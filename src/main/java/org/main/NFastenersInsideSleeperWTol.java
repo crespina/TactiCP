@@ -2,12 +2,10 @@ package org.main;
 
 import java.util.Arrays;
 
-import org.maxicp.cp.CPFactory;
 import org.maxicp.cp.engine.core.CPBoolVar;
 import org.maxicp.cp.engine.core.CPIntVar;
 import org.maxicp.cp.engine.core.CPSolver;
 import org.maxicp.search.DFSearch;
-import org.maxicp.search.SearchStatistics;
 import org.maxicp.search.Searches;
 import org.maxicp.util.exception.InconsistencyException;
 
