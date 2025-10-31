@@ -12,7 +12,7 @@ import static org.maxicp.cp.CPFactory.*;
 public class NFastenersInsideSleeper implements ConstraintPattern {
 
     private final int N; // number of fasteners inside a sleeper
-    private  final int pos_tol; // tolerance on the positions of bboxes
+    private final int pos_tol; // tolerance on the positions of bboxes
 
     public NFastenersInsideSleeper(int N, int pos_tol) {
         this.N = N;

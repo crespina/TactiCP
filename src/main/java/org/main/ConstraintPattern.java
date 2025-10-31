@@ -6,5 +6,6 @@ import org.maxicp.search.DFSearch;
 public interface ConstraintPattern {
 
     void apply(CPSolver cp, Instance instance);
+
     String getName();
 }

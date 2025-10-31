@@ -22,7 +22,7 @@ public class ParametersParser {
                     params.put(entry.getKey(), String.valueOf(entry.getValue()));
                 }
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             System.out.println("An error occurred.");
             e.printStackTrace();
         }
