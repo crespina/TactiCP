@@ -6,18 +6,14 @@ import org.maxicp.cp.engine.core.CPSolver;
 public class Main {
 
     public static void main(String[] args) {
-        // args[0] is path to the parameters file
-        // args[1] is the path to the bounding boxes txt file
+        // args[0] is the parameters file as a json dump
+        // args[1] is the bounding boxes as a json dump
 
-        //For debug purposes
-        args = new String[2];
-        args[0] = "data/parameters.json";
-        args[1] = "data/bbox/alarm_sid_40.0_time_20251029_144753.txt";
+            ParametersParser pp = new ParametersParser(args);
+            ConstraintPattern pattern = PatternRegistry.create(pp.patternName, pp.params);
+            Instance instance = new Instance(args);
+            CPSolver cp = CPFactory.makeSolver();
+            pattern.apply(cp, instance);
 
-        ParametersParser pp = new ParametersParser(args);
-        ConstraintPattern pattern = PatternRegistry.create(pp.patternName, pp.params);
-        Instance instance = new Instance(args[1]);
-        CPSolver cp = CPFactory.makeSolver();
-        pattern.apply(cp, instance);
     }
 }

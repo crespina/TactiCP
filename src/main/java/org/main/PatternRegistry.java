@@ -23,6 +23,13 @@ public class PatternRegistry {
                         Integer.parseInt(args.getOrDefault("num_tol", "2")),
                         Integer.parseInt(args.getOrDefault("pos_tol", "20000"))
                 ));
+
+        patterns.put("LTNInsideTol", args ->
+                new LessThanNFastenersInsideSleeper(
+                        Integer.parseInt(args.getOrDefault("N", "12")),
+                        Integer.parseInt(args.getOrDefault("num_tol", "3")),
+                        Integer.parseInt(args.getOrDefault("pos_tol", "20000"))
+                ));
     }
 
     public static ConstraintPattern create(String name, Map<String, String> args) {

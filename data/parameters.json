@@ -1,1 +1,1 @@
-{"pattern": "NInsideTol",  "N": 12, "pos_tol" : 20000, "num_tol" : 2}
+{"pattern": "LTNInsideTol",  "N": 12, "pos_tol" : 0, "num_tol" : 0}

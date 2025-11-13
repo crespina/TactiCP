@@ -13,9 +13,8 @@ public class ParametersParser {
 
     public ParametersParser(String[] args) {
         ObjectMapper mapper = new ObjectMapper();
-        File paramFile = new File(args[0]);
         try {
-            Map<String, Object> jsonMap = mapper.readValue(paramFile, Map.class);
+            Map<String, Object> jsonMap = mapper.readValue(args[0], Map.class);
             patternName = (String) jsonMap.get("pattern");
             for (Map.Entry<String, Object> entry : jsonMap.entrySet()) {
                 if (!entry.getKey().equals("pattern")) {
