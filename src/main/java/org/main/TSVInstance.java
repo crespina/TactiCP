@@ -7,7 +7,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 
-public class Instance {
+public class TSVInstance {
     // Creates an instance of the problem
 
     public int n;
@@ -19,12 +19,12 @@ public class Instance {
     public int[] cls_ids;
     public int[] box_ids;
 
-    public Instance(String instancePath) {
+    public TSVInstance(String instancePath) {
         File bboxfile = new File(instancePath);
         try (Scanner myReader = new Scanner(bboxfile)) {
             while (myReader.hasNextLine()) {
                 String data = myReader.nextLine();
-                BoundingBox b = new BoundingBox(data);
+                BoundingBox b = new BoundingBox(data, true);
                 bboxes.add(b);
             }
         } catch (FileNotFoundException e) {
@@ -49,7 +49,7 @@ public class Instance {
         }
     }
 
-    public Instance(String[] args){
+    public TSVInstance(String[] args){
         ObjectMapper mapper = new ObjectMapper();
         try {
             List<Map<String, Object>> detections = mapper.readValue(args[1], List.class);

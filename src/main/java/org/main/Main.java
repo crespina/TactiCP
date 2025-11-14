@@ -11,7 +11,7 @@ public class Main {
 
             ParametersParser pp = new ParametersParser(args);
             ConstraintPattern pattern = PatternRegistry.create(pp.patternName, pp.params);
-            Instance instance = new Instance(args);
+            TSVInstance instance = new TSVInstance(args);
             CPSolver cp = CPFactory.makeSolver();
             pattern.apply(cp, instance);
 

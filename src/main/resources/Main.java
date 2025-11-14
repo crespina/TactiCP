@@ -15,7 +15,7 @@ public class Main {
         try (Scanner myReader = new Scanner(bboxfile)) {
             while (myReader.hasNextLine()) {
                 String data = myReader.nextLine();
-                BoundingBox b = new BoundingBox(data);
+                BoundingBox b = new BoundingBox(data, true);
                 System.out.println(b);
             }
         } catch (FileNotFoundException e) {

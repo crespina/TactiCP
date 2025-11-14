@@ -24,7 +24,7 @@ public class NFastenersInsideSleeperWTol implements ConstraintPattern {
     }
 
     @Override
-    public void apply(CPSolver cp, Instance instance) {
+    public void apply(CPSolver cp, TSVInstance instance) {
         //Create instance
         int n = instance.n; // number of bboxes
         int[] x_mins = instance.x_mins;
