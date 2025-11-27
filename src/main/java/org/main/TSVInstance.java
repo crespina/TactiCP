@@ -7,7 +7,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 
-public class TSVInstance {
+public class TSVInstance implements Instance {
     // Creates an instance of the problem
 
     public int n;

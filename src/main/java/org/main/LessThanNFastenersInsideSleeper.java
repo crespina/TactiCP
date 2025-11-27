@@ -28,15 +28,16 @@ public class LessThanNFastenersInsideSleeper implements ConstraintPattern {
     }
 
     @Override
-    public void apply(CPSolver cp, TSVInstance instance) {
+    public void apply(CPSolver cp, Instance instance) {
         //Create instance
-        int n = instance.n; // number of bboxes
-        int[] x_mins = instance.x_mins;
-        int[] x_maxs = instance.x_maxs;
-        int[] y_mins = instance.y_mins;
-        int[] y_maxs = instance.y_maxs;
-        int[] cls_ids = instance.cls_ids;
-        int[] box_ids = instance.box_ids;
+        TSVInstance tsv = (TSVInstance) instance;
+        int n = tsv.n; // number of bboxes
+        int[] x_mins = tsv.x_mins;
+        int[] x_maxs = tsv.x_maxs;
+        int[] y_mins = tsv.y_mins;
+        int[] y_maxs = tsv.y_maxs;
+        int[] cls_ids = tsv.cls_ids;
+        int[] box_ids = tsv.box_ids;
 
         int tolerated_N = N - num_tol;
 

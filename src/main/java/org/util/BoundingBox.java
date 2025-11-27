@@ -29,9 +29,9 @@ public class BoundingBox {
             this.x2 = Double.parseDouble(a_s[4]);
             this.y2 = Double.parseDouble(a_s[5]);
         } else {
-            String[] a_s = s.split(" ");
-            this.cls_id = Integer.parseInt(a_s[0]);
-            this.track_id = Integer.parseInt(a_s[1]);
+            String[] a_s = s.split(",");
+            this.track_id = Integer.parseInt(a_s[0]);
+            this.cls_id = Integer.parseInt(a_s[1]);
             this.x = Integer.parseInt(a_s[2]);
             this.y = Integer.parseInt(a_s[3]);
             this.width = Integer.parseInt(a_s[4]);

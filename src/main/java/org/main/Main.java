@@ -9,11 +9,15 @@ public class Main {
         // args[0] is the parameters file as a json dump
         // args[1] is the bounding boxes as a json dump
 
-            ParametersParser pp = new ParametersParser(args);
-            ConstraintPattern pattern = PatternRegistry.create(pp.patternName, pp.params);
-            TSVInstance instance = new TSVInstance(args);
-            CPSolver cp = CPFactory.makeSolver();
-            pattern.apply(cp, instance);
+//            ParametersParser pp = new ParametersParser(args);
+//            ConstraintPattern pattern = PatternRegistry.create(pp.patternName, pp.params);
+//            TSVInstance instance = new TSVInstance(args);
+//            CPSolver cp = CPFactory.makeSolver();
+//            pattern.apply(cp, instance);
 
+        SoccerInstance si = new SoccerInstance("data/SoccerNet/tracking/train/SNMOT-060");
+        Possession poss = new Possession();
+        CPSolver cp = CPFactory.makeSolver();
+        poss.apply(cp, si);
     }
 }
