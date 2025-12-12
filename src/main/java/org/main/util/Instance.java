@@ -1,4 +1,4 @@
-package org.main;
+package org.main.util;
 
 public interface Instance {
 }

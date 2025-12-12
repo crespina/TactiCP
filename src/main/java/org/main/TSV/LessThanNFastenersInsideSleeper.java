@@ -1,7 +1,9 @@
-package org.main;
+package org.main.TSV;
 
 import java.util.Arrays;
 
+import org.main.util.ConstraintPattern;
+import org.main.util.Instance;
 import org.maxicp.cp.engine.core.CPBoolVar;
 import org.maxicp.cp.engine.core.CPIntVar;
 import org.maxicp.cp.engine.core.CPSolver;

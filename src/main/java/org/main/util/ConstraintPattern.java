@@ -1,4 +1,4 @@
-package org.main;
+package org.main.util;
 
 import org.maxicp.cp.engine.core.CPSolver;
 

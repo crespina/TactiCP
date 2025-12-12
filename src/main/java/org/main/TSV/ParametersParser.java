@@ -1,8 +1,7 @@
-package org.main;
+package org.main.TSV;
 
 import tools.jackson.databind.ObjectMapper;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
