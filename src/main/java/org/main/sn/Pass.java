@@ -15,6 +15,8 @@ import static org.maxicp.cp.CPFactory.*;
 
 public class Pass implements ConstraintPattern {
 
+    Hashtable<PlayerAtFrame, PlayerAtFrame> result;
+
     public Pass() {
     }
 
@@ -69,12 +71,11 @@ public class Pass implements ConstraintPattern {
             DFSearch search = makeDfs(cp, Searches.firstFail(start, end));
 
 
-
             Hashtable<PlayerAtFrame, PlayerAtFrame> sol = new Hashtable<>();
             search.onSolution(() -> {
 
-                        PlayerAtFrame passer = new PlayerAtFrame(player_start.max(),start.max());
-                        PlayerAtFrame receiver = new PlayerAtFrame(player_end.max(),end.max());
+                        PlayerAtFrame passer = new PlayerAtFrame(player_start.max(), start.max());
+                        PlayerAtFrame receiver = new PlayerAtFrame(player_end.max(), end.max());
                         PlayerAtFrame old = sol.get(passer);
                         if (old == null || receiver.frameId < old.frameId) {
                             sol.put(passer, receiver);
@@ -92,6 +93,7 @@ public class Pass implements ConstraintPattern {
                         System.out.println(k.frameId() + " -> " + v.frameId());
                     });
 
+            this.result = sol;
 
 
         } else if (instance instanceof GameStateReconstructionInstance soccer) {
@@ -124,8 +126,8 @@ public class Pass implements ConstraintPattern {
             Hashtable<PlayerAtFrame, PlayerAtFrame> sol = new Hashtable<>();
             search.onSolution(() -> {
 
-                        PlayerAtFrame passer = new PlayerAtFrame(player_start.max(),start.max());
-                        PlayerAtFrame receiver = new PlayerAtFrame(player_end.max(),end.max());
+                        PlayerAtFrame passer = new PlayerAtFrame(player_start.max(), start.max());
+                        PlayerAtFrame receiver = new PlayerAtFrame(player_end.max(), end.max());
                         PlayerAtFrame old = sol.get(passer);
                         if (old == null || receiver.frameId < old.frameId) {
                             sol.put(passer, receiver);
@@ -142,16 +144,17 @@ public class Pass implements ConstraintPattern {
                         System.out.println(k.frameId() + " -> " + v.frameId());
                     });
 
+            this.result = sol;
         }
 
     }
-    public static record PlayerAtFrame(int playerId, int frameId) {}
+
+    public record PlayerAtFrame(int playerId, int frameId) {
+    }
 
     @Override
     public String getName() {
         return "Pass";
     }
-
-
 
 }

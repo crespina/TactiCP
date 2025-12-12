@@ -258,7 +258,6 @@ public class GameStateReconstructionInstance implements Instance {
     }
 
 
-
     @Override
     public String toString() {
         return "TrackingInstance{";

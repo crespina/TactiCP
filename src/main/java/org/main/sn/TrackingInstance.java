@@ -113,13 +113,13 @@ public class TrackingInstance implements Instance {
                     .computeIfAbsent(b.cls_id, k -> b);
         }
 
-        double[][] dx = new double[n+1][maxId+1];
-        double[][] dy = new double[n+1][maxId+1];
-        double[][] ax = new double[n+1][maxId+1];
-        double[][] ay = new double[n+1][maxId+1];
-        double[][] acc = new double[n+1][maxId+1];
-        double[][] angles = new double[n+1][maxId+1];
-        double[][] dthetas = new double[n+1][maxId+1];
+        double[][] dx = new double[n + 1][maxId + 1];
+        double[][] dy = new double[n + 1][maxId + 1];
+        double[][] ax = new double[n + 1][maxId + 1];
+        double[][] ay = new double[n + 1][maxId + 1];
+        double[][] acc = new double[n + 1][maxId + 1];
+        double[][] angles = new double[n + 1][maxId + 1];
+        double[][] dthetas = new double[n + 1][maxId + 1];
 
         // Initialize with NaN or 0 depending on what you want
         for (int i = 0; i <= n; i++) {
@@ -137,18 +137,18 @@ public class TrackingInstance implements Instance {
             for (var clsEntry : trackEntry.getValue().entrySet()) {
                 int clsId = clsEntry.getKey();
                 BoundingBox curr = clsEntry.getValue();
-                BoundingBox prev = grouped.get(trackId-1).get(clsId);
+                BoundingBox prev = grouped.get(trackId - 1).get(clsId);
                 if (prev == null) continue;
 
 
                 dx[trackId][clsId] = curr.x - prev.x;
                 dy[trackId][clsId] = curr.y - prev.y;
-                ax[trackId][clsId] = dx[trackId][clsId] - dx[trackId-1][clsId];
-                ay[trackId][clsId] = dy[trackId][clsId] - dy[trackId-1][clsId];
-                acc[trackId][clsId] = Math.sqrt(ax[trackId][clsId]*ax[trackId][clsId] + ay[trackId][clsId]*ay[trackId][clsId]);
+                ax[trackId][clsId] = dx[trackId][clsId] - dx[trackId - 1][clsId];
+                ay[trackId][clsId] = dy[trackId][clsId] - dy[trackId - 1][clsId];
+                acc[trackId][clsId] = Math.sqrt(ax[trackId][clsId] * ax[trackId][clsId] + ay[trackId][clsId] * ay[trackId][clsId]);
 
                 angles[trackId][clsId] = Math.atan2(dy[trackId][clsId], dx[trackId][clsId]);
-                double dtheta = Math.abs(angles[trackId][clsId] - angles[trackId-1][clsId]);
+                double dtheta = Math.abs(angles[trackId][clsId] - angles[trackId - 1][clsId]);
                 if (dtheta > Math.PI) {
                     dtheta = 2 * Math.PI - dtheta;
                 }

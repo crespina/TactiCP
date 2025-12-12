@@ -67,8 +67,8 @@ public class Possession implements ConstraintPattern {
 //                        double dist = Math.hypot(dx, dy);
 
                         //Euclidean distance with players feet
-                        double dx = box.x + box.width/2 - ball_x - ball_w/2;
-                        double dy = box.y + box.height - ball_y - ball_h/2;
+                        double dx = box.x + box.width / 2 - ball_x - ball_w / 2;
+                        double dy = box.y + box.height - ball_y - ball_h / 2;
                         double dist = Math.hypot(dx, dy);
 
                         if (dist < bestDist) {
@@ -84,7 +84,7 @@ public class Possession implements ConstraintPattern {
                 if (closest_player == -1) {
                     result[frameID] = -1;
                 }
-                if (displacement_ball_score > 47 && bestDist < threshold*3) {
+                if (displacement_ball_score > 47 && bestDist < threshold * 3) {
                     result[frameID] = closest_player;
                 } else {
                     if (bestDist < threshold) {
