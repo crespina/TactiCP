@@ -31,7 +31,7 @@
         <dependency>
             <groupId>com.github.aia-uclouvain</groupId>
             <artifactId>maxicp</artifactId>
-            <version>4b16917cdd</version>
+            <version>-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>commons-cli</groupId>
@@ -47,6 +47,12 @@
             <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>${jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>RELEASE</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <build>

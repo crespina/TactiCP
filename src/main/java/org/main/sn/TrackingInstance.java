@@ -1,15 +1,14 @@
-package org.main;
+package org.main.sn;
 
+import org.main.util.Instance;
 import org.util.BoundingBox;
-import tools.jackson.databind.ObjectMapper;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.util.*;
+import java.util.stream.IntStream;
 
-public class SoccerInstance implements Instance {
+public class TrackingInstance implements Instance {
     // Creates an instance of the problem
     // in : csv files with 6 columns : frame ID, cls ID, top left coordinate of the bounding box, top y coordinate, width, height.
     // e.g. cls_id :
@@ -20,22 +19,20 @@ public class SoccerInstance implements Instance {
 
     public List<BoundingBox> bboxes = new ArrayList<>();
     public int n;
-    public int[] cls_ids;
-    public int[] track_ids;
-    public int[] xs;
-    public int[] ys;
-    public int[] widths;
-    public int[] heights;
 
     public int[] players_right_idx;
     public int[] players_left_idx;
     public int[] referees_idx;
     public int ball_idx;
     public int C; //number of classes
-    public List<Integer> noBall; //frames where there is no bbox for the ball
-    public Map<Integer, BoundingBox> ball_pos;
+    public double[][] dx;
+    public double[][] dy;
+    public double[][] acc;
+    public double[][] dthetas;
 
-    public SoccerInstance(String instanceFolderPath) {
+    Map<Integer, List<BoundingBox>> frames;
+
+    public TrackingInstance(String instanceFolderPath) {
         String txtFilePath = instanceFolderPath + "/gt/gt.txt";
         File txtFile = new File(txtFilePath);
         try (Scanner myReader = new Scanner(txtFile)) {
@@ -47,22 +44,6 @@ public class SoccerInstance implements Instance {
         } catch (FileNotFoundException e) {
             System.out.println("An error occurred.");
             e.printStackTrace();
-        }
-        n = bboxes.size();
-        cls_ids = new int[n];
-        track_ids = new int[n];
-        xs = new int[n];
-        ys = new int[n];
-        widths = new int[n];
-        heights = new int[n];
-
-        for (int i = 0; i < n; i++) {
-            xs[i] = bboxes.get(i).x;
-            ys[i] = bboxes.get(i).y;
-            widths[i] = bboxes.get(i).width;
-            heights[i] = bboxes.get(i).height;
-            cls_ids[i] = bboxes.get(i).cls_id;
-            track_ids[i] = bboxes.get(i).track_id;
         }
 
         String gameInfoPath = instanceFolderPath + "/gameinfo.ini";
@@ -107,29 +88,87 @@ public class SoccerInstance implements Instance {
         players_left_idx = playersLeft.stream().mapToInt(i -> i).toArray();
         referees_idx = referees.stream().mapToInt(i -> i).toArray();
         C = players_right_idx.length + players_left_idx.length + referees_idx.length + 1;
+        int maxId = IntStream.concat(
+                IntStream.concat(Arrays.stream(players_right_idx), Arrays.stream(players_left_idx)),
+                IntStream.of(ball_idx)
+        ).max().orElse(Integer.MIN_VALUE);
 
-        Set<Integer> allFrames = new TreeSet<>();
-        for (int i = 0; i < n; i++) allFrames.add(track_ids[i]);
+        Map<Integer, List<BoundingBox>> frames = new HashMap<>();
 
-        // frames that contain at least one ball bbox (cls_id == ball_idx)
-        Set<Integer> framesWithBall = new HashSet<>();
-        for (int i = 0; i < n; i++) {
-            if (cls_ids[i] == ball_idx) framesWithBall.add(track_ids[i]);
+        for (BoundingBox b : bboxes) {
+            frames.computeIfAbsent(b.track_id, k -> new ArrayList<>())
+                    .add(b);
+        }
+        this.frames = frames;
+        this.n = frames.size();
+
+        Map<Integer, Map<Integer, BoundingBox>> grouped = new HashMap<>();
+
+        for (BoundingBox b : bboxes) {
+            if (Arrays.stream(referees_idx).anyMatch(id -> id == b.cls_id)) {
+                continue;
+            }
+            grouped
+                    .computeIfAbsent(b.track_id, k -> new HashMap<>())
+                    .computeIfAbsent(b.cls_id, k -> b);
         }
 
-        // frames without ball = allFrames \ framesWithBall
-        List<Integer> noBall = new ArrayList<>();
-        for (Integer f : allFrames) if (!framesWithBall.contains(f)) noBall.add(f);
+        double[][] dx = new double[n+1][maxId+1];
+        double[][] dy = new double[n+1][maxId+1];
+        double[][] ax = new double[n+1][maxId+1];
+        double[][] ay = new double[n+1][maxId+1];
+        double[][] acc = new double[n+1][maxId+1];
+        double[][] angles = new double[n+1][maxId+1];
+        double[][] dthetas = new double[n+1][maxId+1];
 
-        this.noBall = noBall;
-        this.ball_pos = ballBoxes();
+        // Initialize with NaN or 0 depending on what you want
+        for (int i = 0; i <= n; i++) {
+            Arrays.fill(dx[i], Double.NaN);
+            Arrays.fill(dy[i], Double.NaN);
+            Arrays.fill(ax[i], Double.NaN);
+            Arrays.fill(ay[i], Double.NaN);
+        }
+
+        // Compute instantaneous vectors
+        for (var trackEntry : grouped.entrySet()) {
+            int trackId = trackEntry.getKey();
+            if (trackId == 1) continue;
+
+            for (var clsEntry : trackEntry.getValue().entrySet()) {
+                int clsId = clsEntry.getKey();
+                BoundingBox curr = clsEntry.getValue();
+                BoundingBox prev = grouped.get(trackId-1).get(clsId);
+                if (prev == null) continue;
+
+
+                dx[trackId][clsId] = curr.x - prev.x;
+                dy[trackId][clsId] = curr.y - prev.y;
+                ax[trackId][clsId] = dx[trackId][clsId] - dx[trackId-1][clsId];
+                ay[trackId][clsId] = dy[trackId][clsId] - dy[trackId-1][clsId];
+                acc[trackId][clsId] = Math.sqrt(ax[trackId][clsId]*ax[trackId][clsId] + ay[trackId][clsId]*ay[trackId][clsId]);
+
+                angles[trackId][clsId] = Math.atan2(dy[trackId][clsId], dx[trackId][clsId]);
+                double dtheta = Math.abs(angles[trackId][clsId] - angles[trackId-1][clsId]);
+                if (dtheta > Math.PI) {
+                    dtheta = 2 * Math.PI - dtheta;
+                }
+                dthetas[trackId][clsId] = dtheta;
+
+            }
+        }
+
+        this.dx = dx;
+        this.dy = dy;
+        this.acc = acc;
+        this.dthetas = dthetas;
+
 
     }
 
 
     @Override
     public String toString() {
-        return "SoccerInstance{" +
+        return "TrackingInstance{" +
                 "bboxes=" +
                 '}' +
                 " players right idx=" + Arrays.toString(players_right_idx) +
@@ -137,41 +176,6 @@ public class SoccerInstance implements Instance {
                 " ball=" + ball_idx +
                 " ref=" + Arrays.toString(referees_idx);
     }
-
-    /**
-     * Returns a sorted list of frame IDs where no bbox has cls_id == ball_idx.
-     */
-    public List<Integer> framesWithoutBall() {
-        // all frame IDs present in the instance
-        Set<Integer> allFrames = new TreeSet<>();
-        for (int i = 0; i < n; i++) allFrames.add(track_ids[i]);
-
-        // frames that contain at least one ball bbox (cls_id == ball_idx)
-        Set<Integer> framesWithBall = new HashSet<>();
-        for (int i = 0; i < n; i++) {
-            if (cls_ids[i] == ball_idx) framesWithBall.add(track_ids[i]);
-        }
-
-        // frames without ball = allFrames \ framesWithBall
-        List<Integer> noBall = new ArrayList<>();
-        for (Integer f : allFrames) if (!framesWithBall.contains(f)) noBall.add(f);
-
-        return noBall;
-    }
-
-    public Map<Integer, BoundingBox> ballBoxes() {
-        Map<Integer, BoundingBox> out = new HashMap<>();
-
-        for (int i = 0; i < n; i++) {
-            if (cls_ids[i] == ball_idx) {
-                int frame = track_ids[i];
-                out.put(frame, bboxes.get(i));
-            }
-        }
-
-        return out;
-    }
-
 
 
 }
