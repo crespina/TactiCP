@@ -30,7 +30,7 @@ public class NoInBetween extends AbstractCPConstraint {
      *
      * @param array the array to index
      * @param start the index variable of start
-     * @param end the index variable of end
+     * @param end   the index variable of end
      */
     public NoInBetween(int[] array, CPIntVar start, CPIntVar end) {
         super(start.getSolver());
@@ -50,9 +50,9 @@ public class NoInBetween extends AbstractCPConstraint {
         start.removeBelow(0);
         start.removeAbove(end.max());
         end.removeBelow(start.min());
-        end.removeAbove(t.length-1);
+        end.removeAbove(t.length - 1);
 
-        start.getSolver().post(new LessOrEqual(start,end));
+        start.getSolver().post(new LessOrEqual(start, end));
 
         start.propagateOnDomainChange(this);
         end.propagateOnDomainChange(this);
@@ -63,16 +63,16 @@ public class NoInBetween extends AbstractCPConstraint {
     @Override
     public void propagate() {
         //first enforce less
-        start.removeAbove(end.max()-1);
-        end.removeBelow(start.min()+1);
+        start.removeAbove(end.max() - 1);
+        end.removeBelow(start.min() + 1);
         if (start.max() < end.min())
             setActive(false);
 
         //if either one is fixed, then we can fix the other
-        if (start.isFixed()){
+        if (start.isFixed()) {
             end.fix(end.min());
         }
-        if (end.isFixed()){
+        if (end.isFixed()) {
             start.fix(start.max());
         }
 

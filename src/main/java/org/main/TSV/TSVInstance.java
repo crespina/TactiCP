@@ -50,7 +50,7 @@ public class TSVInstance implements Instance {
         }
     }
 
-    public TSVInstance(String[] args){
+    public TSVInstance(String[] args) {
         ObjectMapper mapper = new ObjectMapper();
         try {
             List<Map<String, Object>> detections = mapper.readValue(args[1], List.class);

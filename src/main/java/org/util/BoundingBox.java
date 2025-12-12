@@ -20,7 +20,7 @@ public class BoundingBox {
 
     public BoundingBox(String s, boolean xyxy) {
         this.xyxy = xyxy;
-        if  (xyxy) {
+        if (xyxy) {
             String[] a_s = s.split(" ");
             this.cls_id = Integer.parseInt(a_s[0]);
             this.box_id = Integer.parseInt(a_s[1]);
@@ -47,15 +47,14 @@ public class BoundingBox {
             } else {
                 return this.cls_id == 1 ? "Sleeper with ID " + this.box_id + " at x1 = " + this.x1 + " x2 = " + this.x2 + " y1 = " + this.y1 + " y2 = " + this.y2 : "Neither a fastener or a sleeper";
             }
-        }
-        else {
-            return "Class " + cls_id + " from track " + track_id + "; coordinates of the top left corner: " + "("+x+","+y+")"+" width = " + width + " height = " + height;
+        } else {
+            return "Class " + cls_id + " from track " + track_id + "; coordinates of the top left corner: " + "(" + x + "," + y + ")" + " width = " + width + " height = " + height;
         }
     }
 
     public boolean equals(Object o) {
         if (o != null && this.getClass() == o.getClass()) {
-            BoundingBox that = (BoundingBox)o;
+            BoundingBox that = (BoundingBox) o;
             return this.cls_id == that.cls_id && this.box_id == that.box_id && Double.compare(this.x1, that.x1) == 0 && Double.compare(this.x2, that.x2) == 0 && Double.compare(this.y1, that.y1) == 0 && Double.compare(this.y2, that.y2) == 0;
         } else {
             return false;
