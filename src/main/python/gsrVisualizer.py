@@ -70,7 +70,7 @@ def build_frame_index(annotations, mapping):
             "jersey": attrs.get("jersey", ""),
             "role": role,
             "x": float(pos[0]),
-            "y": float(pos[1]),
+            "y": -float(pos[1]),
         })
     return frames
 
@@ -131,7 +131,7 @@ def draw_and_write_video(frames_positions, total_frames, out_path, fps=25, figsi
             ax.scatter(a["x"], a["y"], s=150, marker="o",
                        edgecolors="k", linewidths=0.5, color=color)
 
-            label = str(a.get("jersey", "")) or str(a.get("track_id", ""))
+            label = str(a.get("track_id", ""))
             ax.text(a["x"], a["y"] + 0.2, label,
                     ha="center", va="bottom", fontsize=8, weight="bold")
 

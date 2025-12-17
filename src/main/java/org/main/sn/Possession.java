@@ -3,7 +3,7 @@ package org.main.sn;
 import org.main.util.ConstraintPattern;
 import org.main.util.Instance;
 import org.maxicp.cp.engine.core.CPSolver;
-import org.util.BoundingBox;
+import org.main.util.BoundingBox;
 
 import java.util.*;
 
@@ -11,8 +11,8 @@ public class Possession implements ConstraintPattern {
 
     int[] result;
 
-    public Possession() {
-
+    public Possession(CPSolver cp, Instance instance) {
+        apply(cp, instance);
     }
 
     @Override
@@ -67,7 +67,7 @@ public class Possession implements ConstraintPattern {
 //                        double dist = Math.hypot(dx, dy);
 
                         //Euclidean distance with players feet
-                        double dx = box.x + box.width / 2 - ball_x - ball_w / 2;
+                        double dx = box.x + (double) box.width / 2 - ball_x - ball_w / 2;
                         double dy = box.y + box.height - ball_y - ball_h / 2;
                         double dist = Math.hypot(dx, dy);
 
@@ -119,60 +119,110 @@ public class Possession implements ConstraintPattern {
 
             Map<Integer, GameStateReconstructionInstance.FrameData> positions = soccer.positions;
             int n = soccer.n;
+            int ball_idx = soccer.ball_idx;
+            double[][] acc = soccer.acc;
+            double[][] dthetas = soccer.dthetas;
+
 
             int[] result = new int[n + 1];
-            double threshold = 1.8;
+            result[0] = -1;
+            double threshold = 0.058;
 
             for (Map.Entry<Integer, GameStateReconstructionInstance.FrameData> e : positions.entrySet()) {
-                int frameId = e.getKey();
+                int frameID = e.getKey();
                 GameStateReconstructionInstance.FrameData fd = e.getValue();
 
-                if (fd == null || fd.ball == null || fd.players == null || fd.players.isEmpty()) {
-                    result[frameId] = -1;
+                if (fd == null || fd.players.isEmpty()) {
+                    result[frameID] = -1;
                     continue;
                 }
 
-                GameStateReconstructionInstance.Position ball = fd.ball;
-                double bestDist = Double.POSITIVE_INFINITY;
+                GameStateReconstructionInstance.PlayerInfo ball = fd.players.get(ball_idx);
+                if (ball == null) {
+                    result[frameID] = -1;
+                    continue;
+                }
+
                 int bestTrackId = -1;
+
+                // 1) Compute distance player-ball with 2D reconstruction
+
+                double[] distancesReconstruction = new double[acc[0].length]; // distances[playersID] = distance to the ball for this player
+                Arrays.fill(distancesReconstruction, Double.POSITIVE_INFINITY);
+                for (Map.Entry<Integer, GameStateReconstructionInstance.PlayerInfo> pEntry : fd.players.entrySet()) {
+                    GameStateReconstructionInstance.PlayerInfo pi = pEntry.getValue();
+                    if (pi == null || pi.pos() == null) continue;
+
+                    double dist_x = pi.pos().x() - ball.pos().x();
+                    double dist_y = pi.pos().y() - ball.pos().y();
+                    distancesReconstruction[pi.trackId()] = Math.hypot(dist_x, dist_y);
+                }
+
+                // 2) Compute distance player-ball with tracking information
+                double[] distancesTracking = new double[acc[0].length]; // distances[playersID] = distance to the ball for this player
 
                 for (Map.Entry<Integer, GameStateReconstructionInstance.PlayerInfo> pEntry : fd.players.entrySet()) {
                     GameStateReconstructionInstance.PlayerInfo pi = pEntry.getValue();
-                    if (pi == null || pi.pos == null) continue;
+                    if (pi == null || pi.pos() == null) continue;
 
-                    double dx = pi.pos.x - ball.x;
-                    double dy = pi.pos.y - ball.y;
-                    double dist = Math.hypot(dx, dy);
+                    double dist_x = pi.pos().x_center() - ball.pos().x_center();
+                    double dist_y = pi.pos().y_center() - pi.pos().h() / 2 - ball.pos().y_center();
+                    distancesTracking[pi.trackId()] = Math.hypot(dist_x, dist_y);
+                }
 
-                    if (dist < bestDist || (dist == bestDist && pEntry.getKey() < bestTrackId)) {
+                // 3) Compute a score based on the trajectory of the ball
+                double wAcc = 1.0;
+                double wDir = 30.0;
+                double displacement_ball_score = wAcc * acc[frameID][ball_idx] + wDir * dthetas[frameID][ball_idx];
+
+                // 4) arbitrage between scores
+
+                //TODO : don't take into account distancesReconstruction when the trajectory of the ball is super weird
+                double bestDist = Double.POSITIVE_INFINITY;
+                int closest_player = -1;
+                double wtrack = 0.5 / 1000.0;
+                double wrecons = 0.5 / 64.0;
+
+                for (int pid = 1; pid < distancesTracking.length; pid++) {
+                    if (pid == ball_idx) continue;
+
+                    double dist = wtrack * distancesTracking[pid] + wrecons * distancesReconstruction[pid];
+                    if (dist < bestDist) {
                         bestDist = dist;
-                        bestTrackId = pEntry.getKey();
+                        closest_player = pid;
                     }
                 }
 
-                if (bestTrackId == -1 || bestDist > threshold) {
-                    result[frameId] = -1;
-                } else {
-                    result[frameId] = bestTrackId;
+                if (closest_player == -1) {
+                    result[frameID] = -1;
                 }
+                if (displacement_ball_score > 47 && bestDist < threshold * 3) {
+                    result[frameID] = closest_player;
+                } else {
+                    if (bestDist < threshold) {
+                        result[frameID] = closest_player;
+                    } else {
+                        result[frameID] = -1;
+                    }
+                }
+
             }
 
             //if possession less than 3 frames, not really possession :
-//            int start = -1;
-//            for (int i = 1; i <= n; i++) {
-//                if (result[i] != -1) {
-//                    if (start == -1) start = i; // start of a possession
-//                } else {
-//                    if (start != -1) {
-//                        int length = i - start;
-//                        if (length <= 2) {
-//                            for (int j = start; j < i; j++) result[j] = -1;
-//                        }
-//                        start = -1;
-//                    }
-//                }
-//            }
-
+            int start = -1;
+            for (int i = 1; i <= n; i++) {
+                if (result[i] != -1) {
+                    if (start == -1) start = i; // start of a possession
+                } else {
+                    if (start != -1) {
+                        int length = i - start;
+                        if (length <= 2) {
+                            for (int j = start; j < i; j++) result[j] = -1;
+                        }
+                        start = -1;
+                    }
+                }
+            }
 
             this.result = result;
         }

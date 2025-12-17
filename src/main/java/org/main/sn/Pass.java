@@ -17,7 +17,8 @@ public class Pass implements ConstraintPattern {
 
     Hashtable<PlayerAtFrame, PlayerAtFrame> result;
 
-    public Pass() {
+    public Pass(CPSolver cp, Instance instance) {
+        apply(cp, instance);
     }
 
     @Override
@@ -29,8 +30,7 @@ public class Pass implements ConstraintPattern {
             int[] players_right_idx = soccer.players_right_idx;
             int[] players_left_idx = soccer.players_left_idx;
 
-            Possession p = new Possession();
-            p.apply(cp, soccer);
+            Possession p = new Possession(cp, instance);
             int[] possession = p.result;
 
             //variables = frame_start and frame_end
@@ -90,7 +90,7 @@ public class Pass implements ConstraintPattern {
                     .sorted(Comparator.comparingInt(PlayerAtFrame::frameId))
                     .forEach(k -> {
                         PlayerAtFrame v = sol.get(k);
-                        System.out.println(k.frameId() + " -> " + v.frameId());
+                        System.out.println("frame " + k.frameId() + " player " + k.playerId + " -> " + "frame " + v.frameId() + " player " + v.playerId);
                     });
 
             this.result = sol;
@@ -102,8 +102,7 @@ public class Pass implements ConstraintPattern {
 
             int n = soccer.n;
 
-            Possession p = new Possession();
-            p.apply(cp, instance);
+            Possession p = new Possession(cp, instance);
             int[] possession = p.result;
 
 
@@ -141,7 +140,7 @@ public class Pass implements ConstraintPattern {
                     .sorted(Comparator.comparingInt(PlayerAtFrame::frameId))
                     .forEach(k -> {
                         PlayerAtFrame v = sol.get(k);
-                        System.out.println(k.frameId() + " -> " + v.frameId());
+                        System.out.println("frame " + k.frameId() + " player " + k.playerId + " -> " + "frame " + v.frameId() + " player " + v.playerId);
                     });
 
             this.result = sol;
