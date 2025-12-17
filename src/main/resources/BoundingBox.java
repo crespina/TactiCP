@@ -44,7 +44,7 @@ public class BoundingBox {
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        BoundingBox that = (BoundingBox) o;
+        org.main.util.BoundingBox that = (org.main.util.BoundingBox) o;
         return cls_id == that.cls_id && box_id == that.box_id && Double.compare(x1, that.x1) == 0 && Double.compare(x2, that.x2) == 0 && Double.compare(y1, that.y1) == 0 && Double.compare(y2, that.y2) == 0;
     }
 

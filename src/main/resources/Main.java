@@ -1,6 +1,6 @@
 package org.main;
 
-import org.util.BoundingBox;
+import org.main.util.BoundingBox;
 
 import java.io.File;
 import java.io.FileNotFoundException;

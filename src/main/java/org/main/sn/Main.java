@@ -4,6 +4,7 @@ import org.maxicp.cp.CPFactory;
 import org.maxicp.cp.engine.core.CPSolver;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 public class Main {
 
@@ -17,14 +18,17 @@ public class Main {
 //            CPSolver cp = CPFactory.makeSolver();
 //            pattern.apply(cp, instance);
 
-        TrackingInstance si = new TrackingInstance("data/SoccerNet/tracking/train/SNMOT-060");
-        Pass pass = new Pass();
-        CPSolver cp = CPFactory.makeSolver();
-        pass.apply(cp, si);
-
-//        GameStateReconstructionInstance gsrInstance = new GameStateReconstructionInstance("data/SoccerNet/gamestate-2024/train/SNGS-060");
+//        TrackingInstance si = new TrackingInstance("data/SoccerNet/tracking/train/SNMOT-060");
 //        CPSolver cp = CPFactory.makeSolver();
-//        Pass pass = new Pass();
-//        pass.apply(cp, gsrInstance);
+//        Possession possession = new Possession(cp, si);
+//        System.out.println(Arrays.toString(possession.result));
+//        Pass pass = new Pass(cp, si);
+
+
+        GameStateReconstructionInstance gsrInstance = new GameStateReconstructionInstance("data/SoccerNet/gamestate-2024/train/SNGS-060");
+        CPSolver cp = CPFactory.makeSolver();
+        Possession possess = new Possession(cp, gsrInstance);
+        System.out.println(Arrays.toString(possess.result));
+        Pass passes = new Pass(cp, gsrInstance);
     }
 }

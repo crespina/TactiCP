@@ -1,7 +1,7 @@
 package org.main.sn;
 
 import org.main.util.Instance;
-import org.util.BoundingBox;
+import org.main.util.BoundingBox;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -20,15 +20,10 @@ public class TrackingInstance implements Instance {
     public List<BoundingBox> bboxes = new ArrayList<>();
     public int n;
 
-    public int[] players_right_idx;
-    public int[] players_left_idx;
-    public int[] referees_idx;
+    public int[] players_right_idx, players_left_idx, referees_idx;
     public int ball_idx;
     public int C; //number of classes
-    public double[][] dx;
-    public double[][] dy;
-    public double[][] acc;
-    public double[][] dthetas;
+    public double[][] dx, dy, acc, dthetas;
 
     Map<Integer, List<BoundingBox>> frames;
 
@@ -96,7 +91,7 @@ public class TrackingInstance implements Instance {
         Map<Integer, List<BoundingBox>> frames = new HashMap<>();
 
         for (BoundingBox b : bboxes) {
-            frames.computeIfAbsent(b.track_id, k -> new ArrayList<>())
+            frames.computeIfAbsent(b.frame_id, k -> new ArrayList<>())
                     .add(b);
         }
         this.frames = frames;
@@ -109,7 +104,7 @@ public class TrackingInstance implements Instance {
                 continue;
             }
             grouped
-                    .computeIfAbsent(b.track_id, k -> new HashMap<>())
+                    .computeIfAbsent(b.frame_id, k -> new HashMap<>())
                     .computeIfAbsent(b.cls_id, k -> b);
         }
 
@@ -131,28 +126,28 @@ public class TrackingInstance implements Instance {
 
         // Compute instantaneous vectors
         for (var trackEntry : grouped.entrySet()) {
-            int trackId = trackEntry.getKey();
-            if (trackId == 1) continue;
+            int frameID = trackEntry.getKey();
+            if (frameID == 1) continue;
 
             for (var clsEntry : trackEntry.getValue().entrySet()) {
                 int clsId = clsEntry.getKey();
                 BoundingBox curr = clsEntry.getValue();
-                BoundingBox prev = grouped.get(trackId - 1).get(clsId);
+                BoundingBox prev = grouped.get(frameID - 1).get(clsId);
                 if (prev == null) continue;
 
 
-                dx[trackId][clsId] = curr.x - prev.x;
-                dy[trackId][clsId] = curr.y - prev.y;
-                ax[trackId][clsId] = dx[trackId][clsId] - dx[trackId - 1][clsId];
-                ay[trackId][clsId] = dy[trackId][clsId] - dy[trackId - 1][clsId];
-                acc[trackId][clsId] = Math.sqrt(ax[trackId][clsId] * ax[trackId][clsId] + ay[trackId][clsId] * ay[trackId][clsId]);
+                dx[frameID][clsId] = curr.x - prev.x;
+                dy[frameID][clsId] = curr.y - prev.y;
+                ax[frameID][clsId] = dx[frameID][clsId] - dx[frameID - 1][clsId];
+                ay[frameID][clsId] = dy[frameID][clsId] - dy[frameID - 1][clsId];
+                acc[frameID][clsId] = Math.sqrt(ax[frameID][clsId] * ax[frameID][clsId] + ay[frameID][clsId] * ay[frameID][clsId]);
 
-                angles[trackId][clsId] = Math.atan2(dy[trackId][clsId], dx[trackId][clsId]);
-                double dtheta = Math.abs(angles[trackId][clsId] - angles[trackId - 1][clsId]);
+                angles[frameID][clsId] = Math.atan2(dy[frameID][clsId], dx[frameID][clsId]);
+                double dtheta = Math.abs(angles[frameID][clsId] - angles[frameID - 1][clsId]);
                 if (dtheta > Math.PI) {
                     dtheta = 2 * Math.PI - dtheta;
                 }
-                dthetas[trackId][clsId] = dtheta;
+                dthetas[frameID][clsId] = dtheta;
 
             }
         }

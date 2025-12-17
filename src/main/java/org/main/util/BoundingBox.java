@@ -1,4 +1,4 @@
-package org.util;
+package org.main.util;
 
 import java.util.Objects;
 
@@ -14,13 +14,13 @@ public class BoundingBox {
 
     public int x;
     public int y;
-    public int track_id;
+    public int frame_id;
     public int width;
     public int height;
 
     public BoundingBox(String s, boolean xyxy) {
         this.xyxy = xyxy;
-        if (xyxy) {
+        if (xyxy) { //tsv
             String[] a_s = s.split(" ");
             this.cls_id = Integer.parseInt(a_s[0]);
             this.box_id = Integer.parseInt(a_s[1]);
@@ -28,9 +28,9 @@ public class BoundingBox {
             this.y1 = Double.parseDouble(a_s[3]);
             this.x2 = Double.parseDouble(a_s[4]);
             this.y2 = Double.parseDouble(a_s[5]);
-        } else {
+        } else { //sn
             String[] a_s = s.split(",");
-            this.track_id = Integer.parseInt(a_s[0]);
+            this.frame_id = Integer.parseInt(a_s[0]);
             this.cls_id = Integer.parseInt(a_s[1]);
             this.x = Integer.parseInt(a_s[2]);
             this.y = Integer.parseInt(a_s[3]);
@@ -48,7 +48,7 @@ public class BoundingBox {
                 return this.cls_id == 1 ? "Sleeper with ID " + this.box_id + " at x1 = " + this.x1 + " x2 = " + this.x2 + " y1 = " + this.y1 + " y2 = " + this.y2 : "Neither a fastener or a sleeper";
             }
         } else {
-            return "Class " + cls_id + " from track " + track_id + "; coordinates of the top left corner: " + "(" + x + "," + y + ")" + " width = " + width + " height = " + height;
+            return "Class " + cls_id + " from track " + frame_id + "; coordinates of the top left corner: " + "(" + x + "," + y + ")" + " width = " + width + " height = " + height;
         }
     }
 

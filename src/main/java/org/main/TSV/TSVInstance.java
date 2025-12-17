@@ -1,7 +1,7 @@
 package org.main.TSV;
 
 import org.main.util.Instance;
-import org.util.BoundingBox;
+import org.main.util.BoundingBox;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.File;
