@@ -1,17 +1,12 @@
 package org.main.sn.dsl;
 
-final class Window {
+final class Window implements Pattern {
     public final String name;
-    public Long duration; // null means unspecified
-    public Long start, end; // optional absolute times (ms)
+    public double duration; // null means unspecified
+    public double start, end; // optional absolute times (ms)
 
     public Window(String name) {
         this.name = name;
-    }
-
-    public Window duration(long amount) {
-        this.duration = amount;
-        return this;
     }
 
     public Window from(long start) {
@@ -28,4 +23,18 @@ final class Window {
     public String toString() {
         return "Window(" + name + ")";
     }
+
+    @Override
+    public Pattern within(double duration) {
+        this.duration = duration;
+        return this;
+    }
+
+    @Override
+    public void from(String... ids) {
+
+    }
+
+    @Override
+    public void search() {}
 }

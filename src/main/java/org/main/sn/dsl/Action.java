@@ -1,6 +1,6 @@
 package org.main.sn.dsl;
 
-final class Action {
+public final class Action {
     public final String name;
     public final Object payload;
 
