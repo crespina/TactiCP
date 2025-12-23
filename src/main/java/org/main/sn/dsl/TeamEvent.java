@@ -1,6 +1,6 @@
 package org.main.sn.dsl;
 
-public class TeamEvent {
+public class TeamEvent extends Event{
     public final Action action;
 
     public TeamEvent(Action action) {

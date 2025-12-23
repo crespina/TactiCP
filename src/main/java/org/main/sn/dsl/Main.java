@@ -10,5 +10,8 @@ public class Main {
         Event e2 = player("p2").passTo(player("p1"));
         Sequence s = sequence(e1, e2);
         Ball b = ball();
+        Team left = team("left");
+        Team right = team("right");
+        left.isInFormation(formation(4,3,4));
     }
 }
