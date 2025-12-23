@@ -1,4 +1,4 @@
-package org.main.sn;
+package org.main.sn.logic;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;

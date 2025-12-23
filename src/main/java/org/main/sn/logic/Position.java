@@ -1,4 +1,4 @@
-package org.main.sn;
+package org.main.sn.logic;
 
 import org.main.util.BoundingBox;
 import org.main.util.ConstraintPattern;

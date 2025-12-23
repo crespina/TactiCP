@@ -93,7 +93,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.main.sn.Main</mainClass>
+                            <mainClass>org.main.sn.logic.Main</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
@@ -133,7 +133,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
-                    <mainClass>org.main.sn.Main</mainClass>
+                    <mainClass>org.main.sn.logic.Main</mainClass>
                     <commandlineArgs>
                         --module-path target/lib
                         --add-modules javafx.controls,javafx.fxml

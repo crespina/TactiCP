@@ -1,4 +1,4 @@
-package org.main.sn;
+package org.main.sn.logic;
 
 import org.maxicp.cp.CPFactory;
 import org.maxicp.cp.engine.core.CPSolver;
