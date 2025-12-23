@@ -49,5 +49,18 @@ public class Factory {
         return (Player) canonical(p);
     }
 
+    public static Ball ball() {
+        return Ball.get();
+    }
+
+    public static Team team(String name) {
+        return Team.of(name);
+    }
+
+
+    public static Sequence sequence(Event... exprs) {
+        return new Sequence(exprs);
+    }
+
 
 }
