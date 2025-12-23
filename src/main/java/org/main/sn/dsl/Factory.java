@@ -23,11 +23,26 @@ public class Factory {
             if (ex.team() == null && p.team() != null) {
                 ex.setTeam(p.team());
             }
-
             return ex;
+
+        } else if (e instanceof Team t) {
+            Entity existing = IDENTIFIERS.get(t.name());
+            if (existing == null) {
+                IDENTIFIERS.put(t.name(), t);
+                return t;
+            }
+            return existing;
+
+        } else if (e instanceof Ball b) {
+            Entity existing = IDENTIFIERS.get(b.name());
+            if (existing == null) {
+                IDENTIFIERS.put(b.name(), b);
+                return b;
+            }
+            return existing;
+
         } else {
-            //TODO other entities
-            return e;
+            throw new IllegalArgumentException("Unknown entity type");
         }
 
     }
@@ -55,6 +70,10 @@ public class Factory {
 
     public static Team team(String name) {
         return Team.of(name);
+    }
+
+    public static Formation formation(int... lines) {
+        return Formation.of(lines);
     }
 
 
