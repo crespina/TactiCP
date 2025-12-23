@@ -7,6 +7,7 @@ package org.main.sn;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.main.sn.logic.NoInBetween;
 import org.maxicp.cp.CPSolverTest;
 import org.maxicp.cp.engine.core.CPIntVar;
 import org.maxicp.cp.engine.core.CPSolver;

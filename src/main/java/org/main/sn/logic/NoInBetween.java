@@ -1,4 +1,4 @@
-package org.main.sn;
+package org.main.sn.logic;
 
 
 import org.maxicp.cp.engine.constraints.LessOrEqual;
@@ -6,7 +6,6 @@ import org.maxicp.cp.engine.core.AbstractCPConstraint;
 import org.maxicp.cp.engine.core.CPIntVar;
 import org.maxicp.state.StateInt;
 import org.maxicp.state.StateManager;
-import org.maxicp.util.exception.InconsistencyException;
 
 /**
  *

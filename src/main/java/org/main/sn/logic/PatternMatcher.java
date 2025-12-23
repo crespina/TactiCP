@@ -1,4 +1,4 @@
-package org.main.sn;
+package org.main.sn.logic;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
