@@ -1,6 +1,6 @@
 package org.main.sn.dsl;
 
-final class PlayerEvent extends Event {
+public final class PlayerEvent extends Event {
     public final Player subject;
     public final Action action;
 
@@ -13,7 +13,7 @@ final class PlayerEvent extends Event {
         return new PlayerEvent(from, new Action("PASS_TO", to));
     }
 
-    public static Event pass(Player from, Player to, long amount) {
+    public static Event pass(Player from, Player to, int amount) {
         PlayerEvent e = pass(from, to);
         return e.within(amount);
     }
