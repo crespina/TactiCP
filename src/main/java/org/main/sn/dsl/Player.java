@@ -2,7 +2,7 @@ package org.main.sn.dsl;
 
 import java.util.Optional;
 
-final class Player extends Entity {
+public final class Player extends Entity {
     public final String name;
     private Optional<Integer> id;
     private Optional<String> team;

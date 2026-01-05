@@ -1,21 +1,23 @@
 package org.main.sn.dsl;
 
-abstract class Event {
-    public double timeStart = -1;
-    public double timeEnd = -1;
-    public double duration = -1;
+public abstract class Event {
+    public Action action;
+    public Entity subject;
+    public int timeStart = -1; //in frame
+    public int timeEnd = -1; //in frame
+    public int duration = -1; //in frame
 
-    public Event within(double amount) {
+    public Event within(int amount) {
         this.duration = amount;
         return this;
     }
 
-    public Event start(double time) {
+    public Event start(int time) {
         this.timeStart = time;
         return this;
     }
 
-    public Event end(double time) {
+    public Event end(int time) {
         this.timeEnd = time;
         return this;
     }

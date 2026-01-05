@@ -1,6 +1,6 @@
 package org.main.sn.dsl;
 
-final class Team extends Entity {;
+public final class Team extends Entity {;
     public static final Team LEFT  = new Team("left");
     public static final Team RIGHT = new Team("right");
 
@@ -25,11 +25,11 @@ final class Team extends Entity {;
     }
 
     public TeamEvent isInZone(int z) {
-        return TeamEvent.isInZone(z);
+        return TeamEvent.isInZone(this, z);
     }
 
     public TeamEvent isInFormation(Formation f){
-        return TeamEvent.isInFormation(f);
+        return TeamEvent.isInFormation(this, f);
     }
 
     @Override

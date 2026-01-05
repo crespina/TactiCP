@@ -77,8 +77,8 @@ public class Factory {
     }
 
 
-    public static Sequence sequence(Event... exprs) {
-        return new Sequence(exprs);
+    public static Sequence sequence(String name, Event... exprs) {
+        return new Sequence(name, exprs);
     }
 
 
