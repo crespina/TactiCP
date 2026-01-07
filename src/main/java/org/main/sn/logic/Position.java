@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class Position implements ConstraintPattern {
 
-    int[] result;
+    int[][] position; // [player][frame] -> zone
 
     public Position(CPSolver cp, Instance instance) {
         apply(cp, instance);
@@ -19,100 +19,38 @@ public class Position implements ConstraintPattern {
 
     @Override
     public void apply(CPSolver cp, Instance instance) {
+        if (instance instanceof TrackingInstance soccer) {
+            //TODO: implement position logic for TrackingInstance
 
-        TrackingInstance soccer = (TrackingInstance) instance;
-        int n = soccer.n;
-        Map<Integer, List<BoundingBox>> frames = soccer.frames;
-        int[] players_right_idx = soccer.players_right_idx;
-        int[] players_left_idx = soccer.players_left_idx;
-        int ball_idx = soccer.ball_idx;
+        } else if (instance instanceof GameStateReconstructionInstance soccer) {
 
-        int[] result = new int[n + 1];
-        int threshold = 45;
-        double[][] acc = soccer.acc;
-        double[][] dthetas = soccer.dthetas;
+            int n = soccer.n;
+            int maxId = soccer.maxId;
+            Map<Integer, GameStateReconstructionInstance.FrameData> positions = soccer.positions;
+            int ball_idx = soccer.ball_idx;
+            int[] teams = soccer.teams;
 
-        for (Map.Entry<Integer, List<BoundingBox>> entry : frames.entrySet()) {
-            int frameID = entry.getKey();
-            List<BoundingBox> frame = entry.getValue();
-            double ball_x = -1;
-            double ball_y = -1;
-            double ball_h = -1;
-            double ball_w = -1;
-            for (BoundingBox box : frame) {
-                if (box.cls_id == ball_idx) {
-                    ball_x = box.x;
-                    ball_y = box.y;
-                    ball_h = box.height;
-                    ball_w = box.width;
-                }
+            position = new int[maxId + 1][n + 1];
+            for (int i = 0; i <= maxId; i++) {
+                Arrays.fill(position[i], -1);
             }
-            if (ball_x == -1) {
-                result[frameID] = -1;
-                continue;
-            }
-            int closest_player = -1;
-            double bestDist = Double.POSITIVE_INFINITY;
-            for (BoundingBox box : frame) {
-                if ((Arrays.stream(players_right_idx).anyMatch(x -> x == box.cls_id)) || (Arrays.stream(players_left_idx).anyMatch(x -> x == box.cls_id))) {
-                    //Euclidean distance
-                    //double dx = box.x + box.width/2 - ball_x - ball_w/2;
-                    //double dy = box.y + box.height/2 - ball_y - ball_h/2;
-                    //double dist = Math.hypot(dx, dy);
 
-                    //edge-to-edge distance
-//                        double dx = Math.max(0, Math.max(box.x - (ball_x + ball_w),
-//                                ball_x - (box.x + box.width)));
-//                        double dy = Math.max(0, Math.max(box.y - (ball_y + ball_h),
-//                                ball_y - (box.y + box.height)));
-//                        double dist = Math.hypot(dx, dy);
+            for (int frame : positions.keySet()) {
+                GameStateReconstructionInstance.FrameData frameData = positions.get(frame);
+                Map<Integer, GameStateReconstructionInstance.PlayerInfo> players = frameData.players;
 
-                    //Euclidean distance with players feet
-                    double dx = box.x + box.width / 2 - ball_x - ball_w / 2;
-                    double dy = box.y + box.height - ball_y - ball_h / 2;
-                    double dist = Math.hypot(dx, dy);
+                players.forEach((pid, player) -> {
 
-                    if (dist < bestDist) {
-                        bestDist = dist;
-                        closest_player = box.cls_id;
-                    }
-                }
-            }
-            double wAcc = 1.0;
-            double wDir = 30.0;
-            double displacement_ball_score = wAcc * acc[frameID][ball_idx] + wDir * dthetas[frameID][ball_idx];
+                    GameStateReconstructionInstance.Position bboxPitch = player.pos();
 
-            if (closest_player == -1) {
-                result[frameID] = -1;
-            }
-            if (displacement_ball_score > 47 && bestDist < threshold * 3) {
-                result[frameID] = closest_player;
-            } else {
-                if (bestDist < threshold) {
-                    result[frameID] = closest_player;
-                } else {
-                    result[frameID] = -1;
-                }
+                    int zone = bboxPitch.x() < -40 ? 0 :
+                            bboxPitch.x() < 0 ? 1 :
+                                    bboxPitch.x() < 40 ? 2 : 3;
+
+                    position[pid][frame] = zone;
+                });
             }
         }
-
-        //if possession less than 3 frames, not really possession :
-//            int start = -1;
-//            for (int i = 1; i <= n; i++) {
-//                if (result[i] != -1) {
-//                    if (start == -1) start = i; // start of a possession
-//                } else {
-//                    if (start != -1) {
-//                        int length = i - start;
-//                        if (length <= 2) {
-//                            for (int j = start; j < i; j++) result[j] = -1;
-//                        }
-//                        start = -1;
-//                    }
-//                }
-//            }
-
-        this.result = result;
     }
 
     @Override
