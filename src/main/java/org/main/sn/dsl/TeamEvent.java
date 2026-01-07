@@ -9,8 +9,8 @@ public class TeamEvent extends Event{
         this.action = action;
     }
 
-    public static TeamEvent isInZone(Team team, int zone) {
-        return new TeamEvent(team, new Action("IS_IN_ZONE", zone));
+    public static TeamEvent isInZones(Team team, int... zones) {
+        return new TeamEvent(team, new Action("IS_IN_ZONES", zones));
     }
 
     public static TeamEvent isInFormation(Team team, Formation f) {

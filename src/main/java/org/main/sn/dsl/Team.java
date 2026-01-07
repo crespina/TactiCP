@@ -24,8 +24,8 @@ public final class Team extends Entity {;
         };
     }
 
-    public TeamEvent isInZone(int z) {
-        return TeamEvent.isInZone(this, z);
+    public TeamEvent isInZones(int... z) {
+        return TeamEvent.isInZones(this, z);
     }
 
     public TeamEvent isInFormation(Formation f){

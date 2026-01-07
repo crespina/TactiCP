@@ -14,8 +14,8 @@ public class GameStateReconstructionInstance implements Instance {
 
     public Map<Integer, FrameData> positions;
     public int n;
-    public int ball_idx;
-    public int[] teams; //teams[playerID] = team of the player "left" or "right" (None if not applicable)
+    public int ball_idx, maxId;
+    public int[] teams; //teams[playerID] = team of the player "left" = 0 or "right"=1 (None if not applicable)
     public double[][] dx, dy, acc, dthetas;
 
     public GameStateReconstructionInstance(String instanceFolderPath) {
@@ -91,6 +91,8 @@ public class GameStateReconstructionInstance implements Instance {
                 if (clsId > maxId) maxId = clsId;
             }
         }
+
+        this.maxId = maxId;
 
         double[][] dx = new double[n + 1][maxId + 1];
         double[][] dy = new double[n + 1][maxId + 1];

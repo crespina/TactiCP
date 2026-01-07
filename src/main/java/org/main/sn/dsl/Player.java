@@ -86,4 +86,8 @@ public final class Player extends Entity {
     public PlayerEvent moveTo(int z) {
         return PlayerEvent.moveTo(this, z);
     }
+
+    public  PlayerEvent moveTo(int zone_start, int zone_end) {
+        return PlayerEvent.moveTo(this, zone_start, zone_end);
+    }
 }
