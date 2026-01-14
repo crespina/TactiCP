@@ -16,10 +16,18 @@ public final class Sequence {
     public final List<Event> steps = new ArrayList<>();
     public final List<GameStateReconstructionInstance> matches = new ArrayList<>();
     public int duration = -1;
-    public int start, end, xcenter, ycenter, radius, xtop, ytop, w, h = -1;
+    public int start = -1;
+    public int end = -1;
+    public int xcenter = -1;
+    public int ycenter = -1;
+    public int radius = -1;
+    public int xtop = -1;
+    public int ytop = -1;
+    public int w = -1;
+    public int h = -1;
 
     static final Path ROOT = Paths.get("data/SoccerNet/gamestate-2024");
-    static final List<String> SPLITS = List.of("train", "test", "valid", "challenge");
+    static final List<String> SPLITS = List.of("train", "test", "valid");
 
     public Sequence(String name, Event... exprs) {
         if (name == null || name.isEmpty()) throw new IllegalArgumentException("name must not be null or empty");
@@ -61,7 +69,7 @@ public final class Sequence {
         return this;
     }
 
-    public Sequence rectangle (int xtop, int ytop, int w, int h){
+    public Sequence rectangle(int xtop, int ytop, int w, int h) {
         if (w < 0 || h < 0) {
             throw new IllegalArgumentException("Width and height must be non-negative values.");
         }
@@ -72,7 +80,7 @@ public final class Sequence {
         return this;
     }
 
-    public void from(String ids) throws IOException {
+    public Sequence from(String ids) throws IOException {
         Set<Path> selected = new HashSet<>();
 
         Set<String> tokens = Arrays.stream(ids.split(","))
@@ -105,6 +113,8 @@ public final class Sequence {
         for (Path splitDir : selected) {
             matches.add(new GameStateReconstructionInstance(splitDir.toString()));
         }
+
+        return this;
 
     }
 

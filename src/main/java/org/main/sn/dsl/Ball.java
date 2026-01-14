@@ -5,6 +5,7 @@ final class Ball extends Entity {
     private static final Ball INSTANCE = new Ball();
 
     private Ball() {
+        super("ball");
     }
 
     public static Ball get() {

@@ -84,13 +84,13 @@ public class Pass implements ConstraintPattern {
             );
 
             SearchStatistics stats = search.solve();
-            System.out.format("#Solutions: %s\n", stats.numberOfSolutions());
-            System.out.format("Statistics: %s\n", stats);
+            //System.out.format("#Solutions: %s\n", stats.numberOfSolutions());
+            //System.out.format("Statistics: %s\n", stats);
             sol.keySet().stream()
                     .sorted(Comparator.comparingInt(PlayerAtFrame::frameId))
                     .forEach(k -> {
                         PlayerAtFrame v = sol.get(k);
-                        System.out.println("frame " + k.frameId() + " player " + k.playerId + " -> " + "frame " + v.frameId() + " player " + v.playerId);
+                        //System.out.println("frame " + k.frameId() + " player " + k.playerId + " -> " + "frame " + v.frameId() + " player " + v.playerId);
                     });
 
             this.result = sol;
@@ -134,13 +134,13 @@ public class Pass implements ConstraintPattern {
                     }
             );
             SearchStatistics stats = search.solve();
-            System.out.format("#Solutions: %s\n", stats.numberOfSolutions());
-            System.out.format("Statistics: %s\n", stats);
+            //System.out.format("#Solutions: %s\n", stats.numberOfSolutions());
+            //System.out.format("Statistics: %s\n", stats);
             sol.keySet().stream()
                     .sorted(Comparator.comparingInt(PlayerAtFrame::frameId))
                     .forEach(k -> {
                         PlayerAtFrame v = sol.get(k);
-                        System.out.println("frame " + k.frameId() + " player " + k.playerId + " -> " + "frame " + v.frameId() + " player " + v.playerId);
+                        //System.out.println("frame " + k.frameId() + " player " + k.playerId + " -> " + "frame " + v.frameId() + " player " + v.playerId);
                     });
 
             this.result = sol;

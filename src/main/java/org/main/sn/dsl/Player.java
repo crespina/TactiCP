@@ -20,6 +20,7 @@ public final class Player extends Entity {
     }
 
     public Player(String name, Integer id, String team) {
+        super(name);
         if (name == null) throw new IllegalArgumentException("name must not be null");
         this.name = name;
         this.id = Optional.ofNullable(id);
