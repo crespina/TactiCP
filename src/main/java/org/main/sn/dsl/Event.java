@@ -1,9 +1,23 @@
 package org.main.sn.dsl;
 
 public abstract class Event {
-    public Action action;
-    public Entity subject;
-    public int timeStart, timeEnd, duration, xtop, ytop, w, h, radius, xcenter, ycenter = -1;
+    private final Action action;
+    private final Entity subject;
+    public int timeStart = -1;
+    public int timeEnd = -1;
+    public int duration = -1;
+    public int xtop = -1;
+    public int ytop = -1;
+    public int w = -1;
+    public int h = -1;
+    public int radius = -1;
+    public int xcenter = -1;
+    public int ycenter = -1;
+
+    public Event(Action action, Entity subject) {
+        this.action = action;
+        this.subject = subject;
+    }
 
     public Event within(int amount) {
         if (amount < 0) {
@@ -48,6 +62,14 @@ public abstract class Event {
         this.w = w;
         this.h = h;
         return this;
+    }
+
+    public Action action() {
+        return action;
+    }
+
+    public Entity subject() {
+        return subject;
     }
 }
 

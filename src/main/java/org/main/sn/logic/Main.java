@@ -4,6 +4,7 @@ import org.maxicp.cp.CPFactory;
 import org.maxicp.cp.engine.core.CPSolver;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Main {
@@ -25,10 +26,15 @@ public class Main {
 //        Pass pass = new Pass(cp, si);
 
 
-        GameStateReconstructionInstance gsrInstance = new GameStateReconstructionInstance("data/SoccerNet/gamestate-2024/train/SNGS-060");
-        CPSolver cp = CPFactory.makeSolver();
-        Possession possess = new Possession(cp, gsrInstance);
-        System.out.println(Arrays.toString(possess.result));
-        Pass passes = new Pass(cp, gsrInstance);
+//        GameStateReconstructionInstance gsrInstance = new GameStateReconstructionInstance("data/SoccerNet/gamestate-2024/train/SNGS-060");
+//        CPSolver cp = CPFactory.makeSolver();
+//        Possession possess = new Possession(cp, gsrInstance);
+//        System.out.println(Arrays.toString(possess.result));
+//        Pass passes = new Pass(cp, gsrInstance);
+        ArrayList<String> s = new ArrayList<>();
+        s.add("one");
+        s.add("two");
+        s.add("three");
+        System.out.println(s.get(0) + s.get(1) + s.get(2));
     }
 }

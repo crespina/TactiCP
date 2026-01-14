@@ -1,10 +1,11 @@
 package org.main.sn.dsl;
 
 public class BallEvent extends Event {
-    public final Action action;
-    public final Entity subject;
+    private final Action action;
+    private final Entity subject;
 
     public BallEvent(Action action) {
+        super(action, Ball.get());
         this.action = action;
         this.subject = Ball.get();
     }

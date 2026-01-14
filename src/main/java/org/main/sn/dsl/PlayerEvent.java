@@ -1,10 +1,11 @@
 package org.main.sn.dsl;
 
 public final class PlayerEvent extends Event {
-    public final Player subject;
-    public final Action action;
+    private final Player subject;
+    private final Action action;
 
     public PlayerEvent(Player subject, Action action) {
+        super(action, subject);
         this.subject = subject;
         this.action = action;
     }
@@ -29,4 +30,6 @@ public final class PlayerEvent extends Event {
     public  static PlayerEvent moveTo(Player p, int zone_start, int zone_end) {
         return new PlayerEvent(p, new Action("MOVE_TO", new int[]{zone_start, zone_end}));
     }
+
+
 }

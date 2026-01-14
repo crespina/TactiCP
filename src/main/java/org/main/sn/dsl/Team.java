@@ -7,6 +7,7 @@ public final class Team extends Entity {;
     private final String name;
 
     private Team(String name) {
+        super(name);
         this.name = name;
     }
 

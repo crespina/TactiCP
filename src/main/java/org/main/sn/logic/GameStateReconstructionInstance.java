@@ -33,7 +33,7 @@ public class GameStateReconstructionInstance implements Instance {
 
             int frameId;
             try {
-                frameId = Integer.parseInt(ann.imageId) % 1000;
+                frameId = (int) (Long.parseLong(ann.imageId) % 1000 );
             } catch (NumberFormatException e) {
                 continue; // skip weird frames
             }
@@ -213,7 +213,12 @@ public class GameStateReconstructionInstance implements Instance {
 
     @Override
     public String toString() {
-        return "TrackingInstance";
+        return "GameStateReconstructionInstance{" +
+                "n=" + n +
+                ", ball_idx=" + ball_idx +
+                ", maxId=" + maxId +
+                ", teams=" + Arrays.toString(teams) +
+                '}';
     }
 
 }
