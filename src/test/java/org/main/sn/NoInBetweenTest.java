@@ -24,9 +24,9 @@ public class NoInBetweenTest extends CPSolverTest {
         CPIntVar start = CPFactory.makeIntVar(cp, 0, 10);
         CPIntVar end = CPFactory.makeIntVar(cp, 0, 10);
         int[] array = {1,1,-1,-1,-1,-1,-1,-1,2,2};
+        int value = -1;
 
-
-        cp.post(new NoInBetween(array, start, end));
+        cp.post(new NoInBetween(array, start, end, value));
 
         assertEquals(1, start.min());
         assertEquals(8, end.max());
@@ -44,9 +44,9 @@ public class NoInBetweenTest extends CPSolverTest {
         CPIntVar start = CPFactory.makeIntVar(cp, 0, 10);
         CPIntVar end = CPFactory.makeIntVar(cp, 0, 10);
         int[] array = {1,1,-1,-1,3,-1,-1,-1,2,2};
+        int value = -1;
 
-
-        cp.post(new NoInBetween(array, start, end));
+        cp.post(new NoInBetween(array, start, end, value));
 
         assertEquals(1, start.min());
         assertEquals(8, end.max());
@@ -72,9 +72,9 @@ public class NoInBetweenTest extends CPSolverTest {
         CPIntVar start = CPFactory.makeIntVar(cp, 0, 10);
         CPIntVar end = CPFactory.makeIntVar(cp, 0, 10);
         int[] array = {1,1,-1,-1,3,-1,-1,-1,2,2};
+        int value = -1;
 
-
-        cp.post(new NoInBetween(array, start, end));
+        cp.post(new NoInBetween(array, start, end, value));
 
         assertEquals(1, start.min());
         assertEquals(8, end.max());
@@ -100,9 +100,9 @@ public class NoInBetweenTest extends CPSolverTest {
         CPIntVar start = CPFactory.makeIntVar(cp, 0, 10);
         CPIntVar end = CPFactory.makeIntVar(cp, 0, 10);
         int[] array = {1,1,-1,-1,3,3,-1,-1,2,2};
+        int value = -1;
 
-
-        cp.post(new NoInBetween(array, start, end));
+        cp.post(new NoInBetween(array, start, end, value));
 
         assertEquals(1, start.min());
         assertEquals(8, end.max());
@@ -117,16 +117,23 @@ public class NoInBetweenTest extends CPSolverTest {
         cp.fixPoint();
 
         assertEquals(1, start.min());
-        assertEquals(4, start.max());
-        assertEquals(4, end.min());
-        assertEquals(5, end.max());
-
-        end.remove(5);
-        cp.fixPoint();
-        assertEquals(1, start.min());
         assertEquals(1, start.max());
         assertEquals(4, end.min());
         assertEquals(4, end.max());
+    }
+
+    @ParameterizedTest
+    @MethodSource("getSolver")
+    public void Test4(CPSolver cp) {
+        int[] array = {0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0};
+        CPIntVar start = CPFactory.makeIntVar(cp, 0, array.length);
+        CPIntVar end = CPFactory.makeIntVar(cp, 0, array.length);
+        int value = 1;
+
+        cp.post(new NoInBetween(array, start, end, value));
+
+        assertEquals(8, start.min());
+        assertEquals(31, end.max());
     }
 
 }

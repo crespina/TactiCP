@@ -65,7 +65,7 @@ public class Pass implements ConstraintPattern {
             CPIntVar[] scope = new CPIntVar[]{player_start, player_end};
             cp.post(new TableCT(scope, table));
 
-            cp.post(new NoInBetween(possession, start, end)); //no possession between start and end
+            cp.post(new NoInBetween(possession, start, end, -1)); //no possession between start and end
 
 
             DFSearch search = makeDfs(cp, Searches.firstFail(start, end));
@@ -117,7 +117,7 @@ public class Pass implements ConstraintPattern {
 
             cp.post(neq(player_start, player_end)); //2 different players
             cp.post(eq(element(teams, player_start), element(teams, player_end))); // in the same team
-            cp.post(new NoInBetween(possession, start, end)); //no possession between start and end
+            cp.post(new NoInBetween(possession, start, end, -1)); //no possession between start and end
 
 
             //search

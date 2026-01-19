@@ -13,6 +13,7 @@ public abstract class Event {
     public int radius = -1;
     public int xcenter = -1;
     public int ycenter = -1;
+    public boolean isNegated = false;
 
     public Event(Action action, Entity subject) {
         this.action = action;
@@ -61,6 +62,11 @@ public abstract class Event {
         }
         this.w = w;
         this.h = h;
+        return this;
+    }
+
+    public Event not() {
+        this.isNegated = true;
         return this;
     }
 

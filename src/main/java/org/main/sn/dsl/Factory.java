@@ -76,6 +76,10 @@ public class Factory {
         return Formation.of(lines);
     }
 
+    public static Event not(Event event) {
+        return event.not();
+    }
+
 
     public static Sequence sequence(String name, Event... exprs) {
         return new Sequence(name, exprs);
