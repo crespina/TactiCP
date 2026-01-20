@@ -1,12 +1,6 @@
 package org.main.sn.logic;
 
-import org.maxicp.cp.CPFactory;
-import org.maxicp.cp.engine.core.CPSolver;
-
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.*;
 
 public class Main {
 
@@ -32,10 +26,7 @@ public class Main {
 //        Possession possess = new Possession(cp, gsrInstance);
 //        System.out.println(Arrays.toString(possess.result));
 //        Pass passes = new Pass(cp, gsrInstance);
-        for (int i =0; i<10; i++) {
-            System.out.println(i);
-            if (i==3) i+=3;
-        }
+
 
 
     }

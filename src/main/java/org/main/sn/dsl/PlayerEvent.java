@@ -1,22 +1,13 @@
 package org.main.sn.dsl;
 
 public final class PlayerEvent extends Event {
-    private final Player subject;
-    private final Action action;
 
     public PlayerEvent(Player subject, Action action) {
         super(action, subject);
-        this.subject = subject;
-        this.action = action;
     }
 
     public static PlayerEvent pass(Player from, Player to) {
         return new PlayerEvent(from, new Action("PASS_TO", to));
-    }
-
-    public static Event pass(Player from, Player to, int amount) {
-        PlayerEvent e = pass(from, to);
-        return e.within(amount);
     }
 
     public static PlayerEvent hasBall(Player p) {
