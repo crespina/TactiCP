@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+//TODO: is it relevant?
 public class Formation {
 
     private final List<Integer> formation;

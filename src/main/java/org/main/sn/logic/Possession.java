@@ -95,22 +95,6 @@ public class Possession implements ConstraintPattern {
                 }
             }
 
-            //if possession less than 3 frames, not really possession :
-//            int start = -1;
-//            for (int i = 1; i <= n; i++) {
-//                if (result[i] != -1) {
-//                    if (start == -1) start = i; // start of a possession
-//                } else {
-//                    if (start != -1) {
-//                        int length = i - start;
-//                        if (length <= 2) {
-//                            for (int j = start; j < i; j++) result[j] = -1;
-//                        }
-//                        start = -1;
-//                    }
-//                }
-//            }
-
             this.result = result;
 
 
@@ -142,8 +126,6 @@ public class Possession implements ConstraintPattern {
                     result[frameID] = -1;
                     continue;
                 }
-
-                int bestTrackId = -1;
 
                 // 1) Compute distance player-ball with 2D reconstruction
 

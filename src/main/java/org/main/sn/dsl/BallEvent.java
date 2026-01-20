@@ -1,13 +1,9 @@
 package org.main.sn.dsl;
 
 public class BallEvent extends Event {
-    private final Action action;
-    private final Entity subject;
 
     public BallEvent(Action action) {
         super(action, Ball.get());
-        this.action = action;
-        this.subject = Ball.get();
     }
 
     public static BallEvent moveTo(int zone_end) {

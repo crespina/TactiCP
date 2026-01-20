@@ -6,7 +6,6 @@ import org.maxicp.cp.engine.constraints.TableCT;
 import org.maxicp.cp.engine.core.CPIntVar;
 import org.maxicp.cp.engine.core.CPSolver;
 import org.maxicp.search.DFSearch;
-import org.maxicp.search.SearchStatistics;
 import org.maxicp.search.Searches;
 
 import java.util.*;
@@ -83,13 +82,13 @@ public class Pass implements ConstraintPattern {
                     }
             );
 
-            SearchStatistics stats = search.solve();
+           search.solve();
             //System.out.format("#Solutions: %s\n", stats.numberOfSolutions());
             //System.out.format("Statistics: %s\n", stats);
             sol.keySet().stream()
                     .sorted(Comparator.comparingInt(PlayerAtFrame::frameId))
                     .forEach(k -> {
-                        PlayerAtFrame v = sol.get(k);
+                        //PlayerAtFrame v = sol.get(k);
                         //System.out.println("frame " + k.frameId() + " player " + k.playerId + " -> " + "frame " + v.frameId() + " player " + v.playerId);
                     });
 
@@ -133,13 +132,13 @@ public class Pass implements ConstraintPattern {
                         }
                     }
             );
-            SearchStatistics stats = search.solve();
+            search.solve();
             //System.out.format("#Solutions: %s\n", stats.numberOfSolutions());
             //System.out.format("Statistics: %s\n", stats);
             sol.keySet().stream()
                     .sorted(Comparator.comparingInt(PlayerAtFrame::frameId))
                     .forEach(k -> {
-                        PlayerAtFrame v = sol.get(k);
+                        //PlayerAtFrame v = sol.get(k);
                         //System.out.println("frame " + k.frameId() + " player " + k.playerId + " -> " + "frame " + v.frameId() + " player " + v.playerId);
                     });
 

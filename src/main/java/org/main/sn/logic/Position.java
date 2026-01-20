@@ -1,12 +1,10 @@
 package org.main.sn.logic;
 
-import org.main.util.BoundingBox;
 import org.main.util.ConstraintPattern;
 import org.main.util.Instance;
 import org.maxicp.cp.engine.core.CPSolver;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 public class Position implements ConstraintPattern {
@@ -27,8 +25,6 @@ public class Position implements ConstraintPattern {
             int n = soccer.n;
             int maxId = soccer.maxId;
             Map<Integer, GameStateReconstructionInstance.FrameData> positions = soccer.positions;
-            int ball_idx = soccer.ball_idx;
-            int[] teams = soccer.teams;
 
             position = new int[maxId + 1][n + 1];
             for (int i = 0; i <= maxId; i++) {

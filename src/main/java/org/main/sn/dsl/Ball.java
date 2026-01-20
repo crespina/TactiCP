@@ -1,7 +1,6 @@
 package org.main.sn.dsl;
 
-final class Ball extends Entity {
-    String name = "ball";
+public final class Ball extends Entity {
     private static final Ball INSTANCE = new Ball();
 
     private Ball() {
@@ -14,6 +13,10 @@ final class Ball extends Entity {
 
     public BallEvent moveTo(int z) {
         return BallEvent.moveTo(z);
+    }
+
+    public BallEvent moveTo(int s, int e) {
+        return BallEvent.moveTo(s, e);
     }
 
     @Override

@@ -1,11 +1,9 @@
 package org.main.sn.dsl;
 
-import java.util.Optional;
-
 public final class Player extends Entity {
     public final String name;
-    private Optional<Integer> id;
-    private Optional<String> team;
+    private Integer id;
+    private String team;
 
     public Player(String name) {
         this(name, null, null);
@@ -23,45 +21,42 @@ public final class Player extends Entity {
         super(name);
         if (name == null) throw new IllegalArgumentException("name must not be null");
         this.name = name;
-        this.id = Optional.ofNullable(id);
-        this.team = Optional.ofNullable(team);
+        this.id = id;
+        this.team = team;
     }
 
     public Player id(Integer id) {
-        return new Player(this.name, id, this.team.orElse(null));
+        return new Player(this.name, id, this.team);
     }
 
     public Player team(String team) {
-        return new Player(this.name, this.id.orElse(null), team);
+        return new Player(this.name, this.id, team);
     }
 
     //getters
     public Integer id() {
-        return id.orElse(null);
+        return id;
     }
 
     public String team() {
-        return team.orElse(null);
+        return team;
     }
 
     //setters
     void setId(Integer id) {
-        if (this.id.isEmpty() && id != null)
-            this.id = Optional.of(id);
+        if (this.id == null && id != null)
+            this.id = id;
     }
 
     void setTeam(String team) {
-        if (this.team.isEmpty() && team != null)
-            this.team = Optional.of(team);
+        if (this.team == null && team != null)
+            this.team = team;
     }
 
-
-    //equals
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Player)) return false;
-        Player other = (Player) o;
+        if (!(o instanceof Player other)) return false;
         return name.equals(other.name);
     }
 
@@ -69,7 +64,6 @@ public final class Player extends Entity {
     public int hashCode() {
         return name.hashCode();
     }
-
 
     @Override
     public String toString() {
@@ -88,7 +82,7 @@ public final class Player extends Entity {
         return PlayerEvent.moveTo(this, z);
     }
 
-    public  PlayerEvent moveTo(int zone_start, int zone_end) {
+    public PlayerEvent moveTo(int zone_start, int zone_end) {
         return PlayerEvent.moveTo(this, zone_start, zone_end);
     }
 }

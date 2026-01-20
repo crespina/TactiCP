@@ -1,14 +1,10 @@
 package org.main.sn.dsl;
 
 public class TeamEvent extends Event{
-    private final Action action;
-    private final Team subject;
 
 
     public TeamEvent(Action action, Team subject) {
         super(action, subject);
-        this.action = action;
-        this.subject = subject;
     }
 
     public static TeamEvent isInZones(Team team, int... zones) {

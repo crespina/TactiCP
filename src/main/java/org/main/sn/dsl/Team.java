@@ -1,6 +1,6 @@
 package org.main.sn.dsl;
 
-public final class Team extends Entity {;
+public final class Team extends Entity {
     public static final Team LEFT  = new Team("left");
     public static final Team RIGHT = new Team("right");
 

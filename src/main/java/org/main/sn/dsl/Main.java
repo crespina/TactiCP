@@ -16,10 +16,16 @@ public class Main {
         Event e3 = not(player("p1").hasBall());
         Event e2 = p1.passTo(p3);
 
+        Ball ball = ball();
+        ball.moveTo(4).within(10);
+        ball.moveTo(5,6).within(10);
+
         Event e4 = p4.hasBall();
+        e4.start(10).end(20).rectangle(10,10,2,2).not();
+        e3.radius(100,0,0).not();
 
         //Sequence sq = new Sequence("seq", e1, e2).from("train");
-        Sequence sq = new Sequence("seq", e1, e3, e2).from("SNGS-060");
+        Sequence sq = new Sequence("seq", or(e1,e2), e3).from("SNGS-060");
         sq.search();
     }
 }

@@ -54,7 +54,7 @@ public class GameStateReconstructionInstance implements Instance {
                     int pid = ann.trackId;
                     if (pid > maxPlayerId) maxPlayerId = pid;
                     String team = (ann.attributes.team != null) ? ann.attributes.team : "ball";
-                    if (team != null && !tmpTeams.containsKey(pid)) {
+                    if (!tmpTeams.containsKey(pid)) {
                         switch (team) {
                             case "left" -> tmpTeams.put(pid, 0);
                             case "right" -> tmpTeams.put(pid, 1);
@@ -113,7 +113,6 @@ public class GameStateReconstructionInstance implements Instance {
         Collections.sort(frameIds);
 
         Map<Integer, PlayerInfo> prevPlayers = null;
-        Position prevBall = null;
 
         for (int frameID = 0; frameID < n; frameID++) {
             int frameId = frameIds.get(frameID);

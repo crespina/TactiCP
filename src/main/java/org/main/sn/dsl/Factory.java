@@ -8,41 +8,44 @@ public class Factory {
     private static final Map<String, Entity> IDENTIFIERS = new HashMap<>();
 
     private static Entity canonical(Entity e) {
-        if (e instanceof Player p) {
-            Entity existing = IDENTIFIERS.get(p.name());
+        switch (e) {
+            case Player p -> {
+                Entity existing = IDENTIFIERS.get(p.name());
 
-            if (existing == null) {
-                IDENTIFIERS.put(p.name(), p);
-                return p;
-            }
-            Player ex = (Player) existing;
+                if (existing == null) {
+                    IDENTIFIERS.put(p.name(), p);
+                    return p;
+                }
+                Player ex = (Player) existing;
 
-            if (ex.id() == null && p.id() != null) {
-                ex.setId(p.id());
-            }
-            if (ex.team() == null && p.team() != null) {
-                ex.setTeam(p.team());
-            }
-            return ex;
+                if (ex.id() == null && p.id() != null) {
+                    ex.setId(p.id());
+                }
+                if (ex.team() == null && p.team() != null) {
+                    ex.setTeam(p.team());
+                }
+                return ex;
 
-        } else if (e instanceof Team t) {
-            Entity existing = IDENTIFIERS.get(t.name());
-            if (existing == null) {
-                IDENTIFIERS.put(t.name(), t);
-                return t;
             }
-            return existing;
+            case Team t -> {
+                Entity existing = IDENTIFIERS.get(t.name());
+                if (existing == null) {
+                    IDENTIFIERS.put(t.name(), t);
+                    return t;
+                }
+                return existing;
 
-        } else if (e instanceof Ball b) {
-            Entity existing = IDENTIFIERS.get(b.name());
-            if (existing == null) {
-                IDENTIFIERS.put(b.name(), b);
-                return b;
             }
-            return existing;
+            case Ball b -> {
+                Entity existing = IDENTIFIERS.get(b.name());
+                if (existing == null) {
+                    IDENTIFIERS.put(b.name(), b);
+                    return b;
+                }
+                return existing;
 
-        } else {
-            throw new IllegalArgumentException("Unknown entity type");
+            }
+            case null, default -> throw new IllegalArgumentException("Unknown entity type");
         }
 
     }
@@ -72,12 +75,16 @@ public class Factory {
         return Team.of(name);
     }
 
-    public static Formation formation(int... lines) {
-        return Formation.of(lines);
-    }
+//    public static Formation formation(int... lines) {
+//        return Formation.of(lines);
+//    }
 
     public static Event not(Event event) {
         return event.not();
+    }
+
+    public static Event or(Event... events) {
+        return new OrEvent(events);
     }
 
 

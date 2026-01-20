@@ -118,7 +118,7 @@ public final class Sequence {
 
     }
 
-    private static Path findSNGS(String name) throws IOException {
+    private static Path findSNGS(String name) {
         for (String split : SPLITS) {
             Path candidate = ROOT.resolve(split).resolve(name);
             if (Files.exists(candidate)) {
@@ -128,9 +128,61 @@ public final class Sequence {
         throw new IllegalArgumentException("Unknown SNGS folder: " + name);
     }
 
+    private static final int MAX_EXPANSIONS = 20;
+
+    /** Expands ORs into concrete sequences */
+    public List<Sequence> expand() {
+        List<Sequence> out = new ArrayList<>();
+        expandRec(0, new ArrayList<>(), out);
+        if (out.size() > MAX_EXPANSIONS) {
+            throw new IllegalStateException("Too many OR combinations: " + out.size());
+        }
+        return out;
+    }
+
+    private void expandRec(int idx, List<Event> cur, List<Sequence> out) {
+        if (idx == steps.size()) {
+            Sequence s = new Sequence(name, cur.toArray(new Event[0]));
+            copyMetaTo(s);
+            out.add(s);
+            return;
+        }
+
+        Event e = steps.get(idx);
+
+        if (e instanceof OrEvent or) {
+            for (Event alt : or.alternatives()) {
+                cur.add(alt);
+                expandRec(idx + 1, cur, out);
+                cur.removeLast();
+            }
+        } else {
+            cur.add(e);
+            expandRec(idx + 1, cur, out);
+            cur.removeLast();
+        }
+    }
+
+    private void copyMetaTo(Sequence s) {
+        s.duration = this.duration;
+        s.start = this.start;
+        s.end = this.end;
+        s.xcenter = this.xcenter;
+        s.ycenter = this.ycenter;
+        s.radius = this.radius;
+        s.xtop = this.xtop;
+        s.ytop = this.ytop;
+        s.w = this.w;
+        s.h = this.h;
+        s.matches.addAll(this.matches);
+    }
+
+
     public void search() {
         Query query = new Query();
-        query.apply(this);
+        for (Sequence s : expand()) {
+            query.apply(s);
+        }
     }
 
 

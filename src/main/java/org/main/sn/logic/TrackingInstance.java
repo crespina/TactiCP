@@ -37,8 +37,7 @@ public class TrackingInstance implements Instance {
                 bboxes.add(b);
             }
         } catch (FileNotFoundException e) {
-            System.out.println("An error occurred.");
-            e.printStackTrace();
+            System.out.println("File not found: " + txtFilePath);
         }
 
         String gameInfoPath = instanceFolderPath + "/gameinfo.ini";
@@ -76,7 +75,7 @@ public class TrackingInstance implements Instance {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Error reading game info file: " + gameInfoPath);
         }
 
         players_right_idx = playersRight.stream().mapToInt(i -> i).toArray();
@@ -103,7 +102,7 @@ public class TrackingInstance implements Instance {
             if (Arrays.stream(referees_idx).anyMatch(id -> id == b.cls_id)) {
                 continue;
             }
-            grouped
+            BoundingBox boundingBox = grouped
                     .computeIfAbsent(b.frame_id, k -> new HashMap<>())
                     .computeIfAbsent(b.cls_id, k -> b);
         }

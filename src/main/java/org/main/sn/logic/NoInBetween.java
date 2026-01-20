@@ -4,12 +4,6 @@ package org.main.sn.logic;
 import org.maxicp.cp.engine.constraints.LessOrEqual;
 import org.maxicp.cp.engine.core.AbstractCPConstraint;
 import org.maxicp.cp.engine.core.CPIntVar;
-import org.maxicp.state.StateManager;
-import org.maxicp.util.exception.InconsistencyException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  *
