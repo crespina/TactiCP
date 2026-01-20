@@ -102,9 +102,9 @@ public class TrackingInstance implements Instance {
             if (Arrays.stream(referees_idx).anyMatch(id -> id == b.cls_id)) {
                 continue;
             }
-            BoundingBox boundingBox = grouped
+            grouped
                     .computeIfAbsent(b.frame_id, k -> new HashMap<>())
-                    .computeIfAbsent(b.cls_id, k -> b);
+                    .computeIfAbsent(b.cls_id, k -> b)
         }
 
         double[][] dx = new double[n + 1][maxId + 1];
