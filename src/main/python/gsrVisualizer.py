@@ -74,19 +74,10 @@ def build_frame_index(annotations, mapping):
         })
     return frames
 
-def compute_pitch_limits(all_positions, pad=1.0):
-    xs = [p[0] for p in all_positions]
-    ys = [p[1] for p in all_positions]
-    return (min(xs) - pad, max(xs) + pad, min(ys) - pad, max(ys) + pad)
-
 def draw_and_write_video(frames_positions, total_frames, out_path, fps=25, figsize=(12,7), team_colors=None):
-    all_pos = []
-    for frame_anns in frames_positions.values():
-        for p in frame_anns:
-            all_pos.append((p["x"], p["y"]))
-    if not all_pos:
-        raise RuntimeError("No positions found in annotations to draw.")
-    xmin, xmax, ymin, ymax = compute_pitch_limits(all_pos, pad=1.0)
+    xmin, xmax = -62.5, 62.5
+    ymin, ymax = -39, 39
+
 
     fig, ax = plt.subplots(figsize=figsize)
     ax.set_xlim(xmin, xmax)
@@ -104,6 +95,7 @@ def draw_and_write_video(frames_positions, total_frames, out_path, fps=25, figsi
         ax.set_xlim(xmin, xmax)
         ax.set_ylim(ymin, ymax)
         ax.set_aspect("equal", adjustable="box")
+        draw_zones(ax)
         ax.set_xlabel("pitch x")
         ax.set_ylabel("pitch y")
         ax.set_title(f"Frame {f+1}/{total_frames}")
@@ -149,6 +141,36 @@ def draw_and_write_video(frames_positions, total_frames, out_path, fps=25, figsi
     writer.release()
     plt.close(fig)
     print("Video saved to:", out_path)
+
+def draw_zones(ax):
+    # main vertical split
+    ax.axvline(0, linewidth=1, linestyle="--", color="gray")
+    ax.axvline(-31.25, linewidth=1, linestyle="--", color="gray")
+    ax.axvline(31.25, linewidth=1, linestyle="--", color="gray")
+
+    # horizontal splits
+    ax.hlines(y=-20, xmin=-62.5, xmax=-46,
+            linestyles="--", linewidth=1, colors="gray")
+    ax.hlines(y=-20, xmin=46, xmax=62.5,
+            linestyles="--", linewidth=1, colors="gray")
+    ax.hlines(y=-20, xmin=-31.25, xmax=31.25,
+            linestyles="--", linewidth=1, colors="gray")
+    ax.hlines(y=0, xmin=-46, xmax=46,
+            linestyles="--", linewidth=1, colors="gray")
+    ax.hlines(y=20, xmin=-31.25, xmax=31.25,
+            linestyles="--", linewidth=1, colors="gray")
+    ax.hlines(y=20, xmin=46, xmax=62.5,
+            linestyles="--", linewidth=1, colors="gray")
+    ax.hlines(y=20, xmin=-62.5, xmax=-46,
+            linestyles="--", linewidth=1, colors="gray")
+
+    # extreme side zones
+    ax.vlines(x=-46, ymin=-20, ymax=20,
+            linestyles="--", linewidth=1, colors="gray")
+    ax.vlines(x=46, ymin=-20, ymax=20,
+            linestyles="--", linewidth=1, colors="gray")
+
+
 
 
 
