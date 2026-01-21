@@ -95,7 +95,33 @@ def draw_and_write_video(frames_positions, total_frames, out_path, fps=25, figsi
         ax.set_xlim(xmin, xmax)
         ax.set_ylim(ymin, ymax)
         ax.set_aspect("equal", adjustable="box")
+        #ax.invert_yaxis()
+
         draw_zones(ax)
+        # central zones
+        annotate_zone(ax, 4, -15.6, -10)
+        annotate_zone(ax, 3, 15.6, -10)
+        annotate_zone(ax, 1, -15.6, 10)
+        annotate_zone(ax, 2, 15.6, 10)
+
+        # bottom zones
+        annotate_zone(ax, 11, -15.6, -30)
+        annotate_zone(ax, 10, 15.6, -30)
+
+        # top zones
+        annotate_zone(ax, 6, -15.6, 30)
+        annotate_zone(ax, 7, 15.6, 30)
+
+        # side zones
+        annotate_zone(ax, 13, -54, 0)
+        annotate_zone(ax, 14, 54, 0)
+
+        # corner-ish fallback zones
+        annotate_zone(ax, 12, -40, -30)
+        annotate_zone(ax, 9, 40, -30)
+        annotate_zone(ax, 5, -40, 30)
+        annotate_zone(ax, 8, 40, 30)
+
         ax.set_xlabel("pitch x")
         ax.set_ylabel("pitch y")
         ax.set_title(f"Frame {f+1}/{total_frames}")
@@ -171,6 +197,12 @@ def draw_zones(ax):
             linestyles="--", linewidth=1, colors="gray")
 
 
+def annotate_zone(ax, zone_id, x, y):
+    ax.text(
+        x, y, str(zone_id),
+        ha="center", va="center",
+        fontsize=9, color="gray", alpha=0.7, weight="bold"
+    )
 
 
 
