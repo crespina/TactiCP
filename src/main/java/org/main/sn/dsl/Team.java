@@ -1,28 +1,29 @@
 package org.main.sn.dsl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public final class Team extends Entity {
-    public static final Team LEFT  = new Team("left");
-    public static final Team RIGHT = new Team("right");
 
     private final String name;
+    public final List<Integer> players = new ArrayList<>();
 
-    private Team(String name) {
+    public Team(String name, int... ids) {
         super(name);
+        if (name == null) throw new IllegalArgumentException("name must not be null");
         this.name = name;
+        for (int id : ids) {
+            players.add(id);
+        }
     }
+
+    public Team (String name) {
+        this(name, new int[]{});
+    }
+
 
     public String name() {
         return name;
-    }
-
-    public static Team of(String name) {
-        return switch (name.toLowerCase()) {
-            case "left"  -> LEFT;
-            case "right" -> RIGHT;
-            default -> throw new IllegalArgumentException(
-                    "Invalid team name: " + name + " (expected 'left' or 'right')"
-            );
-        };
     }
 
     public TeamEvent isInZones(int... z) {

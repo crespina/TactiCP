@@ -14,11 +14,15 @@ public class GameStateReconstructionInstance implements Instance {
 
     public Map<Integer, FrameData> positions;
     public int n;
-    public int ball_idx, maxId;
+    public int ball_idx = -1;
+    public int maxId;
+    public int[] GK_ids = new int[2]; // GK_ids[0] = left GK id, GK_ids[1] = right GK id
     public int[] teams; //teams[playerID] = team of the player "left" = 0 or "right"=1 (None if not applicable)
     public double[][] dx, dy, acc, dthetas;
+    public String name;
 
     public GameStateReconstructionInstance(String instanceFolderPath) {
+        this.name = instanceFolderPath.substring("data/SoccerNet/gamestate-2024/".length());
         File JsonFile = new File(instanceFolderPath + "/Labels-GameState.json");
         ObjectMapper om = new ObjectMapper();
         Root root = om.readValue(JsonFile, Root.class);
@@ -47,11 +51,18 @@ public class GameStateReconstructionInstance implements Instance {
             if (bi == null || bi.h == null || bi.w == null || bi.x_center == null || bi.y_center == null)
                 continue;
 
-            Position pos = new Position(bp.x, bp.y, bi.x_center, bi.y_center, bi.w, bi.h);
+            Position pos = new Position(bp.x, -bp.y, bi.x_center, bi.y_center, bi.w, bi.h); //we inverse the y axis here
 
             if (ann.categoryId != null && (ann.categoryId == 1 || ann.categoryId == 2 || ann.categoryId == 4)) {
                 if (ann.trackId != null) {
                     int pid = ann.trackId;
+                    if (ann.categoryId == 2) { // Goalkeepers
+                        if (Objects.equals(ann.attributes.team, "left")){
+                            GK_ids[0] = pid;
+                        } else {
+                            GK_ids[1] = pid;
+                        }
+                    }
                     if (pid > maxPlayerId) maxPlayerId = pid;
                     String team = (ann.attributes.team != null) ? ann.attributes.team : "ball";
                     if (!tmpTeams.containsKey(pid)) {
@@ -59,8 +70,13 @@ public class GameStateReconstructionInstance implements Instance {
                             case "left" -> tmpTeams.put(pid, 0);
                             case "right" -> tmpTeams.put(pid, 1);
                             case "ball" -> {
-                                tmpTeams.put(pid, -1);
-                                ball_idx = pid;
+                                if (ball_idx != -1){
+                                    tmpTeams.put(ball_idx, -1);
+                                    pid = ball_idx;
+                                } else {
+                                    tmpTeams.put(pid, -1);
+                                    ball_idx = pid;
+                                }
                             }
                         }
                     }

@@ -72,7 +72,11 @@ public class Factory {
     }
 
     public static Team team(String name) {
-        return Team.of(name);
+        return new Team(name);
+    }
+
+    public static Team team(String name, int... ids) {
+        return new Team(name, ids);
     }
 
 //    public static Formation formation(int... lines) {
@@ -87,10 +91,25 @@ public class Factory {
         return new OrEvent(events);
     }
 
+    public static Event and(Event... events) {
+        return new AndEvent(events);
+    }
+
 
     public static Sequence sequence(String name, Event... exprs) {
         return new Sequence(name, exprs);
     }
 
+    public static void count(Sequence seq) {
+        seq.count();
+    }
+
+    public static void atLeast(Sequence seq, int n) {
+        seq.atLeast(n);
+    }
+
+    public static void  atMost(Sequence seq, int n) {
+        seq.atMost(n);
+    }
 
 }

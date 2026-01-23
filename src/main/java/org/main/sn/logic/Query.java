@@ -18,15 +18,11 @@ import static org.maxicp.cp.CPFactory.*;
 
 public class Query {
 
-    public void apply(Sequence seq) {
+    public List<String> apply(Sequence seq) {
 
         CPSolver cp = CPFactory.makeSolver();
 
-        ArrayList<ExtendedCPVar> extVars;
-        ArrayList<CPIntVar> frames;
-
-
-        Map<String, CPIntVar> IDENTIFIERS = new HashMap<>(); //Entity's name -> CP variable
+        List<String> toPrint = new ArrayList<>();
 
         final List<Event> steps = seq.steps;
         final List<GameStateReconstructionInstance> matches = seq.matches;
@@ -44,10 +40,13 @@ public class Query {
         boolean total_rectangle = (total_w != -1 && total_h != -1);
 
         for (GameStateReconstructionInstance instance : matches) {
-            extVars = new ArrayList<>();
-            frames = new ArrayList<>();
-            AtomicInteger counterVars = new AtomicInteger(0);
-            AtomicInteger counterEvent = new AtomicInteger(-1);
+
+            Map<String, CPIntVar> IDENTIFIERS = new HashMap<>(); //Entity's name -> CP variable
+
+            ArrayList<ExtendedCPVar> extVars = new ArrayList<>();
+            ArrayList<CPIntVar> frames = new ArrayList<>();
+            AtomicInteger counterVars = new AtomicInteger(-1);
+            AtomicInteger counterEvent = new AtomicInteger(0);
 
             try {
                 int[] teams = instance.teams;
@@ -79,21 +78,34 @@ public class Query {
                 }
 
                 for (Event event : steps) {
-                    CPIntVar frame_start = CPFactory.makeIntVar(cp, n);
-                    CPIntVar frame_end = CPFactory.makeIntVar(cp, n);
+                    CPIntVar frame_start = CPFactory.makeIntVar(cp, n+1);
+                    CPIntVar frame_end = CPFactory.makeIntVar(cp, n+1);
 
                     if (event instanceof AndEvent) {
+                        boolean firstChild = true;
                         for (Event children : ((AndEvent) event).children()) {
-                            executeStep(children, cp, counterEvent, frame_start, frame_end, ball_idx, n,
+                            CPIntVar childFrameStart = firstChild ? frame_start : CPFactory.makeIntVar(cp, n+1);
+                            CPIntVar childFrameEnd = firstChild ? frame_end : CPFactory.makeIntVar(cp, n+1);
+
+                            if (!firstChild) {
+                                cp.post(le(childFrameStart, plus(frame_start,36))); //1.5 sec gap
+                                cp.post(ge(childFrameStart, minus(frame_start,36))); //1.5 sec gap
+
+                                cp.post(le(childFrameEnd, plus(frame_end,36))); //1.5 sec gap
+                                cp.post(ge(childFrameEnd, minus(frame_end,36))); //1.5 sec gap
+                            }
+
+                            executeStep(children, cp, counterEvent, childFrameStart, childFrameEnd, ball_idx, n,
                                     positionZones, positionBox_x, positionBox_y, total_circle, extVars, total_rectangle,
                                     counterVars, instance, teams, IDENTIFIERS, total_xcenter, possession, total_ycenter,
-                                    total_radius, total_xtop, total_ytop, total_w, total_h, frames);
+                                    total_radius, total_xtop, total_ytop, total_w, total_h, frames, true);
+                            firstChild = false;
                         }
                     } else {
                         executeStep(event, cp, counterEvent, frame_start, frame_end, ball_idx, n,
                                 positionZones, positionBox_x, positionBox_y, total_circle, extVars, total_rectangle,
                                 counterVars, instance, teams, IDENTIFIERS, total_xcenter, possession, total_ycenter,
-                                total_radius, total_xtop, total_ytop, total_w, total_h, frames);
+                                total_radius, total_xtop, total_ytop, total_w, total_h, frames, false);
                     }
                 }
 
@@ -111,7 +123,7 @@ public class Query {
                     cp.post(le(lastVar, total_end));
                 }
             } catch (InconsistencyException e) {
-                System.out.println("Inconsistency detected during modeling: " + e.getMessage());
+                System.out.println("No solution found for instance " + instance.name);
                 continue;
             }
 
@@ -119,46 +131,62 @@ public class Query {
             // SEARCH
             // ******
 
+            toPrint.add("instance : " + instance.name + "\n");
+
             CPIntVar[] selectedFrames = extVars.stream().map(ev -> ev.var).toArray(CPIntVar[]::new);
 
             DFSearch search = makeDfs(cp, Searches.firstFail(selectedFrames));
-            ArrayList<ExtendedCPVar> finalExtVars = extVars;
+
             search.onSolution(() -> {
-                for (int i = 0; i < finalExtVars.size(); i++) {
-                    ExtendedCPVar ev = finalExtVars.get(i);
-                    if (Objects.equals(ev.type, "PASS_TO")) {
+                for (int i = 0; i < extVars.size(); i++) {
+                    ExtendedCPVar ev = extVars.get(i);
+                    if (Objects.equals(ev.type, "BALL_MOVE_TO")) {
+                        int frame_start = ev.var.min();
+                        int frame_end = extVars.get(i + 1).var.min();
+                        toPrint.add("EVENT # " + ev.event_idx + (ev.isNegated ? " BALL DOES NOT MOVE TO" : " MOVES TO"));
+                        toPrint.add(" BALL | frames: " + frame_start + " to " + frame_end);
+                        i += 1;
+                    } else if (Objects.equals(ev.type, "PASS_TO")) {
                         int frame_pass = ev.var.min();
-                        int frame_rec = finalExtVars.get(i + 1).var.min();
-                        int passer_id = finalExtVars.get(i + 2).var.min();
-                        int receiver_id = finalExtVars.get(i + 3).var.min();
-                        System.out.println("EVENT # " + ev.event_idx + (ev.isNegated ? " NOT PASS" : " PASS"));
-                        System.out.println(" From player ID " + passer_id + " to player ID " + receiver_id +
+                        int frame_rec = extVars.get(i + 1).var.min();
+                        int passer_id = extVars.get(i + 2).var.min();
+                        int receiver_id = extVars.get(i + 3).var.min();
+                        toPrint.add("EVENT # " + ev.event_idx + (ev.isNegated ? " NOT PASS" : " PASS"));
+                        toPrint.add(" From player ID " + passer_id + " to player ID " + receiver_id +
                                 " | frames: " + frame_pass + " to " + frame_rec);
                         i += 3;
                     } else if (Objects.equals(ev.type, "HAS_BALL")) {
                         int frame_start = ev.var.min();
-                        int frame_end = finalExtVars.get(i + 1).var.min();
-                        int player_id = finalExtVars.get(i + 2).var.min();
-                        System.out.println("EVENT # " + ev.event_idx + (ev.isNegated ? " DOES NOT HAVE BALL" : " HAS BALL"));
-                        System.out.println(" Player ID " + player_id +
+                        int frame_end = extVars.get(i + 1).var.min();
+                        int player_id = extVars.get(i + 2).var.min();
+                        toPrint.add("EVENT # " + ev.event_idx + (ev.isNegated ? " DOES NOT HAVE BALL" : " HAS BALL"));
+                        toPrint.add(" Player ID " + player_id +
                                 " | frames: " + frame_start + " to " + frame_end);
                         i += 2;
                     } else if (Objects.equals(ev.type, "MOVE_TO")) {
                         int frame_start = ev.var.min();
-                        int frame_end = finalExtVars.get(i + 1).var.min();
-                        int player_id = finalExtVars.get(i + 2).var.min();
-                        System.out.println("EVENT # " + ev.event_idx + (ev.isNegated ? " DOES NOT MOVE TO" : " MOVES TO"));
-                        System.out.println(" Player ID " + player_id +
+                        int frame_end = extVars.get(i + 1).var.min();
+                        int player_id = extVars.get(i + 2).var.min();
+                        toPrint.add("EVENT # " + ev.event_idx + (ev.isNegated ? " DOES NOT MOVE TO" : " MOVES TO"));
+                        toPrint.add(" Player ID " + player_id +
                                 " | frames: " + frame_start + " to " + frame_end);
                         i += 2;
+                    } else if (Objects.equals(ev.type, "IS_IN_ZONES")) {
+                        int frame_start = ev.var.min();
+                        int frame_end = extVars.get(i + 1).var.min();
+                        toPrint.add("EVENT # " + ev.event_idx + (ev.isNegated ? " IS NOT IN ZONES" : " IS IN ZONES"));
+                        toPrint.add(" TEAM  | frames: " + frame_start + " to " + frame_end);
+                        i += 1;
                     }
                 }
-                System.out.println("-------------------");
+                toPrint.add("\n");
             });
-            SearchStatistics stats = search.solve();
-            System.out.format("#Solutions: %s\n", stats.numberOfSolutions());
-            System.out.format("Statistics: %s\n", stats);
+            search.solve();
+            //SearchStatistics stats = search.solve();
+            //System.out.format("#Solutions: %s\n", stats.numberOfSolutions());
+            //System.out.format("Statistics: %s\n", stats);
         }
+        return toPrint;
     }
 
 
@@ -173,7 +201,7 @@ public class Query {
                              boolean total_rectangle, AtomicInteger counterVars, GameStateReconstructionInstance instance, int[] teams, Map<String, CPIntVar> IDENTIFIERS,
                              int total_xcenter, int[] possession,
                              int total_ycenter, int total_radius, int total_xtop, int total_ytop,
-                             int total_w, int total_h, ArrayList<CPIntVar> frames) {
+                             int total_w, int total_h, ArrayList<CPIntVar> frames, boolean isAndEvent) {
 
         Action action = event.action();
         Entity subject = event.subject();
@@ -191,7 +219,7 @@ public class Query {
         boolean event_circle = (event_radius != -1);
         boolean event_rectangle = (event_w != -1 && event_h != -1);
         boolean isNegated = event.isNegated;
-
+        int[] GK_ids = instance.GK_ids;
 
         ExtendedCPVar frame_start_ext = new ExtendedCPVar(
                 frame_start,
@@ -232,7 +260,7 @@ public class Query {
                             positionZones, positionBox_x, positionBox_y, event_circle, event_rectangle,
                             total_circle, total_rectangle, event_xcenter, event_ycenter, event_radius,
                             event_xtop, event_ytop, event_w, event_h, total_xcenter, total_ycenter,
-                            total_radius, total_xtop, total_ytop, total_w, total_h, frames);
+                            total_radius, total_xtop, total_ytop, total_w, total_h, frames, isAndEvent);
 
             //PLAYER EVENTS
 
@@ -241,29 +269,30 @@ public class Query {
                     total_rectangle, event_xcenter, event_ycenter, event_radius, event_xtop,
                     event_ytop, event_w, event_h, total_xcenter, total_ycenter, total_radius,
                     total_xtop, total_ytop, total_w, total_h, frames, subject, instance, teams,
-                    IDENTIFIERS, counterVars, action, extVars);
+                    IDENTIFIERS, counterVars, action, extVars, isAndEvent);
 
             case "HAS_BALL" -> model_HAS_BALL(cp, counterEvent, isNegated, frame_start, frame_end, ball_idx, n,
                     possession, event_circle, event_rectangle, total_circle, total_rectangle,
                     event_xcenter, event_ycenter, event_radius, event_xtop, event_ytop, event_w,
                     event_h, total_xcenter, total_ycenter, total_radius, total_xtop, total_ytop,
                     total_w, total_h, frames, subject, IDENTIFIERS, counterVars, action, extVars,
-                    teams, positionBox_x, positionBox_y);
+                    teams, positionBox_x, positionBox_y, isAndEvent);
 
             case "MOVE_TO" -> model_MOVE_TO(cp, counterEvent, isNegated, frame_start, frame_end, event_circle,
                     event_rectangle, total_circle, total_rectangle, event_xcenter, event_ycenter,
                     event_radius, event_xtop, event_ytop, event_w, event_h, total_xcenter,
                     total_ycenter, total_radius, total_xtop, total_ytop, total_w, total_h, frames,
-                    subject, teams, positionBox_x, positionBox_y, positionZones, payload, n);
+                    subject, teams, positionBox_x, positionBox_y, positionZones, payload, n, IDENTIFIERS,
+                    counterVars, action, extVars, ball_idx, isAndEvent);
 
 
             //TEAM EVENTS
 
-            case "IS_IN_ZONES" -> model_IS_IN_ZONE(cp, counterEvent, isNegated, frame_start, frame_end, event_circle,
+            case "IS_IN_ZONES" -> model_IS_IN_ZONES(cp, counterEvent, isNegated, frame_start, frame_end, event_circle,
                     event_rectangle, total_circle, total_rectangle, event_xcenter, event_ycenter,
                     event_radius, event_xtop, event_ytop, event_w, event_h, total_xcenter,
                     total_ycenter, total_radius, total_xtop, total_ytop, total_w, total_h,
-                    frames, subject, teams, positionBox_x, positionBox_y, positionZones, payload, n);
+                    frames, subject, teams, positionBox_x, positionBox_y, positionZones, payload, n, GK_ids, isAndEvent);
 
 
             //TODO: formation logic (is it actually relevant?)
@@ -278,47 +307,116 @@ public class Query {
                                     boolean total_rectangle, int event_xcenter, int event_ycenter, int event_radius,
                                     int event_xtop, int event_ytop, int event_w, int event_h, int total_xcenter,
                                     int total_ycenter, int total_radius, int total_xtop, int total_ytop,
-                                    int total_w, int total_h, ArrayList<CPIntVar> frames) {
+                                    int total_w, int total_h, ArrayList<CPIntVar> frames, boolean isAndEvent) {
 
         cp.post(le(frame_start, frame_end));
-        if (counterEvent.get() != 0) {
+        if (counterEvent.get() != 0 && !isAndEvent) {
             //frame_end of the event before < frame_start of this event
-            cp.post(lt(frames.get(frames.size() - 3), frame_start));
+            cp.post(le(frames.get(frames.size() - 3), plus(frame_start,36))); //1.5sec gap
         }
 
         //ball movement logic
 
+        //movement logic
         if (payload instanceof int[]) {
             int zone_start = ((int[]) payload)[0];
-            int zone_end = ((int[]) payload)[0];
-            int[] ball_pos = positionZones[ball_idx];
+            int zone_end = ((int[]) payload)[1];
 
-            if (isNegated) { // cannot have zone_start -> zone_end, every other combination is allowed
-                CPBoolVar zone_start_var = isEq(element(ball_pos, frame_start), zone_start);
-                CPBoolVar zone_end_var = isEq(element(ball_pos, frame_end), zone_end);
-                cp.post(neq(sum(zone_start_var, zone_end_var), 2));
+            int[] ppos = positionZones[ball_idx];
+            List<Mat.Tuple2<Integer>> ballIntervals = new ArrayList<>();
+
+            for (int f = 0; f < n; f++) {
+                // Look for a starting point (in zone_start)
+                if (ppos[f] == zone_start) {
+                    int start_frame = f;
+
+                    // Move past all consecutive zone_start frames
+                    while (f < n && ppos[f] == zone_start) {
+                        f++;
+                    }
+
+                    // Now look for zone_end, ensuring we don't encounter zone_start again
+                    boolean foundEnd = false;
+                    while (f < n) {
+                        if (ppos[f] == zone_start) {
+                            break; // Invalid interval - we returned to start zone
+                        }
+                        if (ppos[f] == zone_end) {
+                            // Found the first frame in zone_end
+                            ballIntervals.add(new Mat.Tuple2<>(start_frame, f));
+                            foundEnd = true;
+                            break;
+                        }
+                        f++;
+                    }
+
+                    if (!foundEnd) {
+                        f--; // Backtrack if we didn't find zone_end
+                    }
+                }
+            }
+            if (ballIntervals.isEmpty()){
+                throw new InconsistencyException();
+            }
+
+            List<CPBoolVar> intervalSatisfied = new ArrayList<>();
+
+            for (Mat.Tuple2<Integer> interval : ballIntervals) {
+
+                int start = interval.get_0();
+                int end = interval.get_1();
+
+                CPBoolVar isThisInterval = not(
+                        isOr(
+                                not(isEq(frame_start, start)),
+                                not(isEq(frame_end, end))
+                        )
+                );
+                intervalSatisfied.add(isThisInterval);
+            }
+
+            if (isNegated) {
+                //the ball cannot move from zone_start to zone_end between frame_start and frame_end
+                //TODO : not sure this is actually correct
+                cp.post(eq(sum((intervalSatisfied.toArray(new CPBoolVar[0]))), 0));
             } else {
-                cp.post(eq(element(ball_pos, frame_end), zone_end));
-                cp.post(eq(element(ball_pos, frame_start), zone_start));
+                //at least one of the intervals must be satisfied
+                cp.post(or(intervalSatisfied.toArray(new CPBoolVar[0])));
             }
 
 
         } else if (payload instanceof Integer) {
             int zone = (int) payload;
-            int[] ball_pos = positionZones[ball_idx];
-            if (isNegated) { //cannot end up in zone
-                cp.post(neq(element(ball_pos, frame_end), zone));
-            } else {
-                cp.post(eq(element(ball_pos, frame_end), zone));
-                cp.post(neq(element(ball_pos, frame_start), zone));
+            List<Integer> entries = new ArrayList<>();
+            List<CPBoolVar> entryVars = new ArrayList<>();
+            int[] ppos = positionZones[ball_idx];
+
+            for (int i = 1; i < ppos.length; i++) {
+                if (ppos[i] == zone && ppos[i - 1] != zone) {
+                    entries.add(i);
+                }
             }
 
+            for (int entry_frame : entries) {
+                CPBoolVar isEntryInInterval = not(
+                        isOr(
+                                isGe(frame_start, entry_frame),
+                                isLe(frame_end, entry_frame)
+                        )
+                );
+                entryVars.add(isEntryInInterval);
+            }
+
+            if (isNegated) {
+                cp.post(eq(sum(entryVars.toArray(new CPBoolVar[0])), 0)); //no can enter the zone in the interval
+            } else {
+                cp.post(or(entryVars.toArray(new CPBoolVar[0]))); //at least one enters the zone in the interval
+            }
         }
 
         // spatial constraints
 
         if (event_circle || event_rectangle || total_circle || total_rectangle) {
-            //TODO : add tolerance because of the rounding errors in casting to int
             if (event_circle || total_circle) {
                 List<double[]> circles = new ArrayList<>();
                 if (event_circle)
@@ -363,15 +461,15 @@ public class Query {
                               int event_w, int event_h, int total_xcenter, int total_ycenter, int total_radius,
                               int total_xtop, int total_ytop, int total_w, int total_h, ArrayList<CPIntVar> frames,
                               Entity subject, GameStateReconstructionInstance instance, int[] teams, Map<String, CPIntVar> IDENTIFIERS,
-                              AtomicInteger counterVars, Action action, ArrayList<ExtendedCPVar> extVars) {
+                              AtomicInteger counterVars, Action action, ArrayList<ExtendedCPVar> extVars, boolean isAndEvent) {
 
 
         Player player_from = (Player) subject;
         Player player_to = (Player) payload;
         cp.post(le(frame_start, frame_end));
-        if (counterEvent.get() != 0) {
+        if (counterEvent.get() != 0 && !isAndEvent) {
             //frame_end of the event before < frame_start of this event
-            cp.post(lt(frames.get(frames.size() - 3), frame_start));
+            cp.post(le(frames.get(frames.size() - 3), plus(frame_start,36))); //1.5sec gap
         }
 
         //pass logic
@@ -423,6 +521,7 @@ public class Query {
             for (CPIntVar v : IDENTIFIERS.values()) {
                 cp.post(neq(receiver_id, v));
             }
+            IDENTIFIERS.put(player_to.name, receiver_id);
             IDENTIFIERS.put(player_to.name, receiver_id);
         } else {
             receiver_id = IDENTIFIERS.get(player_to.name);
@@ -534,7 +633,6 @@ public class Query {
 
         // spatial constraints
         if (event_circle || event_rectangle || total_circle || total_rectangle) {
-            //TODO : add tolerance because of the rounding errors in casting to int
             if (event_circle || total_circle) {
                 List<double[]> circles = new ArrayList<>();
                 if (event_circle)
@@ -578,13 +676,13 @@ public class Query {
                                int event_w, int event_h, int total_xcenter, int total_ycenter, int total_radius,
                                int total_xtop, int total_ytop, int total_w, int total_h, ArrayList<CPIntVar> frames,
                                Entity subject, Map<String, CPIntVar> IDENTIFIERS, AtomicInteger counterVars, Action action,
-                               ArrayList<ExtendedCPVar> extVars, int[] teams, int[][] positionBox_x, int[][] positionBox_y) {
+                               ArrayList<ExtendedCPVar> extVars, int[] teams, int[][] positionBox_x, int[][] positionBox_y, boolean isAndEvent) {
 
         Player player = (Player) subject;
         cp.post(le(frame_start, frame_end));
-        if (counterEvent.get() != 0) {
+        if (counterEvent.get() != 0 && !isAndEvent) {
             //frame_end of the event before < frame_start of this event
-            cp.post(lt(frames.get(frames.size() - 3), frame_start));
+            cp.post(le(frames.get(frames.size() - 3), plus(frame_start,36))); //1.5sec gap
         }
 
         CPIntVar player_id;
@@ -653,8 +751,9 @@ public class Query {
             }
         }
 
+        // spatial constraints
+        // TODO : for the moment, returns only if the whole possession is in the rectangle/circle. Would it make more sense to return only if at least one frame is in the area?
         if (event_circle || event_rectangle || total_circle || total_rectangle) {
-            //TODO : add tolerance because of the rounding errors in casting to int
             if (event_circle || total_circle) {
                 List<double[]> circles = new ArrayList<>();
                 if (event_circle)
@@ -699,40 +798,58 @@ public class Query {
                               int event_w, int event_h, int total_xcenter, int total_ycenter, double total_radius,
                               int total_xtop, int total_ytop, int total_w, int total_h, ArrayList<CPIntVar> frames,
                               Entity subject, int[] teams, int[][] positionBox_x, int[][] positionBox_y,
-                              int[][] positionZones, Object payload, int n) {
+                              int[][] positionZones, Object payload, int n, Map<String, CPIntVar> IDENTIFIERS,
+                              AtomicInteger counterVars, Action action, ArrayList<ExtendedCPVar> extVars, int ball_idx, boolean isAndEvent) {
 
         Player player = (Player) subject;
         cp.post(le(frame_start, frame_end));
-        if (counterEvent.get() != 0) {
+        if (counterEvent.get() != 0 && !isAndEvent) {
             //frame_end of the event before < frame_start of this event
-            cp.post(lt(frames.get(frames.size() - 3), frame_start));
+            cp.post(le(frames.get(frames.size() - 3), plus(frame_start,36))); //1.5sec gap ?
         }
 
         int[][] player_pos = new int[teams.length][n]; // max size is the number of players
-        for (int[] playerPo : player_pos) {
-            Arrays.fill(playerPo, -1);
+
+        CPIntVar player_id;
+
+        if (IDENTIFIERS.get(player.name()) == null) {
+            player_id = makeIntVar(cp, teams.length);
+            IDENTIFIERS.put(player.name, player_id);
+        } else {
+            player_id = IDENTIFIERS.get(player.name);
         }
 
-        CPIntVar player_id = makeIntVar(cp, teams.length);
+        ExtendedCPVar player_id_ext = new ExtendedCPVar(
+                player_id,
+                counterVars.incrementAndGet(),
+                action.name + "_player_id",
+                counterEvent.get(),
+                isNegated
+        );
+        extVars.add(player_id_ext);
+        List<Integer> playerIds = new ArrayList<>();
 
         if (player.id() != null) {
-            player_pos[0] = positionZones[player.id()];
+            player_pos[player.id()] = positionZones[player.id()];
             cp.post(eq(player_id, player.id())); //should be useless
+            playerIds.add(player.id());
 
         } else if (player.team() != null) {
             int team = player.team().equals("left") ? 0 : 1;
-            List<Integer> playerIds = new ArrayList<>();
             for (int i = 0; i < teams.length; i++) {
                 if (teams[i] == team) {
                     playerIds.add(i);
+                    player_pos[i] = positionZones[i];
                 }
-            }
-            for (int i = 0; i < playerIds.size(); i++) {
-                player_pos[i] = positionZones[playerIds.get(i)];
             }
         } else {
             //all players
-            System.arraycopy(positionZones, 0, player_pos, 0, teams.length);
+            //System.arraycopy(positionZones, 0, player_pos, 0, teams.length);
+            for (int i = 0; i < positionZones.length; i++) {
+                if (i == ball_idx) continue; //skip ball
+                playerIds.add(i);
+                player_pos[i] = positionZones[i];
+            }
         }
 
         //intervals in ppos such that zone_start and zone_end are at position 0 and position -1, but in between, it's only different zones.
@@ -741,9 +858,9 @@ public class Query {
         //movement logic
         if (payload instanceof int[]) {
             int zone_start = ((int[]) payload)[0];
-            int zone_end = ((int[]) payload)[0];
+            int zone_end = ((int[]) payload)[1];
 
-            for (int pl = 0; pl < player_pos.length; pl++) {
+            for (int pl : playerIds) {
                 int[] ppos = player_pos[pl];
                 List<Mat.Tuple2<Integer>> playerIntervals = new ArrayList<>();
 
@@ -754,7 +871,6 @@ public class Query {
 
                         // Move past all consecutive zone_start frames
                         while (f < n && ppos[f] == zone_start) {
-                            start_frame = f; // Keep updating to get the last frame in zone_start
                             f++;
                         }
 
@@ -852,7 +968,6 @@ public class Query {
 
         // spatial constraints
         if (event_circle || event_rectangle || total_circle || total_rectangle) {
-            //TODO : add tolerance because of the rounding errors in casting to int
 
             //Transposed matrices
             int[][] positionBox_x_T = new int[n][teams.length];
@@ -907,34 +1022,44 @@ public class Query {
     }
 
 
-    public void model_IS_IN_ZONE(CPSolver cp, AtomicInteger counterEvent, boolean isNegated, CPIntVar frame_start,
+    public void model_IS_IN_ZONES(CPSolver cp, AtomicInteger counterEvent, boolean isNegated, CPIntVar frame_start,
                                  CPIntVar frame_end, boolean event_circle, boolean event_rectangle, boolean total_circle,
                                  boolean total_rectangle, int event_xcenter, int event_ycenter, int event_radius,
                                  int event_xtop, int event_ytop, int event_w, int event_h, int total_xcenter, int total_ycenter,
                                  double total_radius, int total_xtop, int total_ytop, int total_w, int total_h,
                                  ArrayList<CPIntVar> frames, Entity subject, int[] teams, int[][] positionBox_x,
-                                 int[][] positionBox_y, int[][] positionZones, Object payload, int n) {
+                                 int[][] positionBox_y, int[][] positionZones, Object payload, int n, int[] GK_ids, boolean isAndEvent) {
 
-        //TODO : not take into account the GKs?
+        //the whole team is in the zones specified in payload during the interval
+        //GKs are excluded from the check
         Team team = (Team) subject;
-        int team_int = team.name().equals("left") ? 0 : 1;
+        Set<Integer> playerIds = new HashSet<>();
+        int team_int = -1;
+        if (team.name().equals("left")) {
+            team_int = 0;
+        } else if (team.name().equals("right")) {
+            team_int = 1;
+        } else {
+            playerIds = new HashSet<>(team.players);
+        }
         int[] zones = (int[]) payload;
         cp.post(le(frame_start, frame_end));
-        if (counterEvent.get() != 0) {
+        if (counterEvent.get() != 0 && !isAndEvent) {
             //frame_end of the event before < frame_start of this event
-            cp.post(lt(frames.get(frames.size() - 3), frame_start));
+            cp.post(le(frames.get(frames.size() - 3), plus(frame_start,36))); //1.5sec gap
         }
 
         //is in zone logic
 
-        Set<Integer> playerIds = new HashSet<>();
-        for (int i = 0; i < teams.length; i++) {
-            if (teams[i] == team_int) {
-                playerIds.add(i);
+        if (playerIds.isEmpty()) {
+            for (int i = 0; i < teams.length; i++) {
+                if (teams[i] == team_int && i != GK_ids[0] && i != GK_ids[1]) {
+                    playerIds.add(i);
+                }
             }
         }
 
-        int[] areAllPlayersInZones = new int[playerIds.size()];
+        int[] areAllPlayersInZones = new int[n+1];
         for (int f = 0; f < n; f++) {
             boolean isOnePlayerNotinZone = false;
             for (int playerId : playerIds) {
@@ -945,15 +1070,15 @@ public class Query {
             }
             areAllPlayersInZones[f] = isOnePlayerNotinZone ? 0 : 1;
         }
+        areAllPlayersInZones[n] = -1; //padding
         if (isNegated) {//at least one player of the team is NOT in the zones
-            cp.post(new NoInBetween(areAllPlayersInZones, frame_start, frame_end, 1));
-        } else {//all players of the team must be in the zones
             cp.post(new NoInBetween(areAllPlayersInZones, frame_start, frame_end, 0));
+        } else {//all players of the team must be in the zones
+            cp.post(new NoInBetween(areAllPlayersInZones, frame_start, frame_end, 1));
         }
 
         // spatial constraints
         if (event_circle || event_rectangle || total_circle || total_rectangle) {
-            //TODO : add tolerance because of the rounding errors in casting to int
             if (event_circle || total_circle) {
                 List<double[]> circles = new ArrayList<>();
                 if (event_circle)

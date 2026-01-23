@@ -9,6 +9,9 @@ import java.util.Map;
 
 public class Position implements ConstraintPattern {
 
+    //pitch_width = 105 + 2 * 10
+    //pitch_height = 68 + 2 * 5
+
     int[][] position; // [player][frame] -> zone
 
     public Position(CPSolver cp, Instance instance) {
@@ -39,9 +42,35 @@ public class Position implements ConstraintPattern {
 
                     GameStateReconstructionInstance.Position bboxPitch = player.pos();
 
-                    int zone = bboxPitch.x() < -40 ? 0 :
-                            bboxPitch.x() < 0 ? 1 :
-                                    bboxPitch.x() < 40 ? 2 : 3;
+                    int zone = -1;
+                    double x = bboxPitch.x();
+                    double y = bboxPitch.y();
+
+                    if (x >= -31.25 && x <= 0 && y >= 0 && y <= 20) zone = 1;
+                    else if (x >= 0 && x <= 31.25 && y >= 0 && y <= 20) zone = 2;
+                    else if (x >= 0 && x <= 31.25 && y >= -20 && y <= 0) zone = 3;
+                    else if (x >= -31.25 && x <= 0 && y >= -20 && y <= 0) zone = 4;
+                    else if (x >= -31.25 && x <= 0 && y > 20) zone = 6;
+                    else if (x >= 0 && x <= 31.25 && y > 20) zone = 7;
+                    else if (x >= 0 && x <= 31.25 && y < -20) zone = 10;
+                    else if (x >= -31.25 && x <= 0 && y < -20) zone = 11;
+                    else if (x <= -46 && y >= -20 && y <= 20) zone = 13;
+                    else if (x >= 46 && y >= -20 && y <= 20) zone = 14;
+                    else {
+                        if (y < 0) {
+                            if (x < 0) {
+                                zone = 12;
+                            } else {
+                                zone = 9;
+                            }
+                        } else {
+                            if (x < 0) {
+                                zone = 5;
+                            } else {
+                                zone = 8;
+                            }
+                        }
+                    }
 
                     position[pid][frame] = zone;
                 });
