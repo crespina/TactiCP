@@ -130,7 +130,9 @@ public final class Sequence {
 
     private static final int MAX_EXPANSIONS = 20;
 
-    /** Expands ORs into concrete sequences */
+    /**
+     * Expands ORs into concrete sequences
+     */
     public List<Sequence> expand() {
         List<Sequence> out = new ArrayList<>();
         expandRec(0, new ArrayList<>(), out);
@@ -179,11 +181,83 @@ public final class Sequence {
 
 
     public void search() {
+        if (matches.isEmpty()) {
+            throw new IllegalStateException("No matches specified for sequence: " + name);
+        }
         Query query = new Query();
         for (Sequence s : expand()) {
-            query.apply(s);
+            List<String> toPrint = query.apply(s);
+            for (String str : toPrint) {
+                System.out.println(str);
+            }
         }
     }
 
+    public void count() {
+        if (matches.isEmpty()) {
+            throw new IllegalStateException("No matches specified for sequence: " + name);
+        }
+        Query query = new Query();
+        int count = 0;
+        for (Sequence seq : expand()) {
+            List<String> toPrint = query.apply(seq);
+            for (String s : toPrint) {
+                System.out.println(s);
+                if (s.equals("\n")) {
+                    count++;
+                }
+            }
+        }
+        System.out.println("\n=========================");
+        System.out.println("Total number of solutions is: " + count);
+    }
 
+    public void atMost(int maxCount) {
+        if (matches.isEmpty()) {
+            throw new IllegalStateException("No matches specified for sequence: " + name);
+        }
+        Query query = new Query();
+        int count = 0;
+        for (Sequence seq : expand()) {
+            List<String> toPrint = query.apply(seq);
+            for (String s : toPrint) {
+                System.out.println(s);
+                if (s.equals("\n")) {
+                    count++;
+                }
+            }
+        }
+        System.out.println("\n=========================");
+        System.out.println("Total number of solutions is: " + count);
+        if (count > maxCount) {
+            System.out.println("\n=========================");
+            System.out.println("Reached the maximum number of solutions: " + maxCount);
+        }
+    }
+
+    public void atLeast(int minCount) {
+        if (matches.isEmpty()) {
+            throw new IllegalStateException("No matches specified for sequence: " + name);
+        }
+        Query query = new Query();
+        int count = 0;
+        for (Sequence seq : expand()) {
+            List<String> toPrint = query.apply(seq);
+            for (String s : toPrint) {
+                System.out.println(s);
+                if (s.equals("\n")) {
+                    count++;
+                }
+            }
+        }
+        System.out.println("\n=========================");
+        System.out.println("Total number of solutions is: " + count);
+        if (count < minCount) {
+            System.out.println("\n=========================");
+            System.out.println("Did not reach the minimum number of solutions: " + minCount);
+        }
+    }
 }
+
+
+

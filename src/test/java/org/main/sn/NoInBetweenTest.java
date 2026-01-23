@@ -136,4 +136,26 @@ public class NoInBetweenTest extends CPSolverTest {
         assertEquals(31, end.max());
     }
 
+    @ParameterizedTest
+    @MethodSource("getSolver")
+    public void TestEnd(CPSolver cp) {
+        int[] array = {0,0,0,1,1,1,0,0,0,1,1,1,-1};
+        CPIntVar start = CPFactory.makeIntVar(cp, 0, array.length);
+        CPIntVar end = CPFactory.makeIntVar(cp, 0, array.length);
+        int value = 1;
+
+        cp.post(new NoInBetween(array, start, end, value));
+
+        assertEquals(2, start.min());
+        assertEquals(12, end.max());
+
+        start.removeBelow(6);
+        cp.fixPoint();
+
+        assertEquals(8, start.min());
+        assertEquals(8, start.max());
+        assertEquals(12, end.min());
+        assertEquals(12, end.max());
+    }
+
 }
