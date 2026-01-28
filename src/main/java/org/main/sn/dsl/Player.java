@@ -70,19 +70,19 @@ public final class Player extends Entity {
         return name + " #" + id + "(" + team + ")";
     }
 
-    public PlayerEvent passTo(Player target) {
+    public PlayerEvent PASSTO(Player target) {
         return PlayerEvent.pass(this, target);
     }
 
-    public PlayerEvent hasBall() {
+    public PlayerEvent HASBALL() {
         return PlayerEvent.hasBall(this);
     }
 
-    public PlayerEvent moveTo(int z) {
+    public PlayerEvent MOVETO(int z) {
         return PlayerEvent.moveTo(this, z);
     }
 
-    public PlayerEvent moveTo(int zone_start, int zone_end) {
+    public PlayerEvent MOVETO(int zone_start, int zone_end) {
         return PlayerEvent.moveTo(this, zone_start, zone_end);
     }
 }

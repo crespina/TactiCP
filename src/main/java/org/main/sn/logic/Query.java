@@ -6,7 +6,6 @@ import org.maxicp.cp.engine.core.CPBoolVar;
 import org.maxicp.cp.engine.core.CPIntVar;
 import org.maxicp.cp.engine.core.CPSolver;
 import org.maxicp.search.DFSearch;
-import org.maxicp.search.SearchStatistics;
 import org.maxicp.search.Searches;
 import org.maxicp.util.exception.InconsistencyException;
 import org.opencv.core.Mat;
@@ -18,7 +17,7 @@ import static org.maxicp.cp.CPFactory.*;
 
 public class Query {
 
-    public List<String> apply(Sequence seq) {
+    public List<String> apply(SelectExpr seq) {
 
         CPSolver cp = CPFactory.makeSolver();
 
@@ -1117,6 +1116,252 @@ public class Query {
                 }
             }
         }
+    }
+
+    public List<String> applyPossession(SelectExpr s, Entity entity) {
+        CPSolver cp = makeSolver();
+        List<String> toPrint = new ArrayList<>();
+        for (GameStateReconstructionInstance instance : s.matches) {
+            Possession p = new Possession(cp, instance);
+            int[] possession = p.result;
+            switch (entity) {
+                case Player player -> {
+                    if (player.id() != null) {
+                        List<int[]> intervals = findIntervals(possession, player.id());
+                        toPrint.addAll(
+                                intervals.stream()
+                                        .map(a -> "[" + a[0] + "," + a[1] + "]")
+                                        .toList()
+                        );
+                    } else if (player.team() != null) {
+                        int team = player.team().equals("left") ? 0 : 1;
+                        Set<Integer> playerIds = new HashSet<>();
+                        for (int i = 0; i < instance.teams.length; i++) {
+                            if (instance.teams[i] == team) {
+                                playerIds.add(i);
+                            }
+                        }
+                        int[] teamPossession = new int[possession.length];
+                        for (int f = 0; f < possession.length; f++) {
+                            teamPossession[f] = playerIds.contains(possession[f]) ? 1 : 0;
+                        }
+                        List<int[]> intervals = findIntervals(teamPossession, 1);
+                        toPrint.addAll(
+                                intervals.stream()
+                                        .map(a -> "[" + a[0] + "," + a[1] + "]")
+                                        .toList()
+                        );
+                    } else {
+                        List<int[]> intervals = findIntervals(possession, -1);
+                        List<int[]> inverted = invertIntervals(intervals, instance.n);
+                        toPrint.addAll(
+                                inverted.stream()
+                                        .map(a -> "[" + a[0] + "," + a[1] + "]")
+                                        .toList()
+                        );
+                    }
+                }
+                case Team team -> {
+                    if (team.name().equals("left") || team.name().equals("right")) {
+                        int team_int = team.name().equals("left") ? 0 : 1;
+                        Set<Integer> playerIds = new HashSet<>();
+                        for (int i = 0; i < instance.teams.length; i++) {
+                            if (instance.teams[i] == team_int) {
+                                playerIds.add(i);
+                            }
+                        }
+                        int[] teamPossession = new int[possession.length];
+                        for (int f = 0; f < possession.length; f++) {
+                            teamPossession[f] = playerIds.contains(possession[f]) ? 1 : 0;
+                        }
+                        List<int[]> intervals = findIntervals(teamPossession, 1);
+                        toPrint.addAll(
+                                intervals.stream()
+                                        .map(a -> "[" + a[0] + "," + a[1] + "]")
+                                        .toList()
+                        );
+                    } else {
+                        List<int[]> intervals = findIntervals(possession, -1);
+                        List<int[]> inverted = invertIntervals(intervals, instance.n);
+                        toPrint.addAll(
+                                inverted.stream()
+                                        .map(a -> "[" + a[0] + "," + a[1] + "]")
+                                        .toList()
+                        );
+                    }
+                }
+                case Ball ignored -> throw new IllegalArgumentException("Ball entity is not valid for possession.");
+                case null, default -> throw new IllegalArgumentException("Unknown entity type for possession.");
+            }
+        }
+        return toPrint;
+    }
+
+
+    public List<String> applyPosition(SelectExpr s, Entity entity, int zone) {
+        CPSolver cp = makeSolver();
+        List<String> toPrint = new ArrayList<>();
+        for (GameStateReconstructionInstance instance : s.matches) {
+            Position p = new Position(cp, instance);
+            int[][] position = p.position;
+
+            switch (entity) {
+                case Player player -> {
+
+                    if (player.id() != null) {
+                        List<int[]> intervals = findIntervals(position, player.id(), zone);
+                        toPrint.addAll(
+                                intervals.stream()
+                                        .map(a -> "[" + a[0] + "," + a[1] + "]")
+                                        .toList()
+                        );
+
+                    } else if (player.team() != null) {
+                        int team = player.team().equals("left") ? 0 : 1;
+                        Set<Integer> playerIds = new HashSet<>();
+                        for (int i = 0; i < instance.teams.length; i++) {
+                            if (instance.teams[i] == team) {
+                                playerIds.add(i);
+                            }
+                        }
+                        for (int id : playerIds) {
+                            List<int[]> intervals = findIntervals(position, id, zone);
+                            toPrint.addAll(
+                                    intervals.stream()
+                                            .map(a -> "[" + a[0] + "," + a[1] + "]")
+                                            .toList()
+                            );
+                        }
+
+                    } else {
+                        List<int[]> intervals = findIntervals(position, -1, zone);
+                        List<int[]> inverted = invertIntervals(intervals, instance.n);
+                        toPrint.addAll(
+                                inverted.stream()
+                                        .map(a -> "[" + a[0] + "," + a[1] + "]")
+                                        .toList()
+                        );
+                    }
+                }
+                case Team team -> {
+                    if (team.name().equals("left") || team.name().equals("right")) {
+                        int team_int = team.name().equals("left") ? 0 : 1;
+                        Set<Integer> playerIds = new HashSet<>();
+                        for (int i = 0; i < instance.teams.length; i++) {
+                            if (instance.teams[i] == team_int) {
+                                playerIds.add(i);
+                            }
+                        }
+                        for (int id : playerIds) {
+                            List<int[]> intervals = findIntervals(position, id, zone);
+                            toPrint.addAll(
+                                    intervals.stream()
+                                            .map(a -> "[" + a[0] + "," + a[1] + "]")
+                                            .toList()
+                            );
+                        }
+                    } else {
+                        List<int[]> intervals = findIntervals(position, -1, zone);
+                        List<int[]> inverted = invertIntervals(intervals, instance.n);
+                        toPrint.addAll(
+                                inverted.stream()
+                                        .map(a -> "[" + a[0] + "," + a[1] + "]")
+                                        .toList()
+                        );
+                    }
+                }
+                case Ball ignored -> throw new IllegalArgumentException("Ball entity is not valid for possession.");
+                case null, default -> throw new IllegalArgumentException("Unknown entity type for possession.");
+            }
+        }
+        return toPrint;
+    }
+
+    // ****************** UTILS **********************
+    public static List<int[]> findIntervals(int[] array, int target) {
+        List<int[]> intervals = new ArrayList<>();
+
+        int i = 0;
+        while (i < array.length) {
+            // Find the start of an interval
+            if (array[i] == target) {
+                int start = i;
+                // Find the end of the interval
+                while (i < array.length && array[i] == target) {
+                    i++;
+                }
+
+                // Add interval [start, end) where end is exclusive
+                intervals.add(new int[]{start, i - 1});
+            } else {
+                i++;
+            }
+        }
+
+        return intervals;
+    }
+
+    public static List<int[]> findIntervals(int[][] array, int id, int zone) {
+        List<int[]> intervals = new ArrayList<>();
+
+        int f = 0;
+        while (f < array[id].length) {
+            // Find the start of an interval
+            if (array[id][f] == zone) {
+                int start = f;
+                // Find the end of the interval
+                while (f < array[id].length && array[id][f] == zone) {
+                    f++;
+                }
+
+                // Add interval [start, end) where end is exclusive
+                intervals.add(new int[]{start, f - 1});
+            } else {
+                f++;
+            }
+        }
+
+        return intervals;
+    }
+
+    public static List<int[]> invertIntervals(List<int[]> intervals, int horizon) {
+        if (horizon < 0) throw new IllegalArgumentException("horizon must be >= 0");
+
+        // 1) Clip to [0,horizon] and drop empty
+        List<int[]> clipped = new ArrayList<>();
+        for (int[] it : intervals) {
+            if (it == null || it.length < 2) continue;
+            int s = Math.max(0, it[0]);
+            int e = Math.min(horizon, it[1]);
+            if (s <= e) clipped.add(new int[]{s, e});
+        }
+
+        // 2) Sort and merge overlaps/touching (inclusive)
+        clipped.sort(Comparator.comparingInt(a -> a[0]));
+        List<int[]> merged = new ArrayList<>();
+        for (int[] it : clipped) {
+            if (merged.isEmpty()) {
+                merged.add(it);
+            } else {
+                int[] last = merged.getLast();
+                if (it[0] <= last[1] + 1) { // overlap or adjacent
+                    last[1] = Math.max(last[1], it[1]);
+                } else {
+                    merged.add(it);
+                }
+            }
+        }
+
+        // 3) Emit gaps = inverse
+        List<int[]> inverse = new ArrayList<>();
+        int cur = 0;
+        for (int[] it : merged) {
+            if (cur < it[0]) inverse.add(new int[]{cur, it[0] - 1});
+            cur = it[1] + 1;
+        }
+        if (cur <= horizon) inverse.add(new int[]{cur, horizon});
+
+        return inverse;
     }
 
 

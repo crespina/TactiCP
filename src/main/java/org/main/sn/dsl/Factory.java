@@ -1,6 +1,9 @@
 package org.main.sn.dsl;
 
+import org.main.sn.logic.Query;
+
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Factory {
@@ -50,32 +53,32 @@ public class Factory {
 
     }
 
-    public static Player player(String name, int id, String team) {
+    public static Player PLAYER(String name, int id, String team) {
         return (Player) canonical(new Player(name, id, team));
     }
 
-    public static Player player(String name, int id) {
+    public static Player PLAYER(String name, int id) {
         return (Player) canonical(new Player(name, id));
     }
 
-    public static Player player(String name, String team) {
+    public static Player PLAYER(String name, String team) {
         return (Player) canonical(new Player(name, team));
     }
 
-    public static Player player(String name) {
+    public static Player PLAYER(String name) {
         Entity p = new Player(name);
         return (Player) canonical(p);
     }
 
-    public static Ball ball() {
+    public static Ball BALL() {
         return Ball.get();
     }
 
-    public static Team team(String name) {
+    public static Team TEAM(String name) {
         return new Team(name);
     }
 
-    public static Team team(String name, int... ids) {
+    public static Team TEAM(String name, int... ids) {
         return new Team(name, ids);
     }
 
@@ -83,33 +86,76 @@ public class Factory {
 //        return Formation.of(lines);
 //    }
 
-    public static Event not(Event event) {
+    public static Event NOT(Event event) {
         return event.not();
     }
 
-    public static Event or(Event... events) {
+    public static Event OR(Event... events) {
         return new OrEvent(events);
     }
 
-    public static Event and(Event... events) {
+    public static Event AND(Event... events) {
         return new AndEvent(events);
     }
 
 
-    public static Sequence sequence(String name, Event... exprs) {
-        return new Sequence(name, exprs);
+    public static SelectExpr SELECT(Event... exprs) {
+        return new SelectExpr(exprs);
     }
 
-    public static void count(Sequence seq) {
-        seq.count();
-    }
-
-    public static void atLeast(Sequence seq, int n) {
+    public static void ATLEAST(SelectExpr seq, int n) {
         seq.atLeast(n);
     }
 
-    public static void  atMost(Sequence seq, int n) {
+    public static void ATMOST(SelectExpr seq, int n) {
         seq.atMost(n);
     }
 
+    public static Event POSSESSION(Entity entity) {
+        if (entity instanceof Player p) {
+            return new PlayerEvent(new Action("POSSESSION"), p);
+        } else {
+            throw new IllegalArgumentException("Invalid entity type: " + entity);
+        }
+    }
+
+    public static Event POSITION(Entity entity, int zone) {
+        if (entity instanceof Player p) {
+            return new PlayerEvent(new Action("POSSESSION"), p);
+        } else if (entity instanceof Team t){
+            return new TeamEvent(new Action("POSSESSION", zone), t);
+        } else if (entity instanceof Ball b){
+            return new BallEvent(new Action("POSITION", zone));
+        } else {
+            throw new IllegalArgumentException("Invalid entity type: " + entity);
+        }
+    }
+
+    public static Where START(int frame) {
+        return Where.of(Where.Kind.START, frame);
+    }
+
+    public static Where END(int frame) {
+        return Where.of(Where.Kind.END, frame);
+    }
+
+    public static Where WITHIN(int frames) {
+        return Where.of(Where.Kind.WITHIN, frames);
+    }
+
+    public static Where RECTANGLE(int x1, int y1, int x2, int y2) {
+        return Where.of(Where.Kind.RECTANGLE, x1, y1, x2, y2);
+    }
+
+    public static Where RADIUS(int x, int y, int r) {
+        return Where.of(Where.Kind.RADIUS, x, y, r);
+    }
+
+    public static Where ATMOST(int n) {
+        return Where.of(Where.Kind.ATMOST, n);
+    }
+
+    public static Where ATLEAST(int n) {
+        return Where.of(Where.Kind.ATLEAST, n);
+    }
 }

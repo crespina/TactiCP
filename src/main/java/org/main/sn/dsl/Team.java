@@ -26,7 +26,7 @@ public final class Team extends Entity {
         return name;
     }
 
-    public TeamEvent isInZones(int... z) {
+    public TeamEvent ISINZONES(int... z) {
         return TeamEvent.isInZones(this, z);
     }
 
