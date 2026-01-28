@@ -20,7 +20,31 @@ public abstract class Event {
         this.subject = subject;
     }
 
-    public Event within(int amount) {
+    public Event WHERE(Where... parts) {
+        for (Where w : parts) {
+            switch (w.kind()) {
+                case START -> this.timeStart = w.values()[0];
+                case END -> this.timeEnd = w.values()[0];
+                case WITHIN -> this.duration = w.values()[0];
+                case RADIUS -> {
+                    this.xcenter = w.values()[0];
+                    this.ycenter = w.values()[1];
+                    this.radius = w.values()[2];
+                }
+                case RECTANGLE -> {
+                    this.xtop = w.values()[0];
+                    this.ytop = w.values()[1];
+                    this.w = w.values()[2];
+                    this.h = w.values()[3];
+                }
+                case ATMOST -> throw new IllegalArgumentException("ATMOST is not supported in Event WHERE clause.");
+                case ATLEAST -> throw new IllegalArgumentException("ATLEAST is not supported in Event WHERE clause.");
+            }
+        }
+        return this;
+    }
+
+    public Event WITHIN(int amount) {
         if (amount < 0) {
             throw new IllegalArgumentException("Duration must be a non-negative value.");
         }
@@ -54,7 +78,7 @@ public abstract class Event {
         return this;
     }
 
-    public Event rectangle(int xtop, int ytop, int w, int h) {
+    public Event RECTANGLE(int xtop, int ytop, int w, int h) {
         this.xtop = xtop;
         this.ytop = ytop;
         if (w <= 0 || h <= 0) {

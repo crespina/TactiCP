@@ -10,4 +10,5 @@ public abstract class Entity {
     public String name() {
         return name;
     }
+
 }

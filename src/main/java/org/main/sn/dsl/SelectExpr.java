@@ -11,10 +11,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public final class Sequence {
-    public final String name;
+public final class SelectExpr {
     public final List<Event> steps = new ArrayList<>();
     public final List<GameStateReconstructionInstance> matches = new ArrayList<>();
+    public Entity possession = null;
+    public Entity position = null;
+    int position_zone = -1;
     public int duration = -1;
     public int start = -1;
     public int end = -1;
@@ -25,17 +27,20 @@ public final class Sequence {
     public int ytop = -1;
     public int w = -1;
     public int h = -1;
+    public boolean minrange = false;
+    private final List<Where> whereParts = new ArrayList<>();
+    public int atMost = -1;
+    public int atLeast = -1;
+    public int searchMode = 0; // 0: all, 1: first, other: count
 
     static final Path ROOT = Paths.get("data/SoccerNet/gamestate-2024");
     static final List<String> SPLITS = List.of("train", "test", "valid");
 
-    public Sequence(String name, Event... exprs) {
-        if (name == null || name.isEmpty()) throw new IllegalArgumentException("name must not be null or empty");
-        this.name = name;
+    public SelectExpr(Event... exprs) {
         Collections.addAll(steps, exprs);
     }
 
-    public Sequence start(int start) {
+    public SelectExpr start(int start) {
         if (start < 0) {
             throw new IllegalArgumentException("Start time must be a non-negative value.");
         }
@@ -43,7 +48,7 @@ public final class Sequence {
         return this;
     }
 
-    public Sequence end(int end) {
+    public SelectExpr end(int end) {
         if (end < 0) {
             throw new IllegalArgumentException("End time must be a non-negative value.");
         }
@@ -51,7 +56,7 @@ public final class Sequence {
         return this;
     }
 
-    public Sequence within(int duration) {
+    public SelectExpr within(int duration) {
         if (duration < 0) {
             throw new IllegalArgumentException("Duration must be a non-negative value.");
         }
@@ -59,7 +64,7 @@ public final class Sequence {
         return this;
     }
 
-    public Sequence radius(int xcenter, int ycenter, int radius) {
+    public SelectExpr radius(int xcenter, int ycenter, int radius) {
         if (radius < 0) {
             throw new IllegalArgumentException("Radius must be a non-negative value.");
         }
@@ -69,7 +74,7 @@ public final class Sequence {
         return this;
     }
 
-    public Sequence rectangle(int xtop, int ytop, int w, int h) {
+    public SelectExpr rectangle(int xtop, int ytop, int w, int h) {
         if (w < 0 || h < 0) {
             throw new IllegalArgumentException("Width and height must be non-negative values.");
         }
@@ -80,7 +85,47 @@ public final class Sequence {
         return this;
     }
 
-    public Sequence from(String ids) throws IOException {
+    public SelectExpr MINRANGE(){
+        this.minrange = true;
+        return this;
+    }
+
+    public SelectExpr WHERE(Where... parts) {
+        if (parts != null) for (Where p : parts) if (p != null) whereParts.add(p);
+        applyWhereParts();
+        return this;
+    }
+
+    public SelectExpr SEARCH(int mode){
+        this.searchMode = mode;
+        return this;
+    }
+
+
+    private void applyWhereParts() {
+        for (Where w : whereParts) {
+            switch (w.kind()) {
+                case START -> this.start = w.values()[0];
+                case END -> this.end = w.values()[0];
+                case WITHIN -> this.duration = w.values()[0];
+                case RADIUS -> {
+                    this.xcenter = w.values()[0];
+                    this.ycenter = w.values()[1];
+                    this.radius = w.values()[2];
+                }
+                case RECTANGLE -> {
+                    this.xtop = w.values()[0];
+                    this.ytop = w.values()[1];
+                    this.w = w.values()[2];
+                    this.h = w.values()[3];
+                }
+                case ATMOST -> this.atMost = w.values()[0];
+                case ATLEAST -> this.atLeast = w.values()[0];
+            }
+        }
+    }
+
+    public SelectExpr FROM(String ids) throws IOException {
         Set<Path> selected = new HashSet<>();
 
         Set<String> tokens = Arrays.stream(ids.split(","))
@@ -133,8 +178,8 @@ public final class Sequence {
     /**
      * Expands ORs into concrete sequences
      */
-    public List<Sequence> expand() {
-        List<Sequence> out = new ArrayList<>();
+    public List<SelectExpr> expand() {
+        List<SelectExpr> out = new ArrayList<>();
         expandRec(0, new ArrayList<>(), out);
         if (out.size() > MAX_EXPANSIONS) {
             throw new IllegalStateException("Too many OR combinations: " + out.size());
@@ -142,9 +187,9 @@ public final class Sequence {
         return out;
     }
 
-    private void expandRec(int idx, List<Event> cur, List<Sequence> out) {
+    private void expandRec(int idx, List<Event> cur, List<SelectExpr> out) {
         if (idx == steps.size()) {
-            Sequence s = new Sequence(name, cur.toArray(new Event[0]));
+            SelectExpr s = new SelectExpr(cur.toArray(new Event[0]));
             copyMetaTo(s);
             out.add(s);
             return;
@@ -165,7 +210,7 @@ public final class Sequence {
         }
     }
 
-    private void copyMetaTo(Sequence s) {
+    private void copyMetaTo(SelectExpr s) {
         s.duration = this.duration;
         s.start = this.start;
         s.end = this.end;
@@ -181,44 +226,26 @@ public final class Sequence {
 
 
     public void search() {
-        if (matches.isEmpty()) {
-            throw new IllegalStateException("No matches specified for sequence: " + name);
-        }
         Query query = new Query();
-        for (Sequence s : expand()) {
-            List<String> toPrint = query.apply(s);
-            for (String str : toPrint) {
-                System.out.println(str);
-            }
-        }
-    }
-
-    public void count() {
-        if (matches.isEmpty()) {
-            throw new IllegalStateException("No matches specified for sequence: " + name);
-        }
-        Query query = new Query();
-        int count = 0;
-        for (Sequence seq : expand()) {
-            List<String> toPrint = query.apply(seq);
-            for (String s : toPrint) {
-                System.out.println(s);
-                if (s.equals("\n")) {
-                    count++;
+        if (!matches.isEmpty()) {
+            for (SelectExpr s : expand()) {
+                List<String> toPrint = query.apply(s);
+                for (String str : toPrint) {
+                    System.out.println(str);
                 }
             }
+        } else {
+            throw new IllegalStateException("No matches specified for sequence");
         }
-        System.out.println("\n=========================");
-        System.out.println("Total number of solutions is: " + count);
     }
 
     public void atMost(int maxCount) {
         if (matches.isEmpty()) {
-            throw new IllegalStateException("No matches specified for sequence: " + name);
+            throw new IllegalStateException("No matches specified for sequence");
         }
         Query query = new Query();
         int count = 0;
-        for (Sequence seq : expand()) {
+        for (SelectExpr seq : expand()) {
             List<String> toPrint = query.apply(seq);
             for (String s : toPrint) {
                 System.out.println(s);
@@ -237,11 +264,11 @@ public final class Sequence {
 
     public void atLeast(int minCount) {
         if (matches.isEmpty()) {
-            throw new IllegalStateException("No matches specified for sequence: " + name);
+            throw new IllegalStateException("No matches specified for sequence");
         }
         Query query = new Query();
         int count = 0;
-        for (Sequence seq : expand()) {
+        for (SelectExpr seq : expand()) {
             List<String> toPrint = query.apply(seq);
             for (String s : toPrint) {
                 System.out.println(s);
