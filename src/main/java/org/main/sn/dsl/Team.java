@@ -1,24 +1,23 @@
 package org.main.sn.dsl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public final class Team extends Entity {
 
     private final String name;
-    public final List<Integer> players = new ArrayList<>();
+    public final List<Player> players = new ArrayList<>();
 
-    public Team(String name, int... ids) {
+    public Team(String name, Player... members) {
         super(name);
         if (name == null) throw new IllegalArgumentException("name must not be null");
         this.name = name;
-        for (int id : ids) {
-            players.add(id);
-        }
+        this.players.addAll(Arrays.asList(members));
     }
 
     public Team (String name) {
-        this(name, new int[]{});
+        this(name, new Player[]{});
     }
 
 
@@ -26,12 +25,10 @@ public final class Team extends Entity {
         return name;
     }
 
+    public List<Player> players() {return players;}
+
     public TeamEvent ISINZONES(int... z) {
         return TeamEvent.isInZones(this, z);
-    }
-
-    public TeamEvent isInFormation(Formation f){
-        return TeamEvent.isInFormation(this, f);
     }
 
     @Override

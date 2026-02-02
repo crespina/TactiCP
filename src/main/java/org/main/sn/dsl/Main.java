@@ -8,6 +8,15 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
 
+        //ZONE DE TEST
+
+        SelectExpr testSelect = SELECT(NOT(POSITION(TEAM("p1", 19),1))).FROM("SNGS-060");
+        testSelect.search();
+
+        SelectExpr s = SELECT(PLAYER("p2").PASSTO(PLAYER("p3")).MINRANGE()).FROM("SNGS-060");
+
+
+
         // Test passTo
         // -----------
 
@@ -17,7 +26,7 @@ public class Main {
 
         Event e1 = p1.PASSTO(p2).WITHIN(150);
         SelectExpr s1 = SELECT(e1).FROM("SNGS-060, SNGS-061"); //toutes les passes
-        s1.search();
+        //s1.search();
 
         System.out.println("-------------------");
 
@@ -38,7 +47,7 @@ public class Main {
 
         Ball b = BALL();
         SelectExpr s4 = SELECT(b.MOVETO(4, 6), b.MOVETO(14, 9)).FROM("SNGS-061"); //ball move from zone to zone
-        s4.search();
+        //s4.search();
 
         System.out.println("-------------------");
 
@@ -54,12 +63,12 @@ public class Main {
         Player p7 = PLAYER("p7", 7);
         Player p13 = PLAYER("p13", 13);
 
-        SelectExpr s6 = SELECT(p7.HASBALL()).FROM("SNGS-060"); //p7 has ball for 5 frames
+        SelectExpr s6 = SELECT(POSSESSION(p7)).FROM("SNGS-060"); //p7 has ball for 5 frames
         //s6.search();
 
         System.out.println("-------------------");
 
-        Event e3 = p13.HASBALL().RECTANGLE(-31, 39, 31, 20); //p13 has ball in the midfield
+        Event e3 = POSSESSION(p13).RECTANGLE(-31, 39, 31, 20); //p13 has ball in the midfield
         SelectExpr s7 = SELECT(e3).FROM("SNGS-061"); // no result because the possession is not ONLY in the midfield
         //s7.search();
 
@@ -123,5 +132,6 @@ public class Main {
         //test possession
 
         SelectExpr s16 = SELECT(NOT(POSSESSION(p2))).FROM("SNGS-060");
+
     }
 }

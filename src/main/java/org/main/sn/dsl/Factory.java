@@ -78,8 +78,16 @@ public class Factory {
         return new Team(name);
     }
 
+    public static Team TEAM(String name, Player... pls) {
+        return new Team(name, pls);
+    }
+
     public static Team TEAM(String name, int... ids) {
-        return new Team(name, ids);
+        Player[] pls = new Player[ids.length];
+        for (int i = 0; i < ids.length; i++) {
+            pls[i] = PLAYER("Player" + ids[i], ids[i]);
+        }
+        return new Team(name, pls);
     }
 
 //    public static Formation formation(int... lines) {
@@ -114,18 +122,28 @@ public class Factory {
     public static Event POSSESSION(Entity entity) {
         if (entity instanceof Player p) {
             return new PlayerEvent(new Action("POSSESSION"), p);
+        } else if (entity instanceof Team t){
+            return new TeamEvent(new Action("POSSESSION"), t);
         } else {
             throw new IllegalArgumentException("Invalid entity type: " + entity);
         }
     }
 
-    public static Event POSITION(Entity entity, int zone) {
+    public static Event POSITION(Entity entity, int... zones) {
         if (entity instanceof Player p) {
-            return new PlayerEvent(new Action("POSSESSION"), p);
+            return new PlayerEvent(new Action("POSITION", zones), p);
         } else if (entity instanceof Team t){
-            return new TeamEvent(new Action("POSSESSION", zone), t);
-        } else if (entity instanceof Ball b){
-            return new BallEvent(new Action("POSITION", zone));
+            return new TeamEvent(new Action("POSITION", java.util.stream.IntStream.concat(java.util.Arrays.stream(zones), java.util.stream.IntStream.of(1)).toArray()), t);
+        } else if (entity instanceof Ball){
+            return new BallEvent(new Action("POSITION", zones));
+        } else {
+            throw new IllegalArgumentException("Invalid entity type: " + entity);
+        }
+    }
+
+    public static Event POSITION(Entity entity, int zone, int k) {
+        if (entity instanceof Team t){
+            return new TeamEvent(new Action("POSITION", new int[] {zone, k}), t);
         } else {
             throw new IllegalArgumentException("Invalid entity type: " + entity);
         }
