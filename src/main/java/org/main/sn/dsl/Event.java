@@ -14,6 +14,7 @@ public abstract class Event {
     public int xcenter = -1;
     public int ycenter = -1;
     public boolean isNegated = false;
+    public boolean isMinrange = false;
 
     public Event(Action action, Entity subject) {
         this.action = action;
@@ -49,6 +50,11 @@ public abstract class Event {
             throw new IllegalArgumentException("Duration must be a non-negative value.");
         }
         this.duration = amount; //in frame
+        return this;
+    }
+
+    public Event MINRANGE() {
+        this.isMinrange = true;
         return this;
     }
 

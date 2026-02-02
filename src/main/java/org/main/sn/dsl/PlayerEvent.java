@@ -10,10 +10,6 @@ public final class PlayerEvent extends Event {
         return new PlayerEvent(new Action("PASS_TO", to), from);
     }
 
-    public static PlayerEvent hasBall(Player p) {
-        return new PlayerEvent(new Action("HAS_BALL"), p);
-    }
-
     public static PlayerEvent moveTo(Player p, int zone) {
         return new PlayerEvent(new Action("MOVE_TO", zone), p);
     }

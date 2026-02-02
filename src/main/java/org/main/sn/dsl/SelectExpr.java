@@ -27,7 +27,6 @@ public final class SelectExpr {
     public int ytop = -1;
     public int w = -1;
     public int h = -1;
-    public boolean minrange = false;
     private final List<Where> whereParts = new ArrayList<>();
     public int atMost = -1;
     public int atLeast = -1;
@@ -82,11 +81,6 @@ public final class SelectExpr {
         this.ytop = ytop;
         this.w = w;
         this.h = h;
-        return this;
-    }
-
-    public SelectExpr MINRANGE(){
-        this.minrange = true;
         return this;
     }
 
@@ -173,66 +167,13 @@ public final class SelectExpr {
         throw new IllegalArgumentException("Unknown SNGS folder: " + name);
     }
 
-    private static final int MAX_EXPANSIONS = 20;
-
-    /**
-     * Expands ORs into concrete sequences
-     */
-    public List<SelectExpr> expand() {
-        List<SelectExpr> out = new ArrayList<>();
-        expandRec(0, new ArrayList<>(), out);
-        if (out.size() > MAX_EXPANSIONS) {
-            throw new IllegalStateException("Too many OR combinations: " + out.size());
-        }
-        return out;
-    }
-
-    private void expandRec(int idx, List<Event> cur, List<SelectExpr> out) {
-        if (idx == steps.size()) {
-            SelectExpr s = new SelectExpr(cur.toArray(new Event[0]));
-            copyMetaTo(s);
-            out.add(s);
-            return;
-        }
-
-        Event e = steps.get(idx);
-
-        if (e instanceof OrEvent or) {
-            for (Event alt : or.alternatives()) {
-                cur.add(alt);
-                expandRec(idx + 1, cur, out);
-                cur.removeLast();
-            }
-        } else {
-            cur.add(e);
-            expandRec(idx + 1, cur, out);
-            cur.removeLast();
-        }
-    }
-
-    private void copyMetaTo(SelectExpr s) {
-        s.duration = this.duration;
-        s.start = this.start;
-        s.end = this.end;
-        s.xcenter = this.xcenter;
-        s.ycenter = this.ycenter;
-        s.radius = this.radius;
-        s.xtop = this.xtop;
-        s.ytop = this.ytop;
-        s.w = this.w;
-        s.h = this.h;
-        s.matches.addAll(this.matches);
-    }
-
 
     public void search() {
         Query query = new Query();
         if (!matches.isEmpty()) {
-            for (SelectExpr s : expand()) {
-                List<String> toPrint = query.apply(s);
-                for (String str : toPrint) {
-                    System.out.println(str);
-                }
+            List<String> toPrint = query.apply(this);
+            for (String str : toPrint) {
+                System.out.println(str);
             }
         } else {
             throw new IllegalStateException("No matches specified for sequence");
@@ -245,13 +186,11 @@ public final class SelectExpr {
         }
         Query query = new Query();
         int count = 0;
-        for (SelectExpr seq : expand()) {
-            List<String> toPrint = query.apply(seq);
-            for (String s : toPrint) {
-                System.out.println(s);
-                if (s.equals("\n")) {
-                    count++;
-                }
+        List<String> toPrint = query.apply(this);
+        for (String s : toPrint) {
+            System.out.println(s);
+            if (s.equals("\n")) {
+                count++;
             }
         }
         System.out.println("\n=========================");
@@ -268,13 +207,11 @@ public final class SelectExpr {
         }
         Query query = new Query();
         int count = 0;
-        for (SelectExpr seq : expand()) {
-            List<String> toPrint = query.apply(seq);
-            for (String s : toPrint) {
-                System.out.println(s);
-                if (s.equals("\n")) {
-                    count++;
-                }
+        List<String> toPrint = query.apply(this);
+        for (String s : toPrint) {
+            System.out.println(s);
+            if (s.equals("\n")) {
+                count++;
             }
         }
         System.out.println("\n=========================");

@@ -4,20 +4,25 @@ import java.util.Arrays;
 import java.util.List;
 
 public class OrEvent extends Event {
-    private final List<Event> alts;
+    private final List<Event> children;
 
     public OrEvent(Event... events) {
         super(null,null);
-        this.alts = Arrays.asList(events);
+        this.children = Arrays.asList(events);
+        if (this.isNegated){
+            for (Event e : children) {
+                e.isNegated = !e.isNegated;
+            }
+        }
     }
 
-    public List<Event> alternatives() {
-        return alts;
+    public List<Event> children() {
+        return children;
     }
 
     @Override
     public String toString() {
-        return "OR" + alts;
+        return "OR" + children;
     }
 }
 

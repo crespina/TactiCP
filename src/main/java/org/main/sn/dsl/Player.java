@@ -74,10 +74,6 @@ public final class Player extends Entity {
         return PlayerEvent.pass(this, target);
     }
 
-    public PlayerEvent HASBALL() {
-        return PlayerEvent.hasBall(this);
-    }
-
     public PlayerEvent MOVETO(int z) {
         return PlayerEvent.moveTo(this, z);
     }
