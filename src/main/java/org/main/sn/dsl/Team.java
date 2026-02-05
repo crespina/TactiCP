@@ -27,8 +27,8 @@ public final class Team extends Entity {
 
     public List<Player> players() {return players;}
 
-    public TeamEvent ISINZONES(int... z) {
-        return TeamEvent.isInZones(this, z);
+    public TeamEvent MOVETO(int startZone, int endZone) {
+        return TeamEvent.moveTo(this, startZone, endZone);
     }
 
     @Override

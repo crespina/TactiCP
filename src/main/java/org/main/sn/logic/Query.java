@@ -80,8 +80,8 @@ public class Query {
                 }
 
                 for (Event event : steps) {
-                    CPIntVar frame_start = CPFactory.makeIntVar(cp, n + 1);
-                    CPIntVar frame_end = CPFactory.makeIntVar(cp, n + 1);
+                    CPIntVar frame_start = CPFactory.makeIntVar(cp, 1,n + 1);
+                    CPIntVar frame_end = CPFactory.makeIntVar(cp, 1,n + 1);
 
                     modelEvent(event, cp, counterEvent, frame_start, frame_end, ball_idx, n, positionZones, positionBox_x,
                             positionBox_y, total_circle, extVars, total_rectangle, counterVars, instance, teams,
@@ -116,11 +116,6 @@ public class Query {
             CPIntVar[] selectedFrames = extVars.stream().map(ev -> ev.var).toArray(CPIntVar[]::new);
 
             DFSearch search = makeDfs(cp, Searches.firstFail(selectedFrames));
-            if (searchMode == 0){
-                search.solve();
-            } else {
-                search.solve(statistics -> statistics.numberOfSolutions() == searchMode);
-            }
 
             AtomicInteger solutionCounter = new AtomicInteger(0);
 
@@ -136,18 +131,23 @@ public class Query {
                         int frame_start = ev.var.min();
                         int frame_end = extVars.get(i.incrementAndGet()).var.min();
                         toPrint.add(" THE NEXT " + ev.subSz + " EVENTS ARE PART OF THE \"AND\" | frames: " + frame_start + " to " + frame_end);
-
+                        i.incrementAndGet();
                     } else if (ev.type.equals("OR_interval_start")) {
                         int frame_start = ev.var.min();
                         int frame_end = extVars.get(i.incrementAndGet()).var.min();
                         toPrint.add(" THE NEXT " + ev.subSz + " EVENTS ARE PART OF THE \"OR\" | frames: " + frame_start + " to " + frame_end);
-
+                        i.incrementAndGet();
                     } else {
                         onSolution(extVars, toPrint, i);
                     }
                     toPrint.add("\n");
                 }
             });
+            if (searchMode == 0){
+                search.solve();
+            } else {
+                search.solve(statistics -> statistics.numberOfSolutions() == searchMode);
+            }
             //SearchStatistics stats = search.solve();
             //System.out.format("#Solutions: %s\n", stats.numberOfSolutions());
             //System.out.format("Statistics: %s\n", stats);
@@ -234,14 +234,14 @@ public class Query {
 
             int childrenIdx = 0;
             for (Event children : orEvent.children()) {
-                CPIntVar childFrameStart = CPFactory.makeIntVar(cp, n + 1);
-                CPIntVar childFrameEnd = CPFactory.makeIntVar(cp, n + 1);
+                CPIntVar childFrameStart = CPFactory.makeIntVar(cp, 1,n + 1);
+                CPIntVar childFrameEnd = CPFactory.makeIntVar(cp, 1,n + 1);
                 childrenStarts[childrenIdx] = childFrameStart;
                 childrenEnds[childrenIdx] = childFrameEnd;
                 childrenIdx++;
 
-                cp.post(ge(childFrameStart, frame_start));
-                cp.post(le(childFrameEnd, frame_end));
+                //cp.post(ge(childFrameStart, frame_start));
+                //cp.post(le(childFrameEnd, frame_end));
 
                 executeStep(children, cp, counterEvent, childFrameStart, childFrameEnd, ball_idx, n,
                         positionZones, positionBox_x, positionBox_y, total_circle, extVars, total_rectangle,
@@ -250,9 +250,13 @@ public class Query {
             }
 
             //define the interval of the OR event
-            cp.post(eq(frame_start, minimum(childrenStarts)));
-            cp.post(eq(frame_end, max(childrenEnds)));
-
+            if (orEvent.isNegated) {
+                cp.post(eq(frame_start, max(childrenStarts)));
+                cp.post(eq(frame_end, minimum(childrenEnds)));
+            } else {
+                cp.post(eq(frame_start, minimum(childrenStarts)));
+                cp.post(eq(frame_end, max(childrenEnds)));
+            }
         } else {
             executeStep(event, cp, counterEvent, frame_start, frame_end, ball_idx, n,
                     positionZones, positionBox_x, positionBox_y, total_circle, extVars, total_rectangle,
@@ -338,7 +342,7 @@ public class Query {
                     total_xtop, total_ytop, total_w, total_h, frames, subject, instance, teams,
                     IDENTIFIERS, counterVars, action, extVars, isAndEvent);
 
-            case "PLATER_MOVE_TO" ->
+            case "PLAYER_MOVE_TO" ->
                     model_PLAYER_MOVE_TO(cp, counterEvent, isNegated, frame_start, frame_end, event_circle,
                             event_rectangle, total_circle, total_rectangle, event_xcenter, event_ycenter,
                             event_radius, event_xtop, event_ytop, event_w, event_h, total_xcenter,
@@ -964,11 +968,11 @@ public class Query {
             //frame_end of the event before < frame_start of this event
             cp.post(le(frames.get(frames.size() - 3), frame_start));
         }
-
-        Set<Integer> totalPlayerIds = new HashSet<>();
+        Set<Integer> playerIds = new HashSet<>();
 
         if (subject instanceof Player player) {
             int[] zones = (int[]) payload;
+            int[] notZones = findNotZones(zones);
 
             int[][] player_pos = new int[teams.length][n]; // max size is the number of players
 
@@ -990,26 +994,16 @@ public class Query {
             );
             extVars.add(player_id_ext);
 
-            Set<Integer> playerIds = new HashSet<>();
-            Set<Integer> notPlayerIds = new HashSet<>();
-
             if (player.id() != null) {
                 player_pos[player.id()] = positionZones[player.id()];
                 cp.post(eq(player_id, player.id())); //should be useless
                 playerIds.add(player.id());
-                for (int i = 0; i < teams.length; i++) {
-                    if (i != player.id()) {
-                        notPlayerIds.add(i);
-                    }
-                }
             } else if (player.team() != null) {
                 int team = player.team().equals("left") ? 0 : 1;
                 for (int i = 0; i < teams.length; i++) {
                     if (teams[i] == team) {
                         playerIds.add(i);
                         player_pos[i] = positionZones[i];
-                    } else {
-                        notPlayerIds.add(i);
                     }
                 }
             } else {
@@ -1019,36 +1013,44 @@ public class Query {
                     if (teams[i] == 0 || teams[i] == 1) {
                         playerIds.add(i);
                         player_pos[i] = positionZones[i];
-                    } else {
-                        notPlayerIds.add(i);
                     }
                 }
             }
             //intervals in ppos such that zone_start and zone_end are at position 0 and position -1, but in between, it's only different zones.
             HashMap<Integer, List<Mat.Tuple2<Integer>>> intervals = new HashMap<>(); //playerId -> (last_frame_start_zone, first_frame_end_zone), ...
 
-            findZoneInterval(isNegated, n, playerIds, player_pos, zones, intervals);
-
             if (isNegated) {
-                cp.post(constraintCorrectInterval(frame_start, frame_end, intervals, notPlayerIds, player_id));
-                totalPlayerIds.addAll(notPlayerIds);
-            } else {
+                findZoneInterval(true, n, playerIds, player_pos, notZones, intervals);
                 cp.post(constraintCorrectInterval(frame_start, frame_end, intervals, playerIds, player_id));
-                totalPlayerIds.addAll(playerIds);
+            } else {
+                findZoneInterval(false, n, playerIds, player_pos, zones, intervals);
+                cp.post(constraintCorrectInterval(frame_start, frame_end, intervals, playerIds, player_id));
             }
 
         } else if (subject instanceof Team team) {
             int[] zonesAndK = (int[]) payload;
             int[] zones = Arrays.copyOf(zonesAndK, zonesAndK.length - 1);
+            int[] notZones = findNotZones(zones);
             int k = zonesAndK[zonesAndK.length-1];
             int[][] player_pos = new int[teams.length][n]; // max size is the number of players
 
-            CPBoolVar[] playerInZones = makeBoolVarArray(cp, team.players().size());
+            CPBoolVar[] playerInZones = new CPBoolVar[team.players().size()];
+            CPIntVar[] framesStartPerPlayer = new CPIntVar[team.players().size()];
+            CPIntVar[] framesEndPerPlayer = new CPIntVar[team.players().size()];
             int count = 0;
 
             for (Player player : team.players()){
 
                 CPIntVar player_id;
+                CPIntVar thisPlayerFrameStart = makeIntVar(cp, n + 1);
+                CPIntVar thisPlayerFrameEnd = makeIntVar(cp, n + 1);
+                //cp.post(ge(thisPlayerFrameStart, frame_start));
+                //cp.post(le(thisPlayerFrameStart, frame_end));
+                //cp.post(ge(thisPlayerFrameEnd, frame_start));
+                //cp.post(le(thisPlayerFrameEnd, frame_end));
+                cp.post(le(thisPlayerFrameStart, thisPlayerFrameEnd));
+                framesStartPerPlayer[count] = thisPlayerFrameStart;
+                framesEndPerPlayer[count] = thisPlayerFrameEnd;
 
                 if (IDENTIFIERS.get(player.name()) == null) {
                     player_id = makeIntVar(cp, teams.length);
@@ -1066,85 +1068,116 @@ public class Query {
                 );
                 extVars.add(player_id_ext);
 
-                Set<Integer> playerIds = new HashSet<>();
-                Set<Integer> notPlayerIds = new HashSet<>();
+                Set<Integer> playerId = new HashSet<>();
 
                 if (player.id() != null) {
                     player_pos[player.id()] = positionZones[player.id()];
                     cp.post(eq(player_id, player.id())); //should be useless
                     playerIds.add(player.id());
-                    for (int i = 0; i < teams.length; i++) {
-                        if (i != player.id()) {
-                            notPlayerIds.add(i);
-                        }
-                    }
+                    playerId.add(player.id());
                 }
                 else if (player.team() != null) {
                     int t = player.team().equals("left") ? 0 : 1;
                     for (int i = 0; i < teams.length; i++) {
                         if (teams[i] == t) {
                             playerIds.add(i);
+                            playerId.add(i);
                             player_pos[i] = positionZones[i];
-                        } else {
-                            notPlayerIds.add(i);
                         }
                     }
                 } else {
                     //all players
-                    //System.arraycopy(positionZones, 0, player_pos, 0, teams.length);
                     for (int i = 0; i < positionZones.length; i++) {
                         if (teams[i] == 0 || teams[i] == 1) {
                             playerIds.add(i);
+                            playerId.add(i);
                             player_pos[i] = positionZones[i];
-                        } else {
-                            notPlayerIds.add(i);
                         }
                     }
                 }
                 //intervals in ppos such that zone_start and zone_end are at position 0 and position -1, but in between, it's only different zones.
                 HashMap<Integer, List<Mat.Tuple2<Integer>>> intervals = new HashMap<>(); //playerId -> (last_frame_start_zone, first_frame_end_zone), ...
 
-                findZoneInterval(isNegated, n, playerIds, player_pos, zones, intervals);
-
                 if (isNegated) {
-                    playerInZones[count] = constraintCorrectInterval(frame_start, frame_end, intervals, notPlayerIds, player_id);
-                    count++;
-                    totalPlayerIds.addAll(notPlayerIds);
+                    findZoneInterval(true, n, playerId, player_pos, notZones, intervals);
+                    playerInZones[count] = constraintCorrectInterval(thisPlayerFrameStart, thisPlayerFrameEnd, intervals, playerId, player_id);
                 } else {
-                    playerInZones[count] = constraintCorrectInterval(frame_start, frame_end, intervals, playerIds, player_id);
-                    count++;
-                    totalPlayerIds.addAll(playerIds);
+                    findZoneInterval(false, n, playerId, player_pos, zones, intervals);
+                    playerInZones[count] = constraintCorrectInterval(thisPlayerFrameStart, thisPlayerFrameEnd, intervals, playerId, player_id);
                 }
+                count++;
             }
-            cp.post(eq(sum(playerInZones),k));
+
+            CPBoolVar[] selected = makeBoolVarArray(cp, team.players().size());
+
+            for (int i = 0; i < team.players().size(); i++) {
+                cp.post(or(not(selected[i]), playerInZones[i]));
+                cp.post(or(not(selected[i]), isGe(frame_start, framesStartPerPlayer[i])));
+                cp.post(or(not(selected[i]), isLe(frame_end, framesEndPerPlayer[i])));
+            }
+            cp.post(ge(sum(selected), k));
+
+            //maximality constraints
+            CPBoolVar[] coverStart = new CPBoolVar[team.players().size()];
+            CPBoolVar[] coverEnd = new CPBoolVar[team.players().size()];
+            CPBoolVar[] canExtendLeft = new CPBoolVar[team.players().size()];
+            CPBoolVar[] canExtendRight = new CPBoolVar[team.players().size()];
+
+            for (int i = 0; i < team.players().size(); i++) {
+                // coverStart[i] <=> framesStartPerPlayer[i] <= frame_start <= framesEndPerPlayer[i]
+                CPBoolVar startGe = isGe(frame_start, framesStartPerPlayer[i]);
+                CPBoolVar startLe = isLe(frame_start, framesEndPerPlayer[i]);
+                coverStart[i] = isEq(sum(startGe, startLe), 2);
+
+                // coverEnd[i] <=> framesStartPerPlayer[i] <= frame_end <= framesEndPerPlayer[i]
+                CPBoolVar endGe = isGe(frame_end, framesStartPerPlayer[i]);
+                CPBoolVar endLe = isLe(frame_end, framesEndPerPlayer[i]);
+                coverEnd[i] = isEq(sum(endGe, endLe), 2);
+
+                // canExtendLeft[i] <=> framesStartPerPlayer[i] <= frame_start-1  AND  frame_start-1 <= framesEndPerPlayer[i]
+                CPIntVar startMinus1 = minus(frame_start, 1);
+                CPBoolVar leftGe = isGe(startMinus1, framesStartPerPlayer[i]);
+                CPBoolVar leftLe = isLe(startMinus1, framesEndPerPlayer[i]);
+                canExtendLeft[i] = isEq(sum(leftGe, leftLe), 2);
+
+                // canExtendRight[i] <=> interval covers frame_end+1
+                CPIntVar endPlus1 = plus(frame_end, 1);
+                CPBoolVar rightGe = isGe(endPlus1, framesStartPerPlayer[i]);
+                CPBoolVar rightLe = isLe(endPlus1, framesEndPerPlayer[i]);
+                canExtendRight[i] = isEq(sum(rightGe, rightLe), 2);
+            }
+            cp.post(ge(sum(coverStart), k));
+            cp.post(ge(sum(coverEnd), k));
+
+            CPBoolVar startGt1 = isGe(frame_start, 2);     // frame_start >= 2  <=> frame_start > 1
+            CPBoolVar endLtN = isLe(frame_end, n - 1);     // frame_end <= n-1  <=> frame_end < n
+
+            cp.post(isOr(not(startGt1), isLe(sum(canExtendLeft), k - 1)));
+            cp.post(isOr(not(endLtN), isLe(sum(canExtendRight), k - 1)));
+
+
 
         } else { //ball
             int[] zones = (int[]) payload;
+            int[] notZones = findNotZones(zones);
 
             int[][] ball_pos = new int[teams.length][n]; // max size is the number of players
 
-            Set<Integer> BallId = new HashSet<>();
-            Set<Integer> NotBallId = new HashSet<>();
-
             for (int i = 0; i < positionZones.length; i++) {
                 if (i == ball_idx) {
-                    BallId.add(i);
+                    playerIds.add(i);
                     ball_pos[i] = positionZones[i];
-                } else {
-                    NotBallId.add(i);
                 }
             }
             //intervals in ppos such that zone_start and zone_end are at position 0 and position -1, but in between, it's only different zones.
             HashMap<Integer, List<Mat.Tuple2<Integer>>> intervals = new HashMap<>(); //playerId -> (last_frame_start_zone, first_frame_end_zone), ...
 
-            findZoneInterval(isNegated, n, BallId, ball_pos, zones, intervals);
-
             if (isNegated) {
-                cp.post(constraintCorrectInterval(frame_start, frame_end, intervals, NotBallId));
-                totalPlayerIds.addAll(NotBallId);
+                findZoneInterval(true, n, playerIds, ball_pos, notZones, intervals);
+                cp.post(constraintCorrectInterval(frame_start, frame_end, intervals, playerIds));
             } else {
-                cp.post(constraintCorrectInterval(frame_start, frame_end, intervals, BallId));
-                totalPlayerIds.addAll(BallId);
+                findZoneInterval(false, n, playerIds, ball_pos, zones, intervals);
+                cp.post(constraintCorrectInterval(frame_start, frame_end, intervals, playerIds));
             }
         }
 
@@ -1160,7 +1193,7 @@ public class Query {
 
                 for (double[] circle : circles) {
                     CPBoolVar[] inside_circle = makeBoolVarArray(cp, n);
-                    for (int playerId : totalPlayerIds) {
+                    for (int playerId : playerIds) {
                         for (int f = 0; f < n; f++) {
                             int dist_x = (int) Math.pow(positionBox_x[playerId][f] - circle[1], 2);
                             int dist_y = (int) Math.pow(positionBox_y[playerId][f] - circle[2], 2);
@@ -1178,7 +1211,7 @@ public class Query {
 
                 for (double[] rect : rectangles) {
                     CPBoolVar[] inside_rectangle = makeBoolVarArray(cp, n);
-                    for (int playerId : totalPlayerIds) {
+                    for (int playerId : playerIds) {
                         for (int f = 0; f < n; f++) {
                             double dist_x = positionBox_x[playerId][f] - rect[0];
                             double dist_y = positionBox_y[playerId][f] - rect[1];
@@ -1235,6 +1268,10 @@ public class Query {
                 for (int f = 0; f < possession.length; f++) {
                     playerHasBall[f] = possession[f] == player.id() ? 1 : 0;
                 }
+                //padding
+                playerHasBall[0] = -1;
+                playerHasBall[1] = -1;
+                playerHasBall[playerHasBall.length-1] = -1;
                 if (isNegated) //the player with the id cannot have the ball
                     cp.post(new NoInBetween(playerHasBall, frame_start, frame_end, 0));
                 else {
@@ -1278,7 +1315,7 @@ public class Query {
 
         } else if (subject instanceof Team team) {
 
-            CPBoolVar[] playerInZones = makeBoolVarArray(cp, team.players().size());
+            CPBoolVar[] playerPossession = makeBoolVarArray(cp, team.players().size());
             int count = 0;
 
             for (Player player : team.players()) {
@@ -1332,15 +1369,24 @@ public class Query {
                         }
                     }
                 }
+                notPlayerIds.add(-1);
                 //intervals in ppos such that zone_start and zone_end are at position 0 and position -1, but in between, it's only different zones.
+
                 if (isNegated) {
-                    playerInZones[count] = constraintCorrectInterval(frame_start, frame_end, possessionIntervalsByPlayer, notPlayerIds, player_id);
+                    //Map<Integer, List<Mat.Tuple2<Integer>>> consecutivePossessionIntervalsByNotPlayer = mergeConsecutiveIntervalsForPlayers(possessionIntervalsByPlayer, notPlayerIds);
+                    playerPossession[count] = constraintCorrectInterval(frame_start, frame_end, possessionIntervalsByPlayer, notPlayerIds);
                 } else {
-                    playerInZones[count] = constraintCorrectInterval(frame_start, frame_end, possessionIntervalsByPlayer, playerIds, player_id);
+                    //Map<Integer, List<Mat.Tuple2<Integer>>> consecutivePossessionIntervalsByPlayer = mergeConsecutiveIntervalsForPlayers(possessionIntervalsByPlayer, playerIds);
+                    playerPossession[count] = constraintCorrectInterval(frame_start, frame_end, possessionIntervalsByPlayer, playerIds, player_id);
                 }
                 count++;
             }
-            cp.post(eq(sum(playerInZones), 1));
+            if (isNegated){
+                cp.post(eq(sum(playerPossession), team.players().size()));
+            } else {
+                cp.post(ge(sum(playerPossession), 1));
+            }
+
         }
 
         // spatial constraints
@@ -1401,12 +1447,19 @@ public class Query {
         } else if (Objects.equals(ev.type, "POSSESSION")) {
             int frame_start = ev.var.min();
             int frame_end = extVars.get(i.incrementAndGet()).var.min();
-            int player_id = extVars.get(i.incrementAndGet()).var.min();
-            toPrint.add("EVENT # " + ev.event_idx + (ev.isNegated ? " DOES NOT HAVE BALL" : " HAS BALL"));
-            toPrint.add(" Player ID " + player_id +
-                    " | frames: " + frame_start + " to " + frame_end);
+            if (extVars.size()>i.get()+1){
+                while (extVars.get(i.get()+1).type.contains("_player_id")) {
+                    int player_id = extVars.get(i.incrementAndGet()).var.min();
+                    toPrint.add("EVENT # " + ev.event_idx + (ev.isNegated ? " DOES NOT HAVE BALL" : " HAS BALL"));
+                    toPrint.add(" Player ID " + player_id +
+                            " | frames: " + frame_start + " to " + frame_end);
+                    if (extVars.size()<=i.get()+1) {
+                        break;
+                    }
+                }
+            }
             i.incrementAndGet();
-        } else if (Objects.equals(ev.type, "MOVE_TO")) {
+        } else if (Objects.equals(ev.type, "PLAYER_MOVE_TO")) {
             int frame_start = ev.var.min();
             int frame_end = extVars.get(i.incrementAndGet()).var.min();
             int player_id = extVars.get(i.incrementAndGet()).var.min();
@@ -1414,23 +1467,36 @@ public class Query {
             toPrint.add(" Player ID " + player_id +
                     " | frames: " + frame_start + " to " + frame_end);
             i.incrementAndGet();
-        } else if (Objects.equals(ev.type, "IS_IN_ZONES")) {
+        } else if (Objects.equals(ev.type, "TEAM_MOVE_TO")) {
             int frame_start = ev.var.min();
             int frame_end = extVars.get(i.incrementAndGet()).var.min();
-            toPrint.add("EVENT # " + ev.event_idx + (ev.isNegated ? " IS NOT IN ZONES" : " IS IN ZONES"));
-            toPrint.add(" TEAM  | frames: " + frame_start + " to " + frame_end);
+            int player_id = extVars.get(i.incrementAndGet()).var.min();
+            toPrint.add("EVENT # " + ev.event_idx + (ev.isNegated ? " DOES NOT MOVE TO" : " MOVES TO"));
+            toPrint.add(" Player ID " + player_id +
+                    " | frames: " + frame_start + " to " + frame_end);
+            i.incrementAndGet();
+        } else if (Objects.equals(ev.type, "BALL_MOVE_TO")) {
+            int frame_start = ev.var.min();
+            int frame_end = extVars.get(i.incrementAndGet()).var.min();
+            int player_id = extVars.get(i.incrementAndGet()).var.min();
+            toPrint.add("EVENT # " + ev.event_idx + (ev.isNegated ? " DOES NOT MOVE TO" : " MOVES TO"));
+            toPrint.add(" Player ID " + player_id +
+                    " | frames: " + frame_start + " to " + frame_end);
             i.incrementAndGet();
         } else if (Objects.equals(ev.type, "POSITION")) {
             int frame_start = ev.var.min();
             int frame_end = extVars.get(i.incrementAndGet()).var.min();
             if (extVars.size()>i.get()+1){
-                if (extVars.get(i.get()+1).type.contains("_player_id")) {
-                    int player_id = extVars.get(i.get()+1).var.min();
+                while (extVars.get(i.get()+1).type.contains("_player_id")) {
+                    int player_id = extVars.get(i.incrementAndGet()).var.min();
                     toPrint.add("EVENT # " + ev.event_idx + (ev.isNegated ? " IS NOT IN ZONE" : " IS IN ZONE"));
                     toPrint.add(" Player ID " + player_id +
                             " | frames: " + frame_start + " to " + frame_end);
-                    i.incrementAndGet();
+                    if (extVars.size()<=i.get()+1) {
+                        break;
+                    }
                 }
+                i.incrementAndGet();
             } else {
                 toPrint.add("EVENT # " + ev.event_idx + (ev.isNegated ? " IS NOT IN ZONE" : " IS IN ZONE"));
                 toPrint.add(" TEAM  | frames: " + frame_start + " to " + frame_end);
@@ -1483,12 +1549,12 @@ public class Query {
                 // Look for a starting point (in zone_start)
                 if (ppos[f] == zone_start) {
                     int start_frame = f;
-
+                    while (f < n && ppos[f] == zone_start) {
+                        f++;
+                    }
                     // Move past all consecutive zone_start frames
                     if (minrange) {
-                        while (f < n && ppos[f] == zone_start) {
-                            f++;
-                        }
+                        start_frame = f;
                     }
                     // Now look for zone_end, ensuring we don't encounter zone_start again
                     boolean foundEnd = false;
@@ -1497,7 +1563,7 @@ public class Query {
                             break; // Invalid interval - we returned to start zone
                         }
                         if (ppos[f] == zone_end) {
-                            if (minrange) {
+                            if (!minrange) {
                                 // Move past all consecutive zone_end frames
                                 while (f < n && ppos[f] == zone_end) {
                                     f++;
@@ -1550,6 +1616,92 @@ public class Query {
         if (intervals.isEmpty() && !isNegated) {
             throw new InconsistencyException();
         }
+    }
+
+    public static int[] findNotZones(int[] zones) {
+        // Domain: -1, 1..14 (15 values total)
+        // Index mapping: idx = z + 1  =>  -1->0, 1->2, ..., 14->15
+        boolean[] present = new boolean[16]; // indices 0..15
+
+        for (int z : zones) {
+            if (z == -1) {
+                present[0] = true;
+            } else if (z >= 1 && z <= 14) {
+                present[z + 1] = true;
+            }
+        }
+
+        int count = 0;
+        if (!present[0]) count++; // -1 missing
+        for (int z = 1; z <= 14; z++) {
+            if (!present[z + 1]) count++;
+        }
+
+        int[] notZones = new int[count];
+        int i = 0;
+
+        if (!present[0]) notZones[i++] = -1;
+        for (int z = 1; z <= 14; z++) {
+            if (!present[z + 1]) notZones[i++] = z;
+        }
+
+        return notZones;
+    }
+
+    private static Map<Integer, List<Mat.Tuple2<Integer>>> mergeConsecutiveIntervalsForPlayers(
+            Map<Integer, List<Mat.Tuple2<Integer>>> intervalsByPlayer,
+            Set<Integer> players
+    ) {
+        if (intervalsByPlayer == null || players == null || players.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<int[]> all = new ArrayList<>();
+
+        for (int pid : players) {
+            List<Mat.Tuple2<Integer>> list = intervalsByPlayer.get(pid);
+            if (list == null) continue;
+
+            for (Mat.Tuple2<Integer> it : list) {
+                if (it == null || it.get_0() == null || it.get_1() == null) continue;
+                int s = it.get_0();
+                int e = it.get_1();
+                if (s > e) continue; // skip invalid
+                all.add(new int[]{s, e});
+            }
+        }
+
+        if (all.isEmpty()) {
+            // Keep it compatible with later functions that expect a key existing in the map.
+            Integer key = players.iterator().next();
+            return Map.of(key, List.of());
+        }
+
+        all.sort(Comparator.<int[]>comparingInt(a -> a[0]).thenComparingInt(a -> a[1]));
+
+        List<Mat.Tuple2<Integer>> merged = new ArrayList<>();
+        int curS = all.get(0)[0];
+        int curE = all.get(0)[1];
+
+        for (int i = 1; i < all.size(); i++) {
+            int s = all.get(i)[0];
+            int e = all.get(i)[1];
+
+            // overlap or consecutive
+            if (s <= curE + 1) {
+                curE = Math.max(curE, e);
+            } else {
+                merged.add(new Mat.Tuple2<>(curS, curE));
+                curS = s;
+                curE = e;
+            }
+        }
+        merged.add(new Mat.Tuple2<>(curS, curE));
+
+        Integer key = players.iterator().next(); // any key from the provided set is acceptable
+        Map<Integer, List<Mat.Tuple2<Integer>>> out = new HashMap<>();
+        out.put(key, merged);
+        return out;
     }
 
     public static class ExtendedCPVar {

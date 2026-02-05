@@ -97,6 +97,15 @@ public abstract class Event {
 
     public Event not() {
         this.isNegated = true;
+        if (this instanceof OrEvent orEvent) {
+            for (Event e : orEvent.children()) {
+                e.isNegated = !e.isNegated;
+            }
+        } else if (this instanceof AndEvent andEvent) {
+            for (Event e : andEvent.children()) {
+                e.isNegated = !e.isNegated;
+            }
+        }
         return this;
     }
 
