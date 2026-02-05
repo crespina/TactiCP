@@ -235,13 +235,15 @@ public class Possession implements ConstraintPattern {
         for (int pid : playerIds) {
             intervalsByPlayer.put(pid, new ArrayList<>());
         }
+        intervalsByPlayer.put(-1, new ArrayList<>());
 
         Integer currentPlayer = null; // tracked player currently holding the ball
         int currentStart = -1;
 
         for (int f = 0; f < possession.length; f++) {
             int holder = possession[f];
-            Integer trackedHolder = playerIds.contains(holder) ? holder : null;
+            //Integer trackedHolder = playerIds.contains(holder) ? holder : null;
+            Integer trackedHolder = holder;
 
             if (currentPlayer == null) {
                 // No open interval: start one if a tracked player holds now

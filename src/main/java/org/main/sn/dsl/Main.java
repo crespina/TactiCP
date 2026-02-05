@@ -1,6 +1,7 @@
 package org.main.sn.dsl;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import static org.main.sn.dsl.Factory.*;
 
@@ -10,8 +11,11 @@ public class Main {
 
         //ZONE DE TEST
 
-        SelectExpr testSelect = SELECT(NOT(POSITION(TEAM("p1", 19),1))).FROM("SNGS-060");
-        testSelect.search();
+        SelectExpr moveto = SELECT((POSITION(PLAYER("p1",2),4)).MINRANGE(), POSITION(PLAYER("p1",2),10).MINRANGE()).FROM("SNGS-060");
+         moveto.search();
+
+        SelectExpr movetoreel = SELECT(PLAYER("p1",2).MOVETO(4,10).MINRANGE()).FROM("SNGS-060");
+        movetoreel.search();
 
         SelectExpr s = SELECT(PLAYER("p2").PASSTO(PLAYER("p3")).MINRANGE()).FROM("SNGS-060");
 
@@ -84,24 +88,8 @@ public class Main {
         System.out.println("-------------------");
 
 
-        //test isInZones
-        //--------------
-
-        Team t1 = TEAM("t1", 5, 11, 16, 14);
-        SelectExpr s9 = SELECT(t1.ISINZONES(4, 6)).FROM("SNGS-061");
-        //s9.search();
-
-        System.out.println("-------------------");
-
-        Team t2 = TEAM("t2", 7, 15, 18, 9, 8, 17);
-        SelectExpr s10 = SELECT(t2.ISINZONES(4, 11).WHERE(START(21))).FROM("SNGS-061");
-        //s10.search();
-
-        System.out.println("-------------------");
-
         //test NOT
         //-------
-        //TODO: think about the meaning of not
 
 
         //test AND
@@ -134,4 +122,5 @@ public class Main {
         SelectExpr s16 = SELECT(NOT(POSSESSION(p2))).FROM("SNGS-060");
 
     }
+
 }

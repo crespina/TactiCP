@@ -10,12 +10,8 @@ public final class PlayerEvent extends Event {
         return new PlayerEvent(new Action("PASS_TO", to), from);
     }
 
-    public static PlayerEvent moveTo(Player p, int zone) {
-        return new PlayerEvent(new Action("MOVE_TO", zone), p);
-    }
-
     public  static PlayerEvent moveTo(Player p, int zone_start, int zone_end) {
-        return new PlayerEvent(new Action("MOVE_TO", new int[]{zone_start, zone_end}), p);
+        return new PlayerEvent(new Action("PLAYER_MOVE_TO", new int[]{zone_start, zone_end}), p);
     }
 
 
