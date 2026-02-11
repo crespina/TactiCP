@@ -225,6 +225,10 @@ public class Possession implements ConstraintPattern {
 
     }
 
+    public int[] getResult() {
+        return result;
+    }
+
     @Override
     public String getName() {
         return "Pass";
