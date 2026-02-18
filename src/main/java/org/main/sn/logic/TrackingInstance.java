@@ -104,7 +104,7 @@ public class TrackingInstance implements Instance {
             }
             grouped
                     .computeIfAbsent(b.frame_id, k -> new HashMap<>())
-                    .computeIfAbsent(b.cls_id, k -> b);
+                    .putIfAbsent(b.cls_id, b);
         }
 
         double[][] dx = new double[n + 1][maxId + 1];

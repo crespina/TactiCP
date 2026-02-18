@@ -1,7 +1,6 @@
 package org.main.sn.dsl;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /** Optional: groups multiple Where constraints in one object. */

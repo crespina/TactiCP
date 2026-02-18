@@ -7,7 +7,6 @@ package org.main.sn;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.main.sn.logic.NoInBetween;
 import org.main.sn.logic.TrueInterval;
 import org.maxicp.cp.CPSolverTest;
 import org.maxicp.cp.engine.core.CPBoolVar;

@@ -7,7 +7,6 @@ import org.maxicp.util.exception.InconsistencyException;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Iterator;
 
 /**
  * Regular Constraint for Interval Variables
@@ -15,13 +14,12 @@ import java.util.Iterator;
  * is recognized by the automaton
  */
 public class RegularInterval extends AbstractCPConstraint {
-    private int[] x; // fixed sequence
-    private CPIntervalVar interval; // variable representing start and end of matching subsequence
-    private int[][] transitionFct;
-    private int initialState;
-    private List<Integer> finalStates;
-    private int n; // length of the fixed sequence
-    private int nbStates;
+    private final int[] x; // fixed sequence
+    private final CPIntervalVar interval; // variable representing start and end of matching subsequence
+    private final int[][] transitionFct;
+    private final int initialState;
+    private final List<Integer> finalStates;
+    private final int n; // length of the fixed sequence
 
     /**
      * Creates a regular constraint for intervals.
@@ -39,16 +37,14 @@ public class RegularInterval extends AbstractCPConstraint {
         this.x = x;
         this.interval = interval;
         this.n = x.length;
-        this.nbStates = automaton.getAutomaton().length;
+        int nbStates = automaton.getAutomaton().length;
         this.initialState = automaton.getInitState();
         int[][] A = automaton.getAutomaton();
 
         assert ((initialState >= 0) && (initialState < nbStates));
 
-        finalStates = new ArrayList<Integer>();
-        Iterator<Integer> itr = automaton.getAcceptingStates().iterator();
-        while (itr.hasNext()) {
-            int state = itr.next();
+        finalStates = new ArrayList<>();
+        for (int state : automaton.getAcceptingStates()) {
             assert ((state >= 0) && (state < nbStates));
             finalStates.add(state);
         }
@@ -134,7 +130,7 @@ public class RegularInterval extends AbstractCPConstraint {
     }
 
     /**
-     * Check if the subsequence x[start..end-1] is accepted by the automaton
+     * Check if the subsequence x[start...end-1] is accepted by the automaton
      */
     private boolean isValidSequence(int start, int end) {
         if (start < 0 || end < 0 || start > end || end > n) {

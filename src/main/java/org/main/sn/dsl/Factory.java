@@ -1,9 +1,6 @@
 package org.main.sn.dsl;
 
-import org.main.sn.logic.Query;
-
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class Factory {

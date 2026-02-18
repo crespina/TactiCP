@@ -42,7 +42,7 @@ public class Position implements ConstraintPattern {
 
                     GameStateReconstructionInstance.Position bboxPitch = player.pos();
 
-                    int zone = -1;
+                    int zone;
                     double x = bboxPitch.x();
                     double y = bboxPitch.y();
 
