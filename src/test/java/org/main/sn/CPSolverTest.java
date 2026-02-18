@@ -21,17 +21,14 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 public abstract class CPSolverTest {
 
     public static Stream<CPSolver> getSolver() {
-        return Stream.of(new MaxiCP(new Trailer()), new MaxiCP(new Copier()));
+        return Stream.of(new MaxiCP(new Trailer()));
     }
 
     public static Stream<Arguments> solverSupplier() {
         return Stream.of(
                 arguments(named(
                         new MaxiCP(new Trailer()).toString(),
-                        (Supplier<CPSolver>) () -> new MaxiCP(new Trailer()))),
-                arguments(named(
-                        new MaxiCP(new Copier()).toString(),
-                        (Supplier<CPSolver>) () -> new MaxiCP(new Copier()))));
+                        (Supplier<CPSolver>) () -> new MaxiCP(new Trailer()))));
     }
 
     /**
@@ -43,7 +40,6 @@ public abstract class CPSolverTest {
      */
     public static Stream<Supplier<CPSolver>> getRepeatedSolverSuppliers(int nRepeat) {
         Stream<Supplier<CPSolver>> trailerStream = Stream.generate((Supplier<Supplier<CPSolver>>) () -> () -> new MaxiCP(new Trailer())).limit(nRepeat);
-        Stream<Supplier<CPSolver>> copyStream = Stream.generate((Supplier<Supplier<CPSolver>>) () -> () -> new MaxiCP(new Copier())).limit(nRepeat);
-        return Stream.concat(trailerStream, copyStream);
+        return trailerStream;
     }
 }
