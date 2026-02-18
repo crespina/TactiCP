@@ -4,14 +4,12 @@ import org.main.util.ConstraintPattern;
 import org.main.util.Instance;
 import org.maxicp.cp.engine.core.CPSolver;
 import org.main.util.BoundingBox;
-import org.opencv.core.Mat;
 
 import java.util.*;
 
 public class Possession implements ConstraintPattern {
 
     int[] result;
-    Map<Integer, List<Mat.Tuple2<Integer>>> possessionIntervalsByPlayer;
 
     public Possession(CPSolver cp, Instance instance) {
         apply(cp, instance);
@@ -209,74 +207,12 @@ public class Possession implements ConstraintPattern {
             }
 
             this.result = result;
-            Set<Integer> playerIds = new HashSet<>();
-            for (int pid = 0; pid < soccer.teams.length; pid++) {
-                if (soccer.teams[pid] == 0 || soccer.teams[pid] == 1) {
-                    playerIds.add(pid);
-                }
-            }
-            this.possessionIntervalsByPlayer = possessionIntervalsByPlayer(
-                    playerIds,
-                    this.result
-            );
         }
-
-
-
-    }
-
-    public int[] getResult() {
-        return result;
     }
 
     @Override
     public String getName() {
         return "Pass";
-    }
-
-    public static Map<Integer, List<Mat.Tuple2<Integer>>> possessionIntervalsByPlayer(Set<Integer> playerIds, int[] possession) {
-        Map<Integer, List<Mat.Tuple2<Integer>>> intervalsByPlayer = new HashMap<>();
-        for (int pid : playerIds) {
-            intervalsByPlayer.put(pid, new ArrayList<>());
-        }
-        intervalsByPlayer.put(-1, new ArrayList<>());
-
-        Integer currentPlayer = null; // tracked player currently holding the ball
-        int currentStart = -1;
-
-        for (int f = 0; f < possession.length; f++) {
-            int holder = possession[f];
-            //Integer trackedHolder = playerIds.contains(holder) ? holder : null;
-            Integer trackedHolder = holder;
-
-            if (currentPlayer == null) {
-                // No open interval: start one if a tracked player holds now
-                if (trackedHolder != null) {
-                    currentPlayer = trackedHolder;
-                    currentStart = f;
-                }
-            } else {
-                // There is an open interval: close if holder changed (or left tracked set)
-                if (trackedHolder == null || !trackedHolder.equals(currentPlayer)) {
-                    intervalsByPlayer.get(currentPlayer).add(new Mat.Tuple2<>(currentStart, f - 1));
-                    currentPlayer = null;
-                    currentStart = -1;
-
-                    // Start a new interval immediately if another tracked player holds now
-                    if (trackedHolder != null) {
-                        currentPlayer = trackedHolder;
-                        currentStart = f;
-                    }
-                }
-            }
-        }
-
-        // Close trailing interval if still open at the end
-        if (currentPlayer != null) {
-            intervalsByPlayer.get(currentPlayer).add(new Mat.Tuple2<>(currentStart, possession.length - 1));
-        }
-
-        return intervalsByPlayer;
     }
 
 }
