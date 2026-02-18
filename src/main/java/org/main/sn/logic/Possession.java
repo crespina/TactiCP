@@ -47,7 +47,7 @@ public class Possession implements ConstraintPattern {
                     }
                 }
                 if (ball_x == -1) {
-                    result[frameID] = -1;
+                    result[frameID] = 0;
                     continue;
                 }
                 int closest_player = -1;
@@ -82,7 +82,7 @@ public class Possession implements ConstraintPattern {
                 double displacement_ball_score = wAcc * acc[frameID][ball_idx] + wDir * dthetas[frameID][ball_idx];
 
                 if (closest_player == -1) {
-                    result[frameID] = -1;
+                    result[frameID] = 0;
                 }
                 if (displacement_ball_score > 47 && bestDist < threshold * 3) {
                     result[frameID] = closest_player;
@@ -90,7 +90,7 @@ public class Possession implements ConstraintPattern {
                     if (bestDist < threshold) {
                         result[frameID] = closest_player;
                     } else {
-                        result[frameID] = -1;
+                        result[frameID] = 0;
                     }
                 }
             }
@@ -109,7 +109,7 @@ public class Possession implements ConstraintPattern {
 
 
             int[] result = new int[n + 1];
-            result[0] = -1;
+            result[0] = 0;
             double threshold = 0.058;
 
             for (Map.Entry<Integer, GameStateReconstructionInstance.FrameData> e : positions.entrySet()) {
@@ -117,13 +117,13 @@ public class Possession implements ConstraintPattern {
                 GameStateReconstructionInstance.FrameData fd = e.getValue();
 
                 if (fd == null || fd.players.isEmpty()) {
-                    result[frameID] = -1;
+                    result[frameID] = 0;
                     continue;
                 }
 
                 GameStateReconstructionInstance.PlayerInfo ball = fd.players.get(ball_idx);
                 if (ball == null) {
-                    result[frameID] = -1;
+                    result[frameID] = 0;
                     continue;
                 }
 
@@ -176,7 +176,7 @@ public class Possession implements ConstraintPattern {
                 }
 
                 if (closest_player == -1) {
-                    result[frameID] = -1;
+                    result[frameID] = 0;
                 }
                 if (displacement_ball_score > 47 && bestDist < threshold * 3) {
                     result[frameID] = closest_player;
@@ -184,7 +184,7 @@ public class Possession implements ConstraintPattern {
                     if (bestDist < threshold) {
                         result[frameID] = closest_player;
                     } else {
-                        result[frameID] = -1;
+                        result[frameID] = 0;
                     }
                 }
 
@@ -193,7 +193,7 @@ public class Possession implements ConstraintPattern {
             //if possession less than 3 frames, not really possession :
             int start = -1;
             for (int i = 1; i <= n; i++) {
-                if (result[i] != -1) {
+                if (result[i] != 0) {
                     if (start == -1) start = i; // start of a possession
                 } else {
                     if (start != -1) {

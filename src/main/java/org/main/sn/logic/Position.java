@@ -31,7 +31,7 @@ public class Position implements ConstraintPattern {
 
             position = new int[maxId + 1][n + 1];
             for (int i = 0; i <= maxId; i++) {
-                Arrays.fill(position[i], -1);
+                Arrays.fill(position[i], 0);
             }
 
             for (int frame : positions.keySet()) {
