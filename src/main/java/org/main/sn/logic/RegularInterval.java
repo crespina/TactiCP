@@ -1,5 +1,6 @@
 package org.main.sn.logic;
 
+import org.main.util.Automaton;
 import org.maxicp.cp.engine.core.AbstractCPConstraint;
 import org.maxicp.cp.engine.core.CPIntervalVar;
 import org.maxicp.util.exception.InconsistencyException;
@@ -21,8 +22,6 @@ public class RegularInterval extends AbstractCPConstraint {
     private List<Integer> finalStates;
     private int n; // length of the fixed sequence
     private int nbStates;
-    private double[][] ip; // ip[i][j]>0 for state j reached by reading x[0]..x[i-1] from the initial state
-    private double[][] op; // op[i][j]>0 for state j reaching a final state by reading x[i]..x[end-1]
 
     /**
      * Creates a regular constraint for intervals.
@@ -32,22 +31,22 @@ public class RegularInterval extends AbstractCPConstraint {
      *
      * @param x a fixed array of integers
      * @param interval an interval variable (start and end positions in x)
-     * @param A a 2D array giving the transition function: {states} x {domain values} -> {states}
-     * @param s the initial state
-     * @param f a list of accepting states
+     * @param automaton an automaton defined by its transition function, initial state and accepting states
+     * The transition function is a 2D array: {states} x {domain values} -> {states}
      */
-    public RegularInterval(int[] x, CPIntervalVar interval, int[][] A, int s, List<Integer> f) {
+    public RegularInterval(int[] x, CPIntervalVar interval, Automaton automaton) {
         super(interval.getSolver());
         this.x = x;
         this.interval = interval;
         this.n = x.length;
-        this.nbStates = A.length;
-        this.initialState = s;
+        this.nbStates = automaton.getAutomaton().length;
+        this.initialState = automaton.getInitState();
+        int[][] A = automaton.getAutomaton();
 
         assert ((initialState >= 0) && (initialState < nbStates));
 
         finalStates = new ArrayList<Integer>();
-        Iterator<Integer> itr = f.iterator();
+        Iterator<Integer> itr = automaton.getAcceptingStates().iterator();
         while (itr.hasNext()) {
             int state = itr.next();
             assert ((state >= 0) && (state < nbStates));
@@ -68,9 +67,6 @@ public class RegularInterval extends AbstractCPConstraint {
                 transitionFct[i][j] = A[i][j];
             }
         }
-
-        ip = new double[n + 1][nbStates];
-        op = new double[n + 1][nbStates];
     }
 
     @Override
