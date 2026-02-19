@@ -11,11 +11,13 @@ import org.main.sn.logic.TrueInterval;
 import org.maxicp.cp.CPSolverTest;
 import org.maxicp.cp.engine.core.CPBoolVar;
 import org.maxicp.cp.engine.core.CPIntVar;
+import org.maxicp.cp.engine.core.CPIntervalVar;
 import org.maxicp.cp.engine.core.CPSolver;
 import org.maxicp.cp.CPFactory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.maxicp.cp.CPFactory.*;
 
 
 public class TrueIntervalTest extends CPSolverTest {
@@ -23,22 +25,24 @@ public class TrueIntervalTest extends CPSolverTest {
     @ParameterizedTest
     @MethodSource("getSolver")
     public void simpleTest0(CPSolver cp) {
-        CPIntVar start = CPFactory.makeIntVar(cp, 0, 9);
-        CPIntVar end = CPFactory.makeIntVar(cp, 0, 9);
-        CPBoolVar[] array = CPFactory.makeBoolVarArray(cp, 10);
+        CPIntervalVar interval = makeIntervalVar(cp);
+        interval.setPresent();
+        CPIntVar start = start(interval);
+        CPIntVar end = end(interval);
+        CPBoolVar[] array = makeBoolVarArray(cp, 10);
 
-        cp.post(new TrueInterval(array, start, end));
+        cp.post(new TrueInterval(array, interval));
 
         assertEquals(0, start.min());
-        assertEquals(9, end.max());
+        assertEquals(10, end.max());
 
         start.remove(0);
         cp.fixPoint();
 
         assertEquals(1, start.min());
-        assertEquals(8, start.max());
+        assertEquals(9, start.max());
         assertEquals(2, end.min());
-        assertEquals(9, end.max());
+        assertEquals(10, end.max());
 
         end.removeAbove(6);
         cp.fixPoint();
@@ -60,16 +64,34 @@ public class TrueIntervalTest extends CPSolverTest {
     @ParameterizedTest
     @MethodSource("getSolver")
     public void simpleTest1(CPSolver cp) {
-        CPIntVar start = CPFactory.makeIntVar(cp, 0, 9);
-        CPIntVar end = CPFactory.makeIntVar(cp, 0, 9);
+        CPIntervalVar interval = makeIntervalVar(cp);
         CPBoolVar[] array = CPFactory.makeBoolVarArray(cp, 10);
+        interval.setPresent();
+        CPIntVar start = start(interval);
+        CPIntVar end = end(interval);
 
-        cp.post(new TrueInterval(array, start, end));
+        cp.post(new TrueInterval(array, interval));
 
         assertEquals(0, start.min());
-        assertEquals(9, end.max());
+        assertEquals(10, end.max()); //end is not included in the interval
 
         array[0].fix(false);
+        cp.fixPoint();
+
+        assertEquals(1, start.min());
+        assertEquals(9, start.max());
+        assertEquals(2, end.min());
+        assertEquals(10, end.max());
+
+        array[2].fix(false);
+        cp.fixPoint();
+
+        assertEquals(1, start.min());
+        assertEquals(9, start.max());
+        assertEquals(2, end.min());
+        assertEquals(10, end.max());
+
+        array[9].fix(false);
         cp.fixPoint();
 
         assertEquals(1, start.min());
@@ -77,26 +99,28 @@ public class TrueIntervalTest extends CPSolverTest {
         assertEquals(2, end.min());
         assertEquals(9, end.max());
 
-        array[2].fix(false);
+        array[7].fix(false);
         cp.fixPoint();
 
-        assertEquals(3, start.min()); // 1 should be removed because if start=1 => end>=2 => array[2]=true
+        assertEquals(1, start.min());
         assertEquals(8, start.max());
-        assertEquals(4, end.min());
+        assertEquals(2, end.min());
         assertEquals(9, end.max());
     }
 
     @ParameterizedTest
     @MethodSource("getSolver")
     public void simpleTest2(CPSolver cp) {
-        CPIntVar start = CPFactory.makeIntVar(cp, 0, 9);
-        CPIntVar end = CPFactory.makeIntVar(cp, 0, 9);
+        CPIntervalVar interval = makeIntervalVar(cp);
         CPBoolVar[] array = CPFactory.makeBoolVarArray(cp, 10);
+        interval.setPresent();
+        CPIntVar start = start(interval);
+        CPIntVar end = end(interval);
 
-        cp.post(new TrueInterval(array, start, end));
+        cp.post(new TrueInterval(array, interval));
 
         assertEquals(0, start.min());
-        assertEquals(9, end.max());
+        assertEquals(10, end.max());
 
         for (int i = 2; i <= 7; i++) {
             array[i].fix(false);
@@ -104,18 +128,29 @@ public class TrueIntervalTest extends CPSolverTest {
         cp.fixPoint();
 
         assertEquals(0, start.min());
-        assertEquals(8, start.max());
+        assertEquals(9, start.max());
         assertEquals(1, end.min());
-        assertEquals(9, end.max());
+        assertEquals(10, end.max());
 
         array[1].fix(false);
         cp.fixPoint();
 
+        assertEquals(0, start.min());
+        assertEquals(9, start.max());
+        assertEquals(1, end.min());
+        assertEquals(10, end.max());
+
+        array[0].fix(false);
+        cp.fixPoint();
+
         assertEquals(8, start.min());
-        assertEquals(8, start.max());
+        assertEquals(9, start.max());
         assertEquals(9, end.min());
-        assertEquals(9, end.max());
-        assertTrue(array[8].isTrue());
+        assertEquals(10, end.max());
+
+        array[8].fix(false);
+        cp.fixPoint();
+
         assertTrue(array[9].isTrue());
     }
 }
