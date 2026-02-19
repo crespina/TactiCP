@@ -43,6 +43,8 @@ public class Query {
         boolean total_circle = (total_radius != -1);
         boolean total_rectangle = (total_w != -1 && total_h != -1);
         int searchMode = seq.searchMode; // 0: all, 1: first, other: count
+        int atMost = seq.atMost;
+        int atLeast = seq.atLeast;
 
         for (GameStateReconstructionInstance instance : matches) {
 
@@ -151,10 +153,15 @@ public class Query {
                     toPrint.add("\n");
                 }
             });
-            if (searchMode == 0) {
-                search.solve();
+
+            if (searchMode != -1 || atMost != -1 || atLeast != -1) {
+                if (searchMode == 0) search.solve();
+                else if (searchMode >= 1) search.solve(statistics -> statistics.numberOfSolutions() == searchMode);
+                else if (atMost >= 0 && atLeast >= 0) search.solve(statistics -> statistics.numberOfSolutions() >= atLeast && statistics.numberOfSolutions() <= atMost);
+                else if (atMost >= 0) search.solve(statistics -> statistics.numberOfSolutions() <= atMost);
+                else if (atLeast >= 0) search.solve(statistics -> statistics.numberOfSolutions() >= atLeast);
             } else {
-                search.solve(statistics -> statistics.numberOfSolutions() == searchMode);
+                search.solve();
             }
         }
         return toPrint;
@@ -323,7 +330,7 @@ public class Query {
                             IDENTIFIERS, counterVars, action, extVars, intervals, isAndEvent, minrange);
 
             case "PLAYER_MOVE_TO" ->
-                    model_PLAYER_MOVE_TO(cp, counterEvent, isNegated, eventInterval, event_start, event_end, event_circle,
+                    model_PLAYER_MOVE_TO(cp, counterEvent, isNegated, eventInterval, event_circle,
                             event_rectangle, total_circle, total_rectangle, event_xcenter, event_ycenter,
                             event_radius, event_xtop, event_ytop, event_w, event_h, total_xcenter,
                             total_ycenter, total_radius, total_xtop, total_ytop, total_w, total_h,
@@ -602,7 +609,7 @@ public class Query {
         }
     }
 
-    public void model_PLAYER_MOVE_TO(CPSolver cp, AtomicInteger counterEvent, boolean isNegated, CPIntervalVar eventInterval, CPIntVar event_start, CPIntVar event_end, boolean event_circle,
+    public void model_PLAYER_MOVE_TO(CPSolver cp, AtomicInteger counterEvent, boolean isNegated, CPIntervalVar eventInterval, boolean event_circle,
                                      boolean event_rectangle, boolean total_circle, boolean total_rectangle, int event_xcenter,
                                      int event_ycenter, int event_radius, int event_xtop, int event_ytop,
                                      int event_w, int event_h, int total_xcenter, int total_ycenter, double total_radius,
@@ -735,7 +742,7 @@ public class Query {
                         pl_inside_circle[f] = isLe(sum(distx, disty), circle[0]); //inside the circle
 
                     }
-                    cp.post(new TrueInterval(pl_inside_circle, event_start, event_end));
+                    cp.post(new TrueInterval(pl_inside_circle, eventInterval));
                 }
             } else {
                 List<int[]> rectangles = new ArrayList<>();
@@ -752,7 +759,7 @@ public class Query {
                         //inside the rectangle -> equivalent to and(isLe(distx, rect[2]), isLe(disty, rect[3]))
                         pl_inside_rect[f] = not(isOr(isGe(distx, rect[2]), isGe(disty, rect[3])));
                     }
-                    cp.post(new TrueInterval(pl_inside_rect, event_start, event_end));
+                    cp.post(new TrueInterval(pl_inside_rect, eventInterval));
                 }
             }
         }
@@ -1003,7 +1010,7 @@ public class Query {
                             pl_inside_circle[f] = isLe(sum(distx, disty), circle[0]); //inside the circle
 
                         }
-                        cp.post(new TrueInterval(pl_inside_circle, event_start, event_end));
+                        cp.post(new TrueInterval(pl_inside_circle, eventInterval));
                     }
                 }
             } else {
@@ -1022,7 +1029,7 @@ public class Query {
                             //inside the rectangle -> equivalent to and(isLe(distx, rect[2]), isLe(disty, rect[3]))
                             pl_inside_rect[f] = not(isOr(isGe(distx, rect[2]), isGe(disty, rect[3])));
                         }
-                        cp.post(new TrueInterval(pl_inside_rect, event_start, event_end));
+                        cp.post(new TrueInterval(pl_inside_rect, eventInterval));
                     }
                 }
             }
@@ -1360,7 +1367,7 @@ public class Query {
                             int dist_y = (int) Math.pow(positionBox_y[playerId][f] - circle[2], 2);
                             inside_circle[f].fix(dist_x + dist_y <= circle[0]);
                         }
-                        cp.post(new TrueInterval(inside_circle, event_start, event_end));
+                        cp.post(new TrueInterval(inside_circle, eventInterval));
                     }
                 }
             } else {
@@ -1378,7 +1385,7 @@ public class Query {
                             double dist_y = positionBox_y[playerId][f] - rect[1];
                             inside_rectangle[f].fix(dist_x <= rect[2] && dist_y <= rect[3]);
                         }
-                        cp.post(new TrueInterval(inside_rectangle, event_start, event_end));
+                        cp.post(new TrueInterval(inside_rectangle, eventInterval));
                     }
                 }
             }
@@ -1664,7 +1671,7 @@ public class Query {
                         double dist_y = Math.pow(positionBox_y[ball_idx][f] - circle[2], 2);
                         ball_inside_circle[f].fix(dist_x + dist_y <= circle[0]);
                     }
-                    cp.post(new TrueInterval(ball_inside_circle, event_start, event_end));
+                    cp.post(new TrueInterval(ball_inside_circle, eventInterval));
                 }
             } else {
                 List<double[]> rectangles = new ArrayList<>();
@@ -1680,7 +1687,7 @@ public class Query {
                         double dist_y = positionBox_y[ball_idx][f] - rect[1];
                         ball_inside_rectangle[f].fix(dist_x <= rect[2] && dist_y <= rect[3]);
                     }
-                    cp.post(new TrueInterval(ball_inside_rectangle, event_start, event_end));
+                    cp.post(new TrueInterval(ball_inside_rectangle, eventInterval));
                 }
             }
         }

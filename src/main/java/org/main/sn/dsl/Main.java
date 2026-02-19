@@ -11,7 +11,7 @@ public class Main {
 
         //ZONE DE TEST
 
-        SelectExpr moveto = SELECT((POSITION(PLAYER("p1",2),4)).MINRANGE(), POSITION(PLAYER("p1",2),10).MINRANGE()).FROM("SNGS-060");
+        SelectExpr moveto = SELECT((POSITION(PLAYER("p1",2),4)).MINRANGE(), POSITION(PLAYER("p1",2),10).MINRANGE()).FROM("SNGS-060").SEARCH(0);
          moveto.search();
 
         SelectExpr movetoreel = SELECT(PLAYER("p1",2).MOVETO(4,10).MINRANGE()).FROM("SNGS-060");
@@ -19,7 +19,8 @@ public class Main {
 
         SelectExpr s = SELECT(PLAYER("p2").PASSTO(PLAYER("p3")).MINRANGE()).FROM("SNGS-060");
 
-
+        Team t = TEAM("t1");
+        SelectExpr ambig = SELECT(POSITION(t, 3, 7, 8)).FROM("SNGS-060");
 
         // Test passTo
         // -----------

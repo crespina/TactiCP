@@ -14,9 +14,6 @@ import java.util.stream.Stream;
 public final class SelectExpr {
     public final List<Event> steps = new ArrayList<>();
     public final List<GameStateReconstructionInstance> matches = new ArrayList<>();
-    public Entity possession = null;
-    public Entity position = null;
-    int position_zone = -1;
     public int duration = -1;
     public int start = -1;
     public int end = -1;
@@ -30,7 +27,7 @@ public final class SelectExpr {
     private final List<Where> whereParts = new ArrayList<>();
     public int atMost = -1;
     public int atLeast = -1;
-    public int searchMode = 0; // 0: all, 1: first, other: count
+    public int searchMode = -1; // 0: all, 1: first, other: count
 
     static final Path ROOT = Paths.get("data/SoccerNet/gamestate-2024");
     static final List<String> SPLITS = List.of("train", "test", "valid");
@@ -177,48 +174,6 @@ public final class SelectExpr {
             }
         } else {
             throw new IllegalStateException("No matches specified for sequence");
-        }
-    }
-
-    public void atMost(int maxCount) {
-        if (matches.isEmpty()) {
-            throw new IllegalStateException("No matches specified for sequence");
-        }
-        Query query = new Query();
-        int count = 0;
-        List<String> toPrint = query.apply(this);
-        for (String s : toPrint) {
-            System.out.println(s);
-            if (s.equals("\n")) {
-                count++;
-            }
-        }
-        System.out.println("\n=========================");
-        System.out.println("Total number of solutions is: " + count);
-        if (count > maxCount) {
-            System.out.println("\n=========================");
-            System.out.println("Reached the maximum number of solutions: " + maxCount);
-        }
-    }
-
-    public void atLeast(int minCount) {
-        if (matches.isEmpty()) {
-            throw new IllegalStateException("No matches specified for sequence");
-        }
-        Query query = new Query();
-        int count = 0;
-        List<String> toPrint = query.apply(this);
-        for (String s : toPrint) {
-            System.out.println(s);
-            if (s.equals("\n")) {
-                count++;
-            }
-        }
-        System.out.println("\n=========================");
-        System.out.println("Total number of solutions is: " + count);
-        if (count < minCount) {
-            System.out.println("\n=========================");
-            System.out.println("Did not reach the minimum number of solutions: " + minCount);
         }
     }
 }

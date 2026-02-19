@@ -108,14 +108,6 @@ public class Factory {
         return new SelectExpr(exprs);
     }
 
-    public static void ATLEAST(SelectExpr seq, int n) {
-        seq.atLeast(n);
-    }
-
-    public static void ATMOST(SelectExpr seq, int n) {
-        seq.atMost(n);
-    }
-
     public static Event POSSESSION(Entity entity) {
         if (entity instanceof Player p) {
             return new PlayerEvent(new Action("POSSESSION"), p);
@@ -126,24 +118,20 @@ public class Factory {
         }
     }
 
-    public static Event POSITION(Entity entity, int... zones) {
-        if (entity instanceof Player p) {
-            return new PlayerEvent(new Action("POSITION", zones), p);
-        } else if (entity instanceof Team t){
-            return new TeamEvent(new Action("POSITION", java.util.stream.IntStream.concat(java.util.Arrays.stream(zones), java.util.stream.IntStream.of(1)).toArray()), t);
-        } else if (entity instanceof Ball){
-            return new BallEvent(new Action("POSITION", zones));
-        } else {
-            throw new IllegalArgumentException("Invalid entity type: " + entity);
-        }
+    public static Event POSITION(Player p, int... zones) {
+        return new PlayerEvent(new Action("POSITION", zones), p);
     }
 
-    public static Event POSITION(Entity entity, int zone, int k) {
-        if (entity instanceof Team t){
-            return new TeamEvent(new Action("POSITION", new int[] {zone, k}), t);
-        } else {
-            throw new IllegalArgumentException("Invalid entity type: " + entity);
-        }
+    public static Event POSITION(Team t, K k, int... zones) {
+        return new TeamEvent(new Action("POSITION", java.util.stream.IntStream.concat(java.util.Arrays.stream(zones), java.util.stream.IntStream.of(k.value)).toArray()), t);
+    }
+
+    public static Event POSITION(Team t, int... zones) {
+        return new TeamEvent(new Action("POSITION", java.util.stream.IntStream.concat(java.util.Arrays.stream(zones), java.util.stream.IntStream.of(1)).toArray()), t);
+    }
+
+    public static Event POSITION(Ball b, int... zones) {
+            return new BallEvent(new Action("POSITION", zones));
     }
 
     public static Where START(int frame) {
@@ -173,4 +161,16 @@ public class Factory {
     public static Where ATLEAST(int n) {
         return Where.of(Where.Kind.ATLEAST, n);
     }
+
+    public static final class K {
+        public final int value;
+        private K(int value) { this.value = value; }
+    }
+
+    public static K K(int k) {
+        return new K(k);
+    }
+
 }
+
+
