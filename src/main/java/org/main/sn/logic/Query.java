@@ -147,27 +147,32 @@ public class Query {
 
             search.onSolution(() -> {
                 int solnb = solutionCounter.getAndIncrement();
-                toPrint.add("solution #" + solnb);
-                toPrint.add("------------------\n");
-                AtomicInteger i = new AtomicInteger();
-                while (i.get() < extVars.size()) {
-                    ExtendedCPVar ev = extVars.get(i.get());
-                    CPIntervalVar intervalVar = (CPIntervalVar) ev.var;
-                    if (ev.type.equals("AND_interval")) {
-                        int frame_start = intervalVar.startMin();
-                        int frame_end = intervalVar.endMax();
-                        toPrint.add(" THE NEXT " + ev.subSz + " EVENTS ARE PART OF THE \"AND\" | frames: " + frame_start + " to " + frame_end);
-                        i.incrementAndGet();
-                    } else if (ev.type.equals("OR_interval")) {
-                        int frame_start = intervalVar.startMin();
-                        int frame_end = intervalVar.endMax();
-                        toPrint.add(" THE NEXT " + ev.subSz + " EVENTS ARE PART OF THE \"OR\" | frames: " + frame_start + " to " + frame_end);
-                        i.incrementAndGet();
-                    } else {
-                        onSolution(extVars, toPrint, i);
-                    }
-                    toPrint.add("\n");
+                Result r = parseSolution(solnb, extVars);
+                List<String> formattedStrings = r.toFormattedStrings();
+                for (String s : formattedStrings){
+                    toPrint.add(s);
                 }
+//                toPrint.add("solution #" + solnb);
+//                toPrint.add("------------------\n");
+//                AtomicInteger i = new AtomicInteger();
+//                while (i.get() < extVars.size()) {
+//                    ExtendedCPVar ev = extVars.get(i.get());
+//                    CPIntervalVar intervalVar = (CPIntervalVar) ev.var;
+//                    if (ev.type.equals("AND_interval")) {
+//                        int frame_start = intervalVar.startMin();
+//                        int frame_end = intervalVar.endMax();
+//                        toPrint.add(" THE NEXT " + ev.subSz + " EVENTS ARE PART OF THE \"AND\" | frames: " + frame_start + " to " + frame_end);
+//                        i.incrementAndGet();
+//                    } else if (ev.type.equals("OR_interval")) {
+//                        int frame_start = intervalVar.startMin();
+//                        int frame_end = intervalVar.endMax();
+//                        toPrint.add(" THE NEXT " + ev.subSz + " EVENTS ARE PART OF THE \"OR\" | frames: " + frame_start + " to " + frame_end);
+//                        i.incrementAndGet();
+//                    } else {
+//                        onSolution(extVars, toPrint, i);
+//                    }
+//                    toPrint.add("\n");
+//                }
             });
 
             if (searchMode != -1 || atMost != -1 || atLeast != -1) {
@@ -1878,75 +1883,82 @@ public class Query {
         }
     }
 
-    public void onSolution(List<ExtendedCPVar> extVars, List<String> toPrint, AtomicInteger i) {
-        ExtendedCPVar ev = extVars.get(i.get());
-
-        if (Objects.equals(ev.type, "BALL_MOVE_TO")) {
-            CPIntervalVar interval = (CPIntervalVar) ev.var;
-            toPrint.add("EVENT # " + ev.event_idx + (ev.isNegated ? " BALL DOES NOT MOVE TO" : " MOVES TO"));
-            toPrint.add(" BALL | frames: " + interval);
-            i.incrementAndGet();
-        } else if (Objects.equals(ev.type, "PASS_TO")) {
-            CPIntervalVar interval = (CPIntervalVar) ev.var;
-            int passer_id = ((CPIntVar) extVars.get(i.incrementAndGet()).var).min();
-            int receiver_id = ((CPIntVar) extVars.get(i.incrementAndGet()).var).min();
-            toPrint.add("EVENT # " + ev.event_idx + (ev.isNegated ? " NOT PASS" : " PASS"));
-            toPrint.add(" From player ID " + passer_id + " to player ID " + receiver_id +
-                    " | frames: " + interval);
-            i.incrementAndGet();
-        } else if (Objects.equals(ev.type, "POSSESSION")) {
-            CPIntervalVar interval = (CPIntervalVar) ev.var;
-            if (extVars.size() > i.get() + 1) {
-                while (extVars.get(i.get() + 1).type.contains("_player_id")) {
-                    int player_id = ((CPIntVar) extVars.get(i.incrementAndGet()).var).min();
-                    toPrint.add("EVENT # " + ev.event_idx + (ev.isNegated ? " DOES NOT HAVE BALL" : " HAS BALL"));
-                    toPrint.add(" Player ID " + player_id +
-                            " | frames: " + interval);
-                    if (extVars.size() <= i.get() + 1) {
-                        break;
-                    }
+    public Result parseSolution(int solutionIndex, List<ExtendedCPVar> extVars) {
+        AtomicInteger i = new AtomicInteger(0);
+        List<Result.ResultEvent> events = new ArrayList<>();
+        while (i.get() < extVars.size()) {
+            ExtendedCPVar ev = extVars.get(i.get());
+            if ("AND_interval".equals(ev.type) || "OR_interval".equals(ev.type)) {
+                CPIntervalVar interval = (CPIntervalVar) ev.var;
+                Result.GroupEvent ge = new Result.GroupEvent(ev.event_idx, ev.type.equals("AND_interval") ? "AND" : "OR", ev.subSz, interval);
+                i.incrementAndGet();
+                for (int k = 0; k < ge.subSize && i.get() < extVars.size(); k++) {
+                    Result.ResultEvent child = parseSingleEvent(extVars, i);
+                    if (child != null) ge.children.add(child);
                 }
+                events.add(ge);
+            } else {
+                Result.ResultEvent e = parseSingleEvent(extVars, i);
+                if (e != null) events.add(e);
             }
-            i.incrementAndGet();
-        } else if (Objects.equals(ev.type, "PLAYER_MOVE_TO")) {
-            CPIntervalVar interval = (CPIntervalVar) ev.var;
-            int player_id = ((CPIntVar) extVars.get(i.incrementAndGet()).var).min();
-            toPrint.add("EVENT # " + ev.event_idx + (ev.isNegated ? " DOES NOT MOVE TO" : " MOVES TO"));
-            toPrint.add(" Player ID " + player_id +
-                    " | frames: " + interval);
-            i.incrementAndGet();
-        } else if (Objects.equals(ev.type, "TEAM_MOVE_TO")) {
-            CPIntervalVar interval = (CPIntervalVar) ev.var;
-            List<Integer> player_ids = new ArrayList<>();
-            int next = i.incrementAndGet();
-            while (extVars.get(next).type.contains("_player_id")) {
-                player_ids.add(((CPIntVar) extVars.get(next).var).min());
-                next = i.incrementAndGet();
-                if (extVars.size() <= next) {
-                    break;
-                }
-            }
-            toPrint.add("EVENT # " + ev.event_idx + (ev.isNegated ? " DOES NOT MOVE TO" : " MOVES TO"));
-            toPrint.add(" Players in the team " + player_ids +
-                    " | frames: " + interval);
-            i.incrementAndGet();
-        } else if (Objects.equals(ev.type, "POSITION")) {
-            CPIntervalVar interval = (CPIntervalVar) ev.var;
-            List<Integer> player_ids = new ArrayList<>();
-            int next = i.incrementAndGet();
-            while (extVars.get(next).type.contains("_player_id")) {
-                player_ids.add(((CPIntVar) extVars.get(next).var).min());
-                next = i.incrementAndGet();
-                if (extVars.size() <= next) {
-                    break;
-                }
-            }
-            toPrint.add("EVENT # " + ev.event_idx + (ev.isNegated ? " IS NOT IN ZONE" : " IS IN ZONE"));
-            toPrint.add(player_ids.size() > 1 ? "TEAM" : "PLAYER " + player_ids + " | frames: " + interval);
-            i.incrementAndGet();
         }
+        return new Result(solutionIndex, events);
     }
 
+    private Result.ResultEvent parseSingleEvent(List<ExtendedCPVar> extVars, AtomicInteger i) {
+        ExtendedCPVar ev = extVars.get(i.get());
+        CPIntervalVar intervalVar = (CPIntervalVar) ev.var;
+        if ("PASS_TO".equals(ev.type)) {
+            int eventIdx = ev.event_idx;
+            boolean neg = ev.isNegated;
+            i.incrementAndGet();
+            int passer = ((CPIntVar) extVars.get(i.get()).var).min();
+            i.incrementAndGet();
+            int receiver = ((CPIntVar) extVars.get(i.get()).var).min();
+            i.incrementAndGet();
+            return new Result.PassEvent(eventIdx, neg, intervalVar, passer, receiver);
+        } else if ("POSSESSION".equals(ev.type)) {
+            int eventIdx = ev.event_idx;
+            boolean neg = ev.isNegated;
+            List<Integer> players = new ArrayList<>();
+            i.incrementAndGet(); // move to first player id if any
+            while (i.get() < extVars.size() && extVars.get(i.get()).type.contains("_player_id")) {
+                players.add(((CPIntVar) extVars.get(i.get()).var).min());
+                i.incrementAndGet();
+            }
+            return new Result.PossessionEvent(eventIdx, neg, intervalVar, players);
+        } else if ("PLAYER_MOVE_TO".equals(ev.type)) {
+            int eventIdx = ev.event_idx;
+            boolean neg = ev.isNegated;
+            i.incrementAndGet();
+            int pid = ((CPIntVar) extVars.get(i.get()).var).min();
+            i.incrementAndGet();
+            return new Result.PlayerMoveEvent(eventIdx, neg, intervalVar, pid);
+        } else if ("TEAM_MOVE_TO".equals(ev.type)) {
+            int eventIdx = ev.event_idx;
+            boolean neg = ev.isNegated;
+            List<Integer> players = new ArrayList<>();
+            i.incrementAndGet();
+            while (i.get() < extVars.size() && extVars.get(i.get()).type.contains("_player_id")) {
+                players.add(((CPIntVar) extVars.get(i.get()).var).min());
+                i.incrementAndGet();
+            }
+            return new Result.TeamMoveEvent(eventIdx, neg, intervalVar, players);
+        } else if ("POSITION".equals(ev.type)) {
+            int eventIdx = ev.event_idx;
+            boolean neg = ev.isNegated;
+            List<Integer> players = new ArrayList<>();
+            i.incrementAndGet();
+            while (i.get() < extVars.size() && extVars.get(i.get()).type.contains("_player_id")) {
+                players.add(((CPIntVar) extVars.get(i.get()).var).min());
+                i.incrementAndGet();
+            }
+            return new Result.PositionEvent(eventIdx, neg, intervalVar, players);
+        } else {
+            i.incrementAndGet();
+            return null;
+        }
+    }
 
     public static class ExtendedCPVar {
         CPVar var;

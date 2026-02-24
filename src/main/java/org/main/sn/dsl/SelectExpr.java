@@ -176,6 +176,16 @@ public final class SelectExpr {
             throw new IllegalStateException("No matches specified for sequence");
         }
     }
+
+    public List<String> searchAndReturn() {
+        Query query = new Query();
+        if (!matches.isEmpty()) {
+            List<String> toPrint = query.apply(this);
+            return toPrint;
+        } else {
+            throw new IllegalStateException("No matches specified for sequence");
+        }
+    }
 }
 
 
