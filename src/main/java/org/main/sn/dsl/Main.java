@@ -2,6 +2,7 @@ package org.main.sn.dsl;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 
 import static org.main.sn.dsl.Factory.*;
 
@@ -29,9 +30,12 @@ public class Main {
         Player p2 = PLAYER("p2");
 
 
-//        Event e1 = p1.PASSTO(p2).MINRANGE();
-//        SelectExpr s1 = SELECT(e1).FROM("SNGS-060, SNGS-061"); //toutes les passes
-//        s1.search();
+        Event e1 = p1.PASSTO(p2).MINRANGE();
+        SelectExpr s1 = SELECT(e1).FROM("SNGS-060, SNGS-061"); //toutes les passes
+        List<String> toPrint = s1.searchAndReturn();
+        for (String s : toPrint) {
+            System.out.println(s);
+        }
 
         System.out.println("-------------------");
 

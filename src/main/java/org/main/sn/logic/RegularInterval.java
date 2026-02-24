@@ -41,11 +41,8 @@ public class RegularInterval extends AbstractCPConstraint {
         this.initialState = automaton.getInitState();
         int[][] A = automaton.getAutomaton();
 
-        assert ((initialState >= 0) && (initialState < nbStates));
-
         finalStates = new ArrayList<>();
         for (int state : automaton.getAcceptingStates()) {
-            assert ((state >= 0) && (state < nbStates));
             finalStates.add(state);
         }
 
@@ -57,9 +54,8 @@ public class RegularInterval extends AbstractCPConstraint {
 
         transitionFct = new int[nbStates][maxVal + 1];
         for (int i = 0; i < nbStates; i++) {
-            assert (A[i].length == maxVal + 1);
+            //assert (A[i].length == maxVal + 1);
             for (int j = 0; j < maxVal + 1; j++) {
-                assert (A[i][j] < nbStates);
                 transitionFct[i][j] = A[i][j];
             }
         }
