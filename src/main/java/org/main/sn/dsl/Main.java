@@ -11,16 +11,16 @@ public class Main {
 
         //ZONE DE TEST
 
-        SelectExpr moveto = SELECT((POSITION(PLAYER("p1",2),4)).MINRANGE(), POSITION(PLAYER("p1",2),10).MINRANGE()).FROM("SNGS-060").SEARCH(0);
-         moveto.search();
-
-        SelectExpr movetoreel = SELECT(PLAYER("p1",2).MOVETO(4,10).MINRANGE()).FROM("SNGS-060");
-        movetoreel.search();
-
-        SelectExpr s = SELECT(PLAYER("p2").PASSTO(PLAYER("p3")).MINRANGE()).FROM("SNGS-060");
-
-        Team t = TEAM("t1");
-        SelectExpr ambig = SELECT(POSITION(t, 3, 7, 8)).FROM("SNGS-060");
+//        SelectExpr moveto = SELECT((POSITION(PLAYER("p1",2),4)).MINRANGE(), POSITION(PLAYER("p1",2),10).MINRANGE()).FROM("SNGS-060").SEARCH(0);
+//         moveto.search();
+//
+//        SelectExpr movetoreel = SELECT(PLAYER("p1",2).MOVETO(4,10).MINRANGE()).FROM("SNGS-060");
+//        movetoreel.search();
+//
+//        SelectExpr s = SELECT(PLAYER("p2").PASSTO(PLAYER("p3")).MINRANGE()).FROM("SNGS-060");
+//
+//        Team t = TEAM("t1");
+//        SelectExpr ambig = SELECT(POSITION(t, 3, 7, 8)).FROM("SNGS-060");
 
         // Test passTo
         // -----------
@@ -29,21 +29,21 @@ public class Main {
         Player p2 = PLAYER("p2");
 
 
-        Event e1 = p1.PASSTO(p2).WITHIN(150);
-        SelectExpr s1 = SELECT(e1).FROM("SNGS-060, SNGS-061"); //toutes les passes
-        //s1.search();
+//        Event e1 = p1.PASSTO(p2).MINRANGE();
+//        SelectExpr s1 = SELECT(e1).FROM("SNGS-060, SNGS-061"); //toutes les passes
+//        s1.search();
 
         System.out.println("-------------------");
 
-        Event e2 = p2.PASSTO(p1);
-        //SelectExpr s2 = sequence("s2", e1, e2).from("all"); //1-2
-//        s2.search();
+        //Event e2 = p2.PASSTO(p1);
+        //SelectExpr s2 = SELECT(e1, e2).FROM("all"); //1-2
+        //s2.search();
 
         System.out.println("-------------------");
 
         Player p19 = PLAYER("p19", 19);
-        SelectExpr s3 = SELECT(NOT(p19.PASSTO(p2))).FROM("SNGS-060"); //toutes les passes où 19 n'est pas le passeur
-//        s3.search();
+        SelectExpr s3 = SELECT(NOT(p19.PASSTO(p2))).FROM("SNGS-060");
+        //s3.search();
 
         System.out.println("-------------------");
 
@@ -51,14 +51,17 @@ public class Main {
         //-----------------
 
         Ball b = BALL();
-        SelectExpr s4 = SELECT(b.MOVETO(4, 6), b.MOVETO(14, 9)).FROM("SNGS-061"); //ball move from zone to zone
+        SelectExpr s4 = SELECT(b.MOVETO(4, 6).MINRANGE(), b.MOVETO(14, 9).MINRANGE()).FROM("SNGS-061"); //ball move from zone to zone
         //s4.search();
 
         System.out.println("-------------------");
 
-//        Player p11 = player("p11", 11);
-//        SelectExpr s5 = sequence("s5", and(p11.passTo(p2),not(b.moveTo(4,1)))).from("SNGS-061"); //ball move to zone
-//        s5.search();
+        Player p11 = PLAYER("p11", 11);
+
+        //SelectExpr s5 = SELECT(p11.PASSTO(p2).MINRANGE()).FROM("SNGS-061"); //ball move to zone
+        //SelectExpr s5 = SELECT(NOT(b.MOVETO(4,1)).MINRANGE()).FROM("SNGS-061"); //ball move to zone
+        SelectExpr s5 = SELECT(AND(p11.PASSTO(p2).MINRANGE(),NOT(b.MOVETO(4,1)).MINRANGE())).FROM("SNGS-061"); //ball move to zone
+        //s5.search();
 
         System.out.println("-------------------");
 
@@ -68,7 +71,7 @@ public class Main {
         Player p7 = PLAYER("p7", 7);
         Player p13 = PLAYER("p13", 13);
 
-        SelectExpr s6 = SELECT(POSSESSION(p7)).FROM("SNGS-060"); //p7 has ball for 5 frames
+        SelectExpr s6 = SELECT(NOT(POSSESSION(p7))).FROM("SNGS-060"); //p7 has ball for 5 frames
         //s6.search();
 
         System.out.println("-------------------");
@@ -83,10 +86,17 @@ public class Main {
         //test move to
         //------------
 
-        SelectExpr s8 = SELECT(p1.MOVETO(1, 6), p1.MOVETO(6, 7)).FROM("SNGS-061");
+        SelectExpr s8 = SELECT(p1.MOVETO(1, 6).MINRANGE(), p1.MOVETO(6, 7).MINRANGE()).FROM("SNGS-061"); // id : 13
         //s8.search();
 
         System.out.println("-------------------");
+
+
+        //test POSITION
+        //-------------
+
+        SelectExpr sPos = SELECT(POSITION(p1, 1, 6, 7)).FROM("SNGS-061"); // id : 13
+        //sPos.search();
 
 
         //test NOT
@@ -96,11 +106,10 @@ public class Main {
         //test AND
         //-------
         Player p15 = PLAYER("p15", 15);
-        //SelectExpr s11 = sequence("s11", and(p13.moveTo(6,7), p15.moveTo(1,2))).from("SNGS-061");
         SelectExpr s11 = SELECT(p13.MOVETO(6, 7)).FROM("SNGS-061").WHERE(START(10),END(740));
         //s11.search();
         SelectExpr s12 = SELECT(p15.MOVETO(1, 2)).FROM("SNGS-061");
-        //s12.search();
+        s12.search();
 
         SelectExpr s13 = SELECT(AND(p13.MOVETO(6, 7), p15.MOVETO(1, 2))).FROM("SNGS-061");
         //s13.search();

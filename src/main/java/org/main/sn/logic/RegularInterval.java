@@ -78,8 +78,6 @@ public class RegularInterval extends AbstractCPConstraint {
             throw new InconsistencyException();
         }
 
-        interval.setPresent();
-
         int startMin = interval.startMin();
         int startMax = interval.startMax();
         int endMin = interval.endMin();
