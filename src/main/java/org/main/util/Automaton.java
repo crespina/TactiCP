@@ -106,7 +106,7 @@ public class Automaton {
     }
 
     //minimal movement
-    public static Automaton A_NOTB_STAR_B(int nPlayers, int A, int B) {
+    public static Automaton A_NOTBSTAREXCEPT0_B(int nPlayers, int A, int B) {
         //n is the number of possible inputs excluding 0 (i.e. the number of players); A and B are the start and the end respectively
         //ACCEPTING STATE IS 2
 
@@ -129,7 +129,39 @@ public class Automaton {
         for (int i = 0; i <= nPlayers; i++) {
             if (i == B) {
                 res[1][i] = accept;
-            } else if (i != A || i != 0) { //loop
+            } else if (i != A && i != 0) { //loop
+                res[1][i] = 1;
+            }
+        }
+
+        return new Automaton(0, List.of(accept), res);
+    }
+
+    //minimal movement
+    public static Automaton A_NOTBSTAR_B(int nPlayers, int A, int B) {
+        //n is the number of possible inputs excluding 0 (i.e. the number of players); A and B are the start and the end respectively
+        //ACCEPTING STATE IS 2
+
+        int inputs = nPlayers + 1;
+        int states = 3;
+        int[][] res = new int[states][inputs];
+        for (int i = 0; i < states; i++) {
+            Arrays.fill(res[i], -1);
+        }
+
+        int start = 0;
+        int accept = 2;
+
+        // from start: only A can begin
+        res[start][A] = 1;
+
+        // not b : loop
+        // b : accept
+        // 0 or S : invalid
+        for (int i = 0; i <= nPlayers; i++) {
+            if (i == B) {
+                res[1][i] = accept;
+            } else if (i != A && i != 0) { //loop
                 res[1][i] = 1;
             }
         }
@@ -171,6 +203,44 @@ public class Automaton {
         res[accept][B] = accept;  // allow B repetition
 
         return new Automaton(0, List.of(accept), res);
+    }
+
+    public static Automaton PAD_APLUS_PADSTAR_BPLUS_PAD(int nPlayers, int A, int B) {
+        int inputs = nPlayers + 1; // symbols 0...nPlayers
+        int states = 6;
+        int[][] res = new int[states][inputs];
+        for (int i = 0; i < states; i++) Arrays.fill(res[i], -1);
+
+        int start = 0, afterLead = 1, Astate = 2, midPad = 3, Bstate = 4, accept = 5;
+
+        // from start: any not{A,B} (including 0) -> afterLead
+        for (int x = 0; x <= nPlayers; x++) {
+            if (x != A && x != B) res[start][x] = afterLead;
+        }
+
+        // afterLead: must see A to begin A+
+        if (A >= 0 && A <= nPlayers) res[afterLead][A] = Astate;
+
+        // Astate: A -> stay in Astate; B -> go to Bstate; any not{A,B} -> midPad
+        for (int x = 0; x <= nPlayers; x++) {
+            if (x == A) res[Astate][x] = Astate;
+            else if (x == B) res[Astate][x] = Bstate;
+            else res[Astate][x] = midPad; // includes 0
+        }
+
+        // midPad: loop on not{A,B}; on B -> Bstate; A is invalid here
+        for (int x = 0; x <= nPlayers; x++) {
+            if (x == B) res[midPad][x] = Bstate;
+            else if (x != A && x != B) res[midPad][x] = midPad;
+        }
+
+        // Bstate: B -> stay; any not{A,B} -> accept
+        for (int x = 0; x <= nPlayers; x++) {
+            if (x == B) res[Bstate][x] = Bstate;
+            else if (x != A && x != B) res[Bstate][x] = accept;
+        }
+
+        return new Automaton(start, List.of(accept), res);
     }
 
     //minimal pass excluding direct change of possession
@@ -424,6 +494,51 @@ public class Automaton {
         return new Automaton(0, acceptingStates, res);
     }
 
+    public static Automaton NOTA_APLUS_NOTA(int nPlayers, Set<Integer> As) {
+
+        int inputs = nPlayers + 1; // symbols 0..nPlayers
+        int states = nPlayers + 3;
+        int[][] res = new int[states][inputs];
+        for (int i = 0; i < states; i++) Arrays.fill(res[i], -1);
+
+        int start = 0;
+        int preA = nPlayers + 1;
+        int post = nPlayers + 2;
+
+        // from start: any notA (including 0) → preA
+        for (int x = 0; x <= nPlayers; x++) {
+            if (!As.contains(x)) {
+                res[start][x] = preA;
+            }
+        }
+
+        // from preA: first A of the A+ block
+        for (int a : As) {
+            if (a >= 1 && a <= nPlayers) {
+                res[preA][a] = a;
+            }
+        }
+
+        // A+ part
+        for (int a : As) {
+            if (a >= 1 && a <= nPlayers) {
+
+                res[a][a] = a; // repeat same A
+
+                for (int x = 0; x <= nPlayers; x++) {
+                    if (!As.contains(x)) {
+                        res[a][x] = post; // trailing notA (including 0)
+                    }
+                }
+            }
+        }
+
+        List<Integer> acceptingStates = new ArrayList<>();
+        acceptingStates.add(post);
+
+        return new Automaton(start, acceptingStates, res);
+    }
+
     public static Automaton AS_PLUS(int nPlayers, Set<Integer> As) {
 
         int inputs = nPlayers + 1;
@@ -479,5 +594,13 @@ public class Automaton {
         }
 
         return new Automaton(start, List.of(1), res);
+    }
+
+    public static int[] pad(int[] input) {
+        int[] padded = new int[input.length + 2];
+        padded[0] = 0;
+        System.arraycopy(input, 0, padded, 1, input.length);
+        padded[padded.length - 1] = 0;
+        return padded;
     }
 }
