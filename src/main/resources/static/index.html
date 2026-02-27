@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Geometric Pattern Matching</title>
+  <style>
+    /* ─── Reset & base ─────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+      gap: 2rem;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #7dd3fc;
+      letter-spacing: .04em;
+    }
+
+    /* ─── Section cards ─────────────────────────────────────── */
+    .card {
+      background: #1e2130;
+      border: 1px solid #2d3148;
+      border-radius: 12px;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 900px;
+    }
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 1rem;
+    }
+
+    /* ─── Video section ─────────────────────────────────────── */
+    .video-row {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    select {
+      background: #0f1117;
+      color: #e2e8f0;
+      border: 1px solid #3d4468;
+      border-radius: 8px;
+      padding: .5rem .75rem;
+      font-size: .95rem;
+      cursor: pointer;
+      flex: 1;
+      min-width: 200px;
+    }
+    video {
+      width: 100%;
+      border-radius: 8px;
+      margin-top: 1rem;
+      background: #000;
+      max-height: 420px;
+      display: none;
+    }
+    video.visible { display: block; }
+
+    /* ─── Query section ─────────────────────────────────────── */
+    .query-row { display: flex; gap: .75rem; flex-wrap: wrap; }
+    textarea {
+      flex: 1;
+      min-width: 0;
+      min-height: 80px;
+      background: #0f1117;
+      color: #e2e8f0;
+      border: 1px solid #3d4468;
+      border-radius: 8px;
+      padding: .75rem;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: .9rem;
+      resize: vertical;
+    }
+    textarea:focus { outline: none; border-color: #7dd3fc; }
+    button {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: .75rem 1.5rem;
+      font-size: .95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s;
+      align-self: flex-end;
+      white-space: nowrap;
+    }
+    button:hover { background: #1d4ed8; }
+    button:disabled { background: #374151; cursor: not-allowed; }
+
+    /* ─── Status bar ────────────────────────────────────────── */
+    #status {
+      font-size: .88rem;
+      color: #64748b;
+      min-height: 1.4em;
+    }
+    #status.error { color: #f87171; }
+    #status.ok    { color: #4ade80; }
+
+    /* ─── Results section ───────────────────────────────────── */
+    #results-section { display: none; }
+
+    /* counter badge */
+    .result-counter {
+      font-size: .88rem;
+      color: #94a3b8;
+      margin-bottom: .75rem;
+    }
+
+    /* ─── Carousel ──────────────────────────────────────────── */
+    .carousel {
+      position: relative;
+    }
+    .carousel-track {
+      overflow: hidden;
+    }
+    .carousel-slide {
+      display: none;
+    }
+    .carousel-slide.active {
+      display: block;
+    }
+
+    /* result card inside carousel */
+    .result-card {
+      background: #262b40;
+      border: 1px solid #3d4468;
+      border-radius: 10px;
+      padding: 1.25rem;
+    }
+    .result-card .instance-badge {
+      display: inline-block;
+      background: #1e3a5f;
+      color: #7dd3fc;
+      border-radius: 6px;
+      padding: .2rem .7rem;
+      font-size: .78rem;
+      font-weight: 600;
+      margin-bottom: .75rem;
+    }
+    .result-text {
+      background: #0f1117;
+      border-radius: 8px;
+      padding: .85rem 1rem;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: .82rem;
+      color: #a5f3fc;
+      white-space: pre-wrap;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+
+    /* sub-video clip */
+    .clip-wrapper {
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .clip-wrapper video {
+      width: 100%;
+      max-height: 380px;
+      display: block;
+      margin: 0;
+      border-radius: 0;
+    }
+    .clip-label {
+      font-size: .8rem;
+      color: #64748b;
+      text-align: center;
+      padding: .3rem 0 .5rem;
+    }
+
+    /* carousel navigation */
+    .carousel-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+    .carousel-nav button {
+      background: #374151;
+      padding: .5rem 1.25rem;
+      font-size: .9rem;
+    }
+    .carousel-nav button:hover { background: #4b5563; }
+    .carousel-nav button:disabled { background: #1f2937; color: #4b5563; }
+    .carousel-page {
+      font-size: .9rem;
+      color: #94a3b8;
+      min-width: 80px;
+      text-align: center;
+    }
+
+    /* ─── Spinner ───────────────────────────────────────────── */
+    .spinner {
+      display: none;
+      width: 20px; height: 20px;
+      border: 3px solid #3d4468;
+      border-top-color: #7dd3fc;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      flex-shrink: 0;
+    }
+    .spinner.active { display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Additional styles for result text box */
+    .result-textbox {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: .5rem;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .result-textbox label {
+      color: #94a3b8;
+      font-size: .85rem;
+    }
+    #solution-select {
+      background: #0f1117;
+      color: #e2e8f0;
+      border: 1px solid #3d4468;
+      border-radius: 6px;
+      padding: .35rem .5rem;
+      font-size: .85rem;
+      justify-self: end;
+      min-width: 120px;
+    }
+    #result-text {
+      grid-column: 1 / -1;
+      background: #0f1117;
+      color: #a5f3fc;
+      border: 1px solid #3d4468;
+      border-radius: 8px;
+      padding: .75rem;
+      min-height: 140px;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: .82rem;
+      white-space: pre-wrap;
+      resize: vertical;
+    }
+
+    .inline-results {
+      margin-top: .75rem;
+      display: grid;
+      gap: .4rem;
+    }
+    .inline-results label {
+      color: #94a3b8;
+      font-size: .85rem;
+    }
+    #inline-result-text {
+      background: #0f1117;
+      color: #a5f3fc;
+      border: 1px solid #3d4468;
+      border-radius: 8px;
+      padding: .75rem;
+      min-height: 120px;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: .82rem;
+      white-space: pre-wrap;
+      resize: vertical;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>⚽ Constraint-based mining of spatio-temporal soccer tactics</h1>
+
+  <!-- ── 1. Video selector ──────────────────────────────────── -->
+  <div class="card" id="video-card">
+    <h2>Select Instance</h2>
+    <div class="video-row">
+      <select id="instance-select">
+        <option value="">Loading instances…</option>
+      </select>
+    </div>
+    <video id="main-video" controls></video>
+  </div>
+
+  <!-- ── 2. Query input ─────────────────────────────────────── -->
+  <div class="card">
+    <h2>Query</h2>
+    <div class="query-row">
+      <textarea id="query-input" spellcheck="false"
+        placeholder='e.g.  SELECT(PLAYER("p1").PASSTO(PLAYER("p2")).MINRANGE()).FROM("SNGS-060").SEARCH(0)'></textarea>
+      <button id="run-btn" onclick="runQuery()">▶ Run</button>
+      <div class="spinner" id="spinner"></div>
+    </div>
+    <div id="status"></div>
+    <div id="inline-results" class="inline-results" style="display:none;">
+      <label for="inline-result-text">Result output</label>
+      <textarea id="inline-result-text" readonly></textarea>
+    </div>
+  </div>
+
+  <!-- ── 3. Results ─────────────────────────────────────────── -->
+  <div class="card" id="results-section">
+    <h2>Results</h2>
+    <div class="result-counter" id="result-counter"></div>
+
+    <div class="result-textbox">
+      <label for="result-text">Solution text</label>
+      <select id="solution-select"></select>
+      <textarea id="result-text" readonly></textarea>
+    </div>
+
+    <div class="carousel" id="carousel">
+      <div class="carousel-track" id="carousel-track"></div>
+      <div class="carousel-nav">
+        <button id="prev-btn" onclick="navigate(-1)">← Prev</button>
+        <span class="carousel-page" id="carousel-page"></span>
+        <button id="next-btn" onclick="navigate(1)">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // ─────────────────────────────────────────────────────────────
+  // State
+  // ─────────────────────────────────────────────────────────────
+  let allSlides   = [];
+  let currentIdx  = 0;
+  let instanceMap = {};  // id -> {split, label, hasVideo}
+  let currentResults = [];
+
+  // ─────────────────────────────────────────────────────────────
+  // Boot: load instances
+  // ─────────────────────────────────────────────────────────────
+  async function loadInstances() {
+    try {
+      const res  = await fetch('/api/instances');
+      const data = await res.json();
+      const sel  = document.getElementById('instance-select');
+      sel.innerHTML = '<option value="">— choose an instance —</option>';
+      data.forEach(inst => {
+        instanceMap[inst.id] = inst;
+        const opt = document.createElement('option');
+        opt.value = inst.id;
+        opt.textContent = inst.label + (inst.hasVideo === 'true' ? '' : ' (no video)');
+        sel.appendChild(opt);
+      });
+    } catch (e) {
+      setStatus('Failed to load instances: ' + e.message, 'error');
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Instance selection → load main video
+  // ─────────────────────────────────────────────────────────────
+  document.getElementById('instance-select').addEventListener('change', async function () {
+    const id   = this.value;
+    const vid  = document.getElementById('main-video');
+    if (!id || !instanceMap[id] || instanceMap[id].hasVideo !== 'true') {
+      vid.classList.remove('visible');
+      vid.src = '';
+      setStatus('');
+      return;
+    }
+    const { split } = instanceMap[id];
+    const url = `/api/video/${split}/${id}`;
+
+    // call debug endpoint to verify path resolution before loading
+    const debug = await (await fetch(url + '/debug')).text();
+    setStatus(debug);
+    if (debug.includes('exists=false')) {
+      setStatus(debug, 'error');
+      vid.classList.remove('visible');
+      return;
+    }
+
+    vid.src = url;
+    vid.classList.add('visible');
+    vid.load();
+    setStatus('');
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // Run query
+  // ─────────────────────────────────────────────────────────────
+  async function runQuery() {
+    const query   = document.getElementById('query-input').value.trim();
+    const btn     = document.getElementById('run-btn');
+    const spinner = document.getElementById('spinner');
+    if (!query) { setStatus('Please enter a query.', 'error'); return; }
+
+    btn.disabled     = true;
+    spinner.classList.add('active');
+    setStatus('Running query…');
+    clearResults();
+
+    try {
+      const res  = await fetch('/api/query', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ query })
+      });
+      const data = await res.json();
+      console.log('query response', data);
+      window.lastFullText = data.fullText || (data.results || []).map(r => r.text).join('\n');
+
+      if (!data.success) {
+        setStatus('Error: ' + data.error, 'error');
+        return;
+      }
+
+      if (data.results.length === 0) {
+        setStatus('No solutions found.', 'error');
+        return;
+      }
+
+      setStatus(`Found ${data.results.length} solution(s).`, 'ok');
+      renderResults(data.results);
+    } catch (e) {
+      setStatus('Request failed: ' + e.message, 'error');
+    } finally {
+      btn.disabled = false;
+      spinner.classList.remove('active');
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Render results into carousel slides
+  // ─────────────────────────────────────────────────────────────
+  function renderResults(results) {
+    const track = document.getElementById('carousel-track');
+    const select = document.getElementById('solution-select');
+    track.innerHTML = '';
+    allSlides = [];
+    currentResults = results;
+
+    select.innerHTML = '';
+    const allOpt = document.createElement('option');
+    allOpt.value = '-1';
+    allOpt.textContent = 'all solutions';
+    select.appendChild(allOpt);
+
+    results.forEach((sol, idx) => {
+      const opt = document.createElement('option');
+      opt.value = String(idx);
+      opt.textContent = `solution #${sol.solutionIndex}`;
+      select.appendChild(opt);
+
+      const slide = document.createElement('div');
+      slide.className = 'carousel-slide' + (idx === 0 ? ' active' : '');
+
+      // instance badge + text
+      const instInfo   = instanceMap[sol.instance?.split('/').pop()] || {};
+      const split      = instInfo.split || guessplit(sol.instance);
+      const instanceId = sol.instance?.split('/').pop() || sol.instance;
+
+      // Build clip video if we have timing
+      const hasVideo   = instInfo.hasVideo === 'true';
+      const clipHtml   = (hasVideo && sol.intervalStart >= 0 && sol.intervalEnd > sol.intervalStart)
+        ? buildClipHtml(split, instanceId, sol.intervalStart, sol.intervalEnd)
+        : '';
+
+      slide.innerHTML = `
+        <div class="result-card">
+          <div class="instance-badge">${sol.instance || ''} &nbsp;·&nbsp; solution #${sol.solutionIndex}</div>
+          <div class="result-text">${escHtml(sol.text)}</div>
+          ${clipHtml}
+        </div>`;
+
+      track.appendChild(slide);
+      allSlides.push(slide);
+    });
+
+    select.onchange = () => {
+      const idx = parseInt(select.value, 10);
+      if (idx === -1) {
+        updateTextBox(true);
+      } else {
+        jumpTo(idx);
+      }
+    };
+
+    // Wire up video seek after DOM is ready
+    results.forEach((sol, idx) => {
+      const vid = document.getElementById('clip-video-' + idx);
+      if (vid) {
+        const startT = parseFloat(vid.dataset.start);
+        const endT   = parseFloat(vid.dataset.end);
+        vid.addEventListener('loadedmetadata', () => { vid.currentTime = startT; });
+        vid.addEventListener('timeupdate', () => {
+          if (vid.currentTime >= endT) { vid.pause(); }
+        });
+      }
+    });
+
+    document.getElementById('results-section').style.display = 'block';
+    document.getElementById('result-counter').textContent =
+      `${results.length} solution${results.length !== 1 ? 's' : ''} found`;
+    currentIdx = 0;
+    updateTextBox(true);
+    updateNav();
+    document.getElementById('results-section').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function buildClipHtml(split, instanceId, startFrame, endFrame) {
+    const fps    = 25;
+    const startT = (startFrame / fps).toFixed(2);
+    const endT   = (endFrame   / fps).toFixed(2);
+    const slideIdx = allSlides.length;
+    return `
+      <div class="clip-wrapper">
+        <video id="clip-video-${slideIdx}" controls preload="metadata"
+               data-start="${startT}" data-end="${endT}"
+               src="/api/video/${split}/${instanceId}">
+        </video>
+        <div class="clip-label">frames ${startFrame} – ${endFrame} &nbsp;(${startT}s – ${endT}s)</div>
+      </div>`;
+  }
+
+  function guessplit(instancePath) {
+    if (!instancePath) return 'train';
+    if (instancePath.includes('train')) return 'train';
+    if (instancePath.includes('test'))  return 'test';
+    if (instancePath.includes('valid')) return 'valid';
+    return 'train';
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Carousel navigation
+  // ─────────────────────────────────────────────────────────────
+  function navigate(dir) {
+    allSlides[currentIdx].classList.remove('active');
+    currentIdx = Math.max(0, Math.min(allSlides.length - 1, currentIdx + dir));
+    allSlides[currentIdx].classList.add('active');
+    updateTextBox();
+    updateNav();
+  }
+
+  function updateNav() {
+    document.getElementById('prev-btn').disabled = (currentIdx === 0);
+    document.getElementById('next-btn').disabled = (currentIdx === allSlides.length - 1);
+    document.getElementById('carousel-page').textContent =
+      allSlides.length > 0 ? `${currentIdx + 1} / ${allSlides.length}` : '';
+  }
+
+  function updateTextBox(useAll) {
+    const box = document.getElementById('result-text');
+    const sel = document.getElementById('solution-select');
+    const inlineBox = document.getElementById('inline-result-text');
+    const inlineWrap = document.getElementById('inline-results');
+    if (!currentResults.length) {
+      box.value = '';
+      sel.innerHTML = '';
+      inlineBox.value = '';
+      inlineWrap.style.display = 'none';
+      return;
+    }
+    if (useAll) {
+      const allText = window.lastFullText || currentResults.map(r => r.text).join('\n');
+      box.value = allText;
+      sel.value = '-1';
+      inlineBox.value = allText;
+      inlineWrap.style.display = 'grid';
+      return;
+    }
+    const singleText = currentResults[currentIdx].text || '';
+    box.value = singleText;
+    sel.value = String(currentIdx);
+    inlineBox.value = singleText;
+    inlineWrap.style.display = 'grid';
+  }
+
+  function jumpTo(idx) {
+    if (idx < 0 || idx >= allSlides.length) return;
+    allSlides[currentIdx].classList.remove('active');
+    currentIdx = idx;
+    allSlides[currentIdx].classList.add('active');
+    updateTextBox(false);
+    updateNav();
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Utilities
+  // ─────────────────────────────────────────────────────────────
+  function clearResults() {
+    document.getElementById('results-section').style.display = 'none';
+    document.getElementById('carousel-track').innerHTML = '';
+    document.getElementById('result-text').value = '';
+    document.getElementById('solution-select').innerHTML = '';
+    document.getElementById('inline-result-text').value = '';
+    document.getElementById('inline-results').style.display = 'none';
+    allSlides  = [];
+    currentIdx = 0;
+    currentResults = [];
+    window.lastFullText = '';
+  }
+
+  function setStatus(msg, cls) {
+    const el = document.getElementById('status');
+    el.textContent  = msg;
+    el.className    = cls || '';
+  }
+
+  function escHtml(s) {
+    return String(s ?? '')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // Allow Ctrl+Enter to submit
+  document.getElementById('query-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) runQuery();
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // Init
+  // ─────────────────────────────────────────────────────────────
+  loadInstances();
+  </script>
+</body>
+</html>
+

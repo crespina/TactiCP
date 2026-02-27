@@ -30,7 +30,9 @@ public final class SelectExpr {
     public int atLeast = -1;
     public int searchMode = -1; // 0: all, 1: first, other: count
 
-    static final Path ROOT = Paths.get("data/SoccerNet/gamestate-2024");
+    static final Path ROOT = Paths.get(
+            System.getProperty("user.home"),
+            "GeometricPatternMatching", "data", "SoccerNet", "gamestate-2024");
     static final List<String> SPLITS = List.of("train", "test", "valid");
 
     public SelectExpr(Event... exprs) {
