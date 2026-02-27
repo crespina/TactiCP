@@ -136,7 +136,7 @@ public class Query {
             // ******
 
 
-            DFSearch search = makeDfs(cp, Searches.firstFail(intervals.stream()
+            DFSearch search = makeDfs(cp, Searches.firstFailBinary(intervals.stream()
                     .flatMap(itv -> Stream.of(start(itv), end(itv)))
                     .toArray(CPIntVar[]::new)));
             AtomicInteger solutionCounter = new AtomicInteger(0);

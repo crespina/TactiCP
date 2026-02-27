@@ -28,7 +28,7 @@ public class Main {
 
         long start = System.currentTimeMillis();
         SelectExpr s1 = SELECT(PLAYER("p1").PASSTO(PLAYER("p2")).MINRANGE()).FROM("SNGS-060").WHERE(START(20), END(400), WITHIN(200)).SEARCH(1); //toutes les passes
-        //s1.searchAndPrint();
+        s1.searchAndPrint();
         long finish = System.currentTimeMillis();
         long timeElapsed = finish - start;
         System.out.println(timeElapsed);
