@@ -27,8 +27,8 @@ public final class Team extends Entity {
 
     public List<Player> players() {return players;}
 
-    public TeamEvent MOVETO(int startZone, int endZone) {
-        return TeamEvent.moveTo(this, startZone, endZone);
+    public TeamEvent MOVETO(int startZone, int endZone, int k) {
+        return TeamEvent.moveTo(this, new int[]{startZone, endZone, k});
     }
 
     @Override

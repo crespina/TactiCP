@@ -2,7 +2,6 @@ package org.main.sn.logic;
 
 import org.main.sn.dsl.*;
 import org.main.util.Automaton;
-import org.maxicp.cp.CPFactory;
 import org.maxicp.cp.engine.core.CPBoolVar;
 import org.maxicp.cp.engine.core.CPIntVar;
 import org.maxicp.cp.engine.core.CPVar;
@@ -22,11 +21,10 @@ import static org.maxicp.cp.CPFactory.*;
 
 public class Query {
 
-    public List<String> apply(SelectExpr seq) {
+    public List<Result> apply(SelectExpr seq) {
 
-        CPSolver cp = CPFactory.makeSolver();
-
-        List<String> toPrint = new ArrayList<>();
+        CPSolver cp = makeSolver();
+        List<Result> r = new ArrayList<>();
 
         final List<Event> steps = seq.steps;
         final List<GameStateReconstructionInstance> matches = seq.matches;
@@ -136,9 +134,7 @@ public class Query {
             // ******
             // SEARCH
             // ******
-            toPrint.add("**************************");
-            toPrint.add("INSTANCE : " + instance.name);
-            toPrint.add("**************************"+"\n");
+
 
             DFSearch search = makeDfs(cp, Searches.firstFail(intervals.stream()
                     .flatMap(itv -> Stream.of(start(itv), end(itv)))
@@ -147,32 +143,7 @@ public class Query {
 
             search.onSolution(() -> {
                 int solnb = solutionCounter.getAndIncrement();
-                Result r = parseSolution(solnb, extVars);
-                List<String> formattedStrings = r.toFormattedStrings();
-                for (String s : formattedStrings){
-                    toPrint.add(s);
-                }
-//                toPrint.add("solution #" + solnb);
-//                toPrint.add("------------------\n");
-//                AtomicInteger i = new AtomicInteger();
-//                while (i.get() < extVars.size()) {
-//                    ExtendedCPVar ev = extVars.get(i.get());
-//                    CPIntervalVar intervalVar = (CPIntervalVar) ev.var;
-//                    if (ev.type.equals("AND_interval")) {
-//                        int frame_start = intervalVar.startMin();
-//                        int frame_end = intervalVar.endMax();
-//                        toPrint.add(" THE NEXT " + ev.subSz + " EVENTS ARE PART OF THE \"AND\" | frames: " + frame_start + " to " + frame_end);
-//                        i.incrementAndGet();
-//                    } else if (ev.type.equals("OR_interval")) {
-//                        int frame_start = intervalVar.startMin();
-//                        int frame_end = intervalVar.endMax();
-//                        toPrint.add(" THE NEXT " + ev.subSz + " EVENTS ARE PART OF THE \"OR\" | frames: " + frame_start + " to " + frame_end);
-//                        i.incrementAndGet();
-//                    } else {
-//                        onSolution(extVars, toPrint, i);
-//                    }
-//                    toPrint.add("\n");
-//                }
+                r.add(parseSolution(solnb, extVars, instance.name));
             });
 
             if (searchMode != -1 || atMost != -1 || atLeast != -1) {
@@ -185,7 +156,8 @@ public class Query {
                 search.solve();
             }
         }
-        return toPrint;
+
+        return r;
     }
 
 
@@ -1883,14 +1855,14 @@ public class Query {
         }
     }
 
-    public Result parseSolution(int solutionIndex, List<ExtendedCPVar> extVars) {
+    public Result parseSolution(int solutionIndex, List<ExtendedCPVar> extVars, String instance) {
         AtomicInteger i = new AtomicInteger(0);
         List<Result.ResultEvent> events = new ArrayList<>();
         while (i.get() < extVars.size()) {
             ExtendedCPVar ev = extVars.get(i.get());
             if ("AND_interval".equals(ev.type) || "OR_interval".equals(ev.type)) {
                 CPIntervalVar interval = (CPIntervalVar) ev.var;
-                Result.GroupEvent ge = new Result.GroupEvent(ev.event_idx, ev.type.equals("AND_interval") ? "AND" : "OR", ev.subSz, interval);
+                Result.GroupEvent ge = new Result.GroupEvent(ev.event_idx, ev.type.equals("AND_interval") ? "AND" : "OR", ev.subSz, new Result.ResultInterval(interval));
                 i.incrementAndGet();
                 for (int k = 0; k < ge.subSize && i.get() < extVars.size(); k++) {
                     Result.ResultEvent child = parseSingleEvent(extVars, i);
@@ -1902,12 +1874,13 @@ public class Query {
                 if (e != null) events.add(e);
             }
         }
-        return new Result(solutionIndex, events);
+        return new Result(solutionIndex, events, instance);
     }
 
     private Result.ResultEvent parseSingleEvent(List<ExtendedCPVar> extVars, AtomicInteger i) {
         ExtendedCPVar ev = extVars.get(i.get());
         CPIntervalVar intervalVar = (CPIntervalVar) ev.var;
+        Result.ResultInterval interval = new Result.ResultInterval(intervalVar);
         if ("PASS_TO".equals(ev.type)) {
             int eventIdx = ev.event_idx;
             boolean neg = ev.isNegated;
@@ -1916,7 +1889,7 @@ public class Query {
             i.incrementAndGet();
             int receiver = ((CPIntVar) extVars.get(i.get()).var).min();
             i.incrementAndGet();
-            return new Result.PassEvent(eventIdx, neg, intervalVar, passer, receiver);
+            return new Result.PassEvent(eventIdx, neg, interval, passer, receiver);
         } else if ("POSSESSION".equals(ev.type)) {
             int eventIdx = ev.event_idx;
             boolean neg = ev.isNegated;
@@ -1926,14 +1899,14 @@ public class Query {
                 players.add(((CPIntVar) extVars.get(i.get()).var).min());
                 i.incrementAndGet();
             }
-            return new Result.PossessionEvent(eventIdx, neg, intervalVar, players);
+            return new Result.PossessionEvent(eventIdx, neg, interval, players);
         } else if ("PLAYER_MOVE_TO".equals(ev.type)) {
             int eventIdx = ev.event_idx;
             boolean neg = ev.isNegated;
             i.incrementAndGet();
             int pid = ((CPIntVar) extVars.get(i.get()).var).min();
             i.incrementAndGet();
-            return new Result.PlayerMoveEvent(eventIdx, neg, intervalVar, pid);
+            return new Result.PlayerMoveEvent(eventIdx, neg, interval, pid);
         } else if ("TEAM_MOVE_TO".equals(ev.type)) {
             int eventIdx = ev.event_idx;
             boolean neg = ev.isNegated;
@@ -1943,7 +1916,7 @@ public class Query {
                 players.add(((CPIntVar) extVars.get(i.get()).var).min());
                 i.incrementAndGet();
             }
-            return new Result.TeamMoveEvent(eventIdx, neg, intervalVar, players);
+            return new Result.TeamMoveEvent(eventIdx, neg, interval, players);
         } else if ("POSITION".equals(ev.type)) {
             int eventIdx = ev.event_idx;
             boolean neg = ev.isNegated;
@@ -1953,7 +1926,12 @@ public class Query {
                 players.add(((CPIntVar) extVars.get(i.get()).var).min());
                 i.incrementAndGet();
             }
-            return new Result.PositionEvent(eventIdx, neg, intervalVar, players);
+            return new Result.PositionEvent(eventIdx, neg, interval, players);
+        } else if ("BALL_MOVE_TO".equals(ev.type)) {
+            int eventIdx = ev.event_idx;
+            boolean neg = ev.isNegated;
+            i.incrementAndGet();
+            return new Result.BallMoveEvent(eventIdx, neg, interval);
         } else {
             i.incrementAndGet();
             return null;

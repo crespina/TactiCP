@@ -17,7 +17,7 @@ public class Main {
 //
 //        SelectExpr movetoreel = SELECT(PLAYER("p1",2).MOVETO(4,10).MINRANGE()).FROM("SNGS-060");
 //        movetoreel.search();
-//
+//061
 //        SelectExpr s = SELECT(PLAYER("p2").PASSTO(PLAYER("p3")).MINRANGE()).FROM("SNGS-060");
 //
 //        Team t = TEAM("t1");
@@ -26,22 +26,22 @@ public class Main {
         // Test passTo
         // -----------
 
-        Player p1 = PLAYER("p1");
-        Player p2 = PLAYER("p2");
+        long start = System.currentTimeMillis();
+        SelectExpr s1 = SELECT(PLAYER("p1").PASSTO(PLAYER("p2")).MINRANGE()).FROM("SNGS-060").WHERE(START(20), END(400), WITHIN(200)).SEARCH(1); //toutes les passes
+        //s1.searchAndPrint();
+        long finish = System.currentTimeMillis();
+        long timeElapsed = finish - start;
+        System.out.println(timeElapsed);
 
-
-        Event e1 = p1.PASSTO(p2).MINRANGE();
-        SelectExpr s1 = SELECT(e1).FROM("SNGS-060, SNGS-061"); //toutes les passes
-        List<String> toPrint = s1.searchAndReturn();
-        for (String s : toPrint) {
-            System.out.println(s);
-        }
 
         System.out.println("-------------------");
 
         //Event e2 = p2.PASSTO(p1);
         //SelectExpr s2 = SELECT(e1, e2).FROM("all"); //1-2
         //s2.search();
+
+        Player p1 = PLAYER("p1");
+        Player p2 = PLAYER("p2");
 
         System.out.println("-------------------");
 
@@ -65,9 +65,9 @@ public class Main {
         //SelectExpr s5 = SELECT(p11.PASSTO(p2).MINRANGE()).FROM("SNGS-061"); //ball move to zone
         //SelectExpr s5 = SELECT(NOT(b.MOVETO(4,1)).MINRANGE()).FROM("SNGS-061"); //ball move to zone
         SelectExpr s5 = SELECT(AND(p11.PASSTO(p2).MINRANGE(),NOT(b.MOVETO(4,1)).MINRANGE())).FROM("SNGS-061"); //ball move to zone
-        //s5.search();
+        s5.searchAndPrint();
 
-        System.out.println("-------------------");
+        System.out.println("-------------------5");
 
         // test has ball
         // -------------
@@ -91,7 +91,7 @@ public class Main {
         //------------
 
         SelectExpr s8 = SELECT(p1.MOVETO(1, 6).MINRANGE(), p1.MOVETO(6, 7).MINRANGE()).FROM("SNGS-061"); // id : 13
-        //s8.search();
+        //s8.searchAndPrint();
 
         System.out.println("-------------------");
 
@@ -113,7 +113,7 @@ public class Main {
         SelectExpr s11 = SELECT(p13.MOVETO(6, 7)).FROM("SNGS-061").WHERE(START(10),END(740));
         //s11.search();
         SelectExpr s12 = SELECT(p15.MOVETO(1, 2)).FROM("SNGS-061");
-        s12.search();
+        s12.searchAndPrint();
 
         SelectExpr s13 = SELECT(AND(p13.MOVETO(6, 7), p15.MOVETO(1, 2))).FROM("SNGS-061");
         //s13.search();

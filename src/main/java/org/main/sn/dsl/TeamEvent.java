@@ -7,7 +7,7 @@ public class TeamEvent extends Event{
         super(action, subject);
     }
 
-    public static TeamEvent moveTo(Team team, int startZone, int endZone) {
-        return new TeamEvent(new Action("TEAM_MOVE_TO",  new int[]{startZone, endZone}), team);
+    public static TeamEvent moveTo(Team team, int[] zonesAndK) {
+        return new TeamEvent(new Action("TEAM_MOVE_TO",  zonesAndK), team);
     }
 }

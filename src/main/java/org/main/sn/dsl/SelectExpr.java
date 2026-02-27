@@ -2,6 +2,7 @@ package org.main.sn.dsl;
 
 import org.main.sn.logic.GameStateReconstructionInstance;
 import org.main.sn.logic.Query;
+import org.main.sn.logic.Result;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -164,24 +165,21 @@ public final class SelectExpr {
         throw new IllegalArgumentException("Unknown SNGS folder: " + name);
     }
 
-
-    public void search() {
+    public List<Result> search() {
         Query query = new Query();
         if (!matches.isEmpty()) {
-            List<String> toPrint = query.apply(this);
-            for (String str : toPrint) {
-                System.out.println(str);
-            }
+            return query.apply(this);
         } else {
             throw new IllegalStateException("No matches specified for sequence");
         }
     }
 
-    public List<String> searchAndReturn() {
+    public void searchAndPrint() {
         Query query = new Query();
         if (!matches.isEmpty()) {
-            List<String> toPrint = query.apply(this);
-            return toPrint;
+            List<Result> r = query.apply(this);
+            List<String> out = r.getFirst().formatAll(r);
+            out.forEach(System.out::println);
         } else {
             throw new IllegalStateException("No matches specified for sequence");
         }
