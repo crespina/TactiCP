@@ -111,6 +111,7 @@ public class Possession implements ConstraintPattern {
             int[] result = new int[n + 1];
             result[0] = 0;
             double threshold = 0.058;
+            //double threshold = 0.075;
 
             for (Map.Entry<Integer, GameStateReconstructionInstance.FrameData> e : positions.entrySet()) {
                 int frameID = e.getKey();
@@ -161,7 +162,9 @@ public class Possession implements ConstraintPattern {
 
                 //TODO : don't take into account distancesReconstruction when the trajectory of the ball is super weird
                 double bestDist = Double.POSITIVE_INFINITY;
+                double secondBestDist = Double.POSITIVE_INFINITY;
                 int closest_player = -1;
+                int second_closest_player = -1;
                 double wtrack = 0.5 / 1000.0;
                 double wrecons = 0.5 / 64.0;
 
@@ -170,8 +173,11 @@ public class Possession implements ConstraintPattern {
 
                     double dist = wtrack * distancesTracking[pid] + wrecons * distancesReconstruction[pid];
                     if (dist < bestDist) {
+                        secondBestDist = bestDist;
                         bestDist = dist;
                         closest_player = pid;
+                    } else if (dist < secondBestDist) {
+                        secondBestDist = dist;
                     }
                 }
 
@@ -184,28 +190,39 @@ public class Possession implements ConstraintPattern {
                     if (bestDist < threshold) {
                         result[frameID] = closest_player;
                     } else {
-                        result[frameID] = 0;
+                        if (bestDist < threshold * 2 && secondBestDist > 2 * bestDist) {
+                            result[frameID] = closest_player;
+                        } else {
+                            result[frameID] = 0;
+                        }
                     }
                 }
 
             }
 
             //if possession less than 3 frames, not really possession :
-            int start = -1;
-            for (int i = 1; i <= n; i++) {
-                if (result[i] != 0) {
-                    if (start == -1) start = i; // start of a possession
-                } else {
-                    if (start != -1) {
-                        int length = i - start;
-                        if (length <= 2) {
-                            for (int j = start; j < i; j++) result[j] = -1;
-                        }
-                        start = -1;
+
+            int i = 0;
+            while (i < result.length) {
+                int currentPlayer = result[i];
+                int j = i;
+
+                while (j < result.length && result[j] == currentPlayer) {
+                    j++;
+                }
+
+                int possessionLength = j - i;
+
+                // If the streak is too short, overwrite it with the previous player's ID
+                if (possessionLength <= 5) {
+                    int previousPlayer = (i > 0) ? result[i - 1] : result[j]; // fallback to next if at start
+                    for (int k = i; k < j; k++) {
+                        result[k] = previousPlayer;
                     }
                 }
-            }
 
+                i = j;
+            }
             this.result = result;
         }
     }
