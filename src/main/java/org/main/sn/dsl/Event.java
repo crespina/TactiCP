@@ -5,7 +5,8 @@ public abstract class Event {
     private final Entity subject;
     public int timeStart = -1;
     public int timeEnd = -1;
-    public int duration = -1;
+    public int maxDuration = -1;
+    public int minDuration = -1;
     public int xtop = -1;
     public int ytop = -1;
     public int w = -1;
@@ -26,7 +27,8 @@ public abstract class Event {
             switch (w.kind()) {
                 case START -> this.timeStart = w.values()[0];
                 case END -> this.timeEnd = w.values()[0];
-                case WITHIN -> this.duration = w.values()[0];
+                case WITHIN -> this.maxDuration = w.values()[0];
+                case MIN_DURATION -> this.minDuration = w.values()[0];
                 case RADIUS -> {
                     this.xcenter = w.values()[0];
                     this.ycenter = w.values()[1];
@@ -49,7 +51,7 @@ public abstract class Event {
         if (amount < 0) {
             throw new IllegalArgumentException("Duration must be a non-negative value.");
         }
-        this.duration = amount; //in frame
+        this.maxDuration = amount; //in frame
         return this;
     }
 

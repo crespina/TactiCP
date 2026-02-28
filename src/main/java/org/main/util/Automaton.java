@@ -213,9 +213,9 @@ public class Automaton {
 
         int start = 0, afterLead = 1, Astate = 2, midPad = 3, Bstate = 4, accept = 5;
 
-        // from start: any not{A,B} (including 0) -> afterLead
+        // from start: any not{A} (including 0) -> afterLead
         for (int x = 0; x <= nPlayers; x++) {
-            if (x != A && x != B) res[start][x] = afterLead;
+            if (x != A) res[start][x] = afterLead;
         }
 
         // afterLead: must see A to begin A+

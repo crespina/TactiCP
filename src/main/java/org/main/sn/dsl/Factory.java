@@ -146,8 +146,12 @@ public class Factory {
         return Where.of(Where.Kind.WITHIN, frames);
     }
 
-    public static Where RECTANGLE(int x1, int y1, int x2, int y2) {
-        return Where.of(Where.Kind.RECTANGLE, x1, y1, x2, y2);
+    public static Where MIN_DURATION(int frames) {
+        return Where.of(Where.Kind.MIN_DURATION, frames);
+    }
+
+    public static Where RECTANGLE(int xtop, int ytop, int w, int h) {
+        return Where.of(Where.Kind.RECTANGLE, xtop, ytop, w, h);
     }
 
     public static Where RADIUS(int x, int y, int r) {

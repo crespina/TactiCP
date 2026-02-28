@@ -28,7 +28,7 @@ public class Main {
 
         long start = System.currentTimeMillis();
         SelectExpr s1 = SELECT(PLAYER("p1").PASSTO(PLAYER("p2")).MINRANGE()).FROM("SNGS-060").WHERE(START(20), END(400), WITHIN(200)).SEARCH(1); //toutes les passes
-        s1.searchAndPrint();
+        //s1.searchAndPrint();
         long finish = System.currentTimeMillis();
         long timeElapsed = finish - start;
         System.out.println(timeElapsed);
@@ -90,8 +90,8 @@ public class Main {
         //test move to
         //------------
 
-        SelectExpr s8 = SELECT(p1.MOVETO(1, 6).MINRANGE(), p1.MOVETO(6, 7).MINRANGE()).FROM("SNGS-061"); // id : 13
-        //s8.searchAndPrint();
+        SelectExpr s8 = SELECT( p1.MOVETO(6, 7)).FROM("SNGS-061"); // id : 13
+        s8.searchAndPrint();
 
         System.out.println("-------------------");
 
