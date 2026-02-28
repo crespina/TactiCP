@@ -22,7 +22,7 @@ public class GameStateReconstructionInstance implements Instance {
     public String name;
 
     public GameStateReconstructionInstance(String instanceFolderPath) {
-        this.name = instanceFolderPath.substring("data/SoccerNet/gamestate-2024/".length());
+        this.name = instanceFolderPath.substring(instanceFolderPath.lastIndexOf('/') +1);;
         File JsonFile = new File(instanceFolderPath + "/Labels-GameState.json");
         ObjectMapper om = new ObjectMapper();
         Root root = om.readValue(JsonFile, Root.class);

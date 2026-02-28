@@ -15,7 +15,8 @@ import java.util.stream.Stream;
 public final class SelectExpr {
     public final List<Event> steps = new ArrayList<>();
     public final List<GameStateReconstructionInstance> matches = new ArrayList<>();
-    public int duration = -1;
+    public int maxDuration = -1;
+    public int minDuration = -1;
     public int start = -1;
     public int end = -1;
     public int xcenter = -1;
@@ -59,7 +60,7 @@ public final class SelectExpr {
         if (duration < 0) {
             throw new IllegalArgumentException("Duration must be a non-negative value.");
         }
-        this.duration = duration;
+        this.maxDuration = duration;
         return this;
     }
 
@@ -101,7 +102,8 @@ public final class SelectExpr {
             switch (w.kind()) {
                 case START -> this.start = w.values()[0];
                 case END -> this.end = w.values()[0];
-                case WITHIN -> this.duration = w.values()[0];
+                case WITHIN -> this.maxDuration = w.values()[0];
+                case MIN_DURATION -> this.minDuration = w.values()[0];
                 case RADIUS -> {
                     this.xcenter = w.values()[0];
                     this.ycenter = w.values()[1];
@@ -180,8 +182,14 @@ public final class SelectExpr {
         Query query = new Query();
         if (!matches.isEmpty()) {
             List<Result> r = query.apply(this);
-            List<String> out = r.getFirst().formatAll(r);
-            out.forEach(System.out::println);
+            if (r.size() == 0) {
+                System.out.println("No matches found for the given query.");
+                return;
+            } else {
+                List<String> out = r.getFirst().formatAll(r);
+                out.forEach(System.out::println);
+            }
+
         } else {
             throw new IllegalStateException("No matches specified for sequence");
         }
