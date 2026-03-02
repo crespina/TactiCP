@@ -5,9 +5,11 @@ import org.main.sn.logic.Result;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.nio.file.*;
 import java.util.*;
 import java.util.logging.Logger;
@@ -20,9 +22,23 @@ public class QueryController {
 
     private static final Logger log = Logger.getLogger(QueryController.class.getName());
 
-    private static final Path GAMESTATE_ROOT = Paths.get(
-            System.getProperty("user.home"),
-            "GeometricPatternMatching", "data", "SoccerNet", "gamestate-2024");
+    /**
+     * Data root is configurable via:
+     *   -Ddata.root=/path/to/gamestate-2024
+     * or env var DATA_ROOT.
+     * Falls back to $HOME/GeometricPatternMatching/data/SoccerNet/gamestate-2024
+     */
+    private static final Path GAMESTATE_ROOT = resolveDataRoot();
+
+    private static Path resolveDataRoot() {
+        String prop = System.getProperty("data.root");
+        if (prop != null && !prop.isBlank()) return Paths.get(prop);
+        String env = System.getenv("DATA_ROOT");
+        if (env != null && !env.isBlank()) return Paths.get(env);
+        return Paths.get(System.getProperty("user.home"),
+                "GeometricPatternMatching", "data", "SoccerNet", "gamestate-2024");
+    }
+
     private static final List<String> SPLITS = List.of("train", "test", "valid");
 
     /** List all available instances that have a video file */
@@ -49,26 +65,77 @@ public class QueryController {
         return result;
     }
 
-    /** Serve the video file directly via servlet response */
+    /**
+     * Serve video with full HTTP Range support.
+     * Browsers require Range requests for video seeking / streaming.
+     */
     @GetMapping("/video/{split}/{instance}")
     public void getVideo(@PathVariable("split") String split,
                          @PathVariable("instance") String instance,
+                         HttpServletRequest request,
                          HttpServletResponse response) throws IOException {
         Path videoPath = GAMESTATE_ROOT.resolve(split).resolve(instance).resolve("vid.mp4");
         Path absolute  = videoPath.toAbsolutePath();
-        log.info("Video requested: " + absolute + " | cwd: " + Paths.get("").toAbsolutePath());
+        log.info("Video requested: " + absolute);
 
         if (!Files.exists(videoPath)) {
-            String msg = "Video not found at: " + absolute + " | cwd: " + Paths.get("").toAbsolutePath();
-            log.warning(msg);
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, msg);
+            log.warning("Video not found: " + absolute);
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Not found: " + absolute);
             return;
         }
 
+        long fileLength = Files.size(videoPath);
+        String rangeHeader = request.getHeader("Range");
+
         response.setContentType("video/mp4");
-        response.setContentLengthLong(Files.size(videoPath));
-        try (OutputStream out = response.getOutputStream()) {
-            Files.copy(videoPath, out);
+        response.setHeader("Accept-Ranges", "bytes");
+
+        if (rangeHeader == null) {
+            // No Range header: send the whole file
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.setContentLengthLong(fileLength);
+            try (OutputStream out = response.getOutputStream()) {
+                Files.copy(videoPath, out);
+            }
+        } else {
+            // Parse Range: bytes=start-end
+            long start = 0;
+            long end = fileLength - 1;
+            String rangeValue = rangeHeader.replace("bytes=", "").trim();
+            String[] parts = rangeValue.split("-");
+            if (!parts[0].isEmpty()) {
+                start = Long.parseLong(parts[0]);
+            }
+            if (parts.length > 1 && !parts[1].isEmpty()) {
+                end = Long.parseLong(parts[1]);
+            }
+            if (start > end || start >= fileLength) {
+                response.setStatus(HttpServletResponse.SC_REQUESTED_RANGE_NOT_SATISFIABLE);
+                response.setHeader("Content-Range", "bytes */" + fileLength);
+                return;
+            }
+            if (end >= fileLength) {
+                end = fileLength - 1;
+            }
+            long contentLength = end - start + 1;
+
+            response.setStatus(206); // Partial Content
+            response.setContentLengthLong(contentLength);
+            response.setHeader("Content-Range", "bytes " + start + "-" + end + "/" + fileLength);
+
+            try (RandomAccessFile raf = new RandomAccessFile(videoPath.toFile(), "r");
+                 OutputStream out = response.getOutputStream()) {
+                raf.seek(start);
+                byte[] buffer = new byte[8192];
+                long remaining = contentLength;
+                while (remaining > 0) {
+                    int toRead = (int) Math.min(buffer.length, remaining);
+                    int read = raf.read(buffer, 0, toRead);
+                    if (read <= 0) break;
+                    out.write(buffer, 0, read);
+                    remaining -= read;
+                }
+            }
         }
     }
 
@@ -81,7 +148,8 @@ public class QueryController {
         Path absolute  = videoPath.toAbsolutePath();
         String msg = "exists=" + Files.exists(videoPath)
                 + "\nresolved=" + absolute
-                + "\nworkingDir=" + Paths.get("").toAbsolutePath();
+                + "\nworkingDir=" + Paths.get("").toAbsolutePath()
+                + "\nGAMESTATE_ROOT=" + GAMESTATE_ROOT;
         response.setContentType("text/plain");
         response.getWriter().write(msg);
     }
