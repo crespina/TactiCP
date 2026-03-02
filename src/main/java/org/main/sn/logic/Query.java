@@ -2,12 +2,12 @@ package org.main.sn.logic;
 
 import org.main.sn.dsl.*;
 import org.main.util.Automaton;
-import org.maxicp.cp.engine.constraints.scheduling.Alternative;
 import org.maxicp.cp.engine.core.CPBoolVar;
 import org.maxicp.cp.engine.core.CPIntVar;
 import org.maxicp.cp.engine.core.CPVar;
 import org.maxicp.cp.engine.core.CPIntervalVar;
 import org.maxicp.cp.engine.core.CPSolver;
+
 
 import org.maxicp.search.DFSearch;
 import org.maxicp.search.Searches;
@@ -29,7 +29,8 @@ public class Query {
 
         final List<Event> steps = seq.steps;
         final List<GameStateReconstructionInstance> matches = seq.matches;
-        int total_duration = seq.maxDuration;
+        int total_max_duration = seq.maxDuration;
+        int total_min_duration = seq.minDuration;
         int total_start = seq.start;
         int total_end = seq.end;
         int total_radius = seq.radius;
@@ -119,8 +120,11 @@ public class Query {
                 CPIntervalVar lastVar = intervals.getLast();
                 CPIntervalVar firstVar = intervals.getFirst();
 
-                if (total_duration != -1) {
-                    cp.post(le(sum(end(lastVar), minus(start(firstVar))), total_duration));
+                if (total_max_duration != -1) {
+                    cp.post(le(sum(end(lastVar), minus(start(firstVar))), total_max_duration));
+                }
+                if (total_min_duration != -1) {
+                    cp.post(ge(sum(end(lastVar), minus(start(firstVar))), total_min_duration));
                 }
                 if (total_start != -1) {
                     cp.post(ge(start(firstVar), total_start));
@@ -138,15 +142,14 @@ public class Query {
             // ******
 
 
-            DFSearch search = makeDfs(cp, Searches.firstFailBinary(intervals.stream()
-                    .flatMap(itv -> Stream.of(start(itv), end(itv)))
-                    .toArray(CPIntVar[]::new)));
+            DFSearch search = makeDfs(cp, Searches.firstFailBinary(
+                    Stream.concat(
+                            IDENTIFIERS.values().stream(),
+                            intervals.stream().flatMap(itv -> Stream.of(start(itv), end(itv)))
+                    ).toArray(CPIntVar[]::new)));
             AtomicInteger solutionCounter = new AtomicInteger(0);
 
             search.onSolution(() -> {
-                System.out.println(Arrays.toString(intervals.stream()
-                        .flatMap(itv -> Stream.of(start(itv), end(itv)))
-                        .toArray(CPIntVar[]::new)));
                 int solnb = solutionCounter.getAndIncrement();
                 r.add(parseSolution(solnb, extVars, instance.name));
             });
@@ -353,7 +356,7 @@ public class Query {
                             event_radius, event_xtop, event_ytop, event_w, event_h, total_xcenter,
                             total_ycenter, total_radius, total_xtop, total_ytop, total_w, total_h,
                             subject, teams, positionBox_x, positionBox_y, positionZones, payload, n, IDENTIFIERS,
-                            counterVars, action, extVars, minrange, childIdx);
+                            counterVars, action, extVars, minrange, childIdx, nbChild, intervals);
 
             //TEAM + PLAYER EVENTS
 
@@ -507,7 +510,7 @@ public class Query {
             IDENTIFIERS.put(player_from.name, passer_id);
         } else {
             passer_id = IDENTIFIERS.get(player_from.name);
-            cp.post(eq(passer_id, element(possession, start(eventInterval))));
+            if (!isNegated) cp.post(eq(passer_id, element(possession, start(eventInterval))));
 
         }
 
@@ -519,7 +522,7 @@ public class Query {
             IDENTIFIERS.put(player_to.name, receiver_id);
         } else {
             receiver_id = IDENTIFIERS.get(player_to.name);
-            cp.post(eq(receiver_id, element(possession, end(eventInterval))));
+            if (!isNegated) cp.post(eq(receiver_id, element(possession, end(eventInterval))));
         }
 
 
@@ -793,8 +796,8 @@ public class Query {
                     cp.post(eq(start(after), end(thisPlayerTrueInterval)));
                     cp.post(eq(end(after), latest));
 
-                    CPBoolVar isBefore = isEq(sum(isEq(start(eventInterval), start(before)), isEq(end(eventInterval), end(before)), isEq(player_id, pl_id)), 3);
-                    CPBoolVar isAfter = isEq(sum(isEq(start(eventInterval), start(after)), isEq(end(eventInterval), end(after)), isEq(player_id, pl_id)), 3);
+                    CPBoolVar isBefore = isEq(sum(isEq(start(eventInterval), start(before)), isEq(end(eventInterval), end(before)), isThisPlayerVars[pl_id]), 3);
+                    CPBoolVar isAfter = isEq(sum(isEq(start(eventInterval), start(after)), isEq(end(eventInterval), end(after)), isThisPlayerVars[pl_id]), 3);
                     // if isThisPlayerVars[pl_id] is true, then the player is in the event interval, and the interval is either before or after the event interval, but not both
                     cp.post(implies(isThisPlayerVars[pl_id], isEq(sum(isBefore, isAfter), 1)));
 
@@ -813,21 +816,25 @@ public class Query {
             CPBoolVar[] isThisPlayerVars = new CPBoolVar[teams.length];
 
             for (int pl_id : possible_players) {
-                if (pl_id == 0){
+                if (pl_id == 0) {
                     continue;
                 }
-                CPIntervalVar thisPlayerTrueInterval = makeIntervalVar(cp, false, 0, n+1);
+                CPIntervalVar thisPlayerTrueInterval = makeIntervalVar(cp, false, 0, n + 1);
                 try {
                     if (minrange) {
                         cp.post(new RegularInterval(positionZones[pl_id], thisPlayerTrueInterval, Automaton.A_NOTBSTAR_B(teams.length, zone_start, zone_end)));
                     } else {
-                        CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n+1);
+                        CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n + 1);
                         int[] paddedArray = Automaton.pad(positionZones[pl_id]);
                         cp.post(new RegularInterval(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADSTAR_BPLUS_PAD(teams.length, zone_start, zone_end)));
                         cp.post(eq(start(thisPlayerTrueInterval), start(paddedInterval)));
-                        cp.post(eq(end(thisPlayerTrueInterval), minus(end(paddedInterval),3)));
+                        cp.post(eq(end(thisPlayerTrueInterval), minus(end(paddedInterval), 3)));
                     }
-                    isThisPlayerVars[pl_id] = isEq(sum(isEq(player_id, pl_id), isEq(start(thisPlayerTrueInterval), start(eventInterval)), isEq(end(thisPlayerTrueInterval), end(eventInterval))), 3);
+                    //isThisPlayerVars[pl_id] = isEq(sum(isEq(player_id, pl_id), isEq(start(thisPlayerTrueInterval), start(eventInterval)), isEq(end(thisPlayerTrueInterval), end(eventInterval))), 3);
+                    isThisPlayerVars[pl_id] = isEq(player_id, pl_id);
+                    cp.post(implies(isThisPlayerVars[pl_id], isEq(start(thisPlayerTrueInterval), start(eventInterval))));
+                    cp.post(implies(isThisPlayerVars[pl_id], isEq(end(thisPlayerTrueInterval), end(eventInterval))));
+
                 } catch (InconsistencyException e) {
                     isThisPlayerVars[pl_id] = makeBoolVar(cp);
                     isThisPlayerVars[pl_id].fix(false);
@@ -903,7 +910,7 @@ public class Query {
                                    int total_xtop, int total_ytop, int total_w, int total_h,
                                    Entity subject, int[] teams, int[][] positionBox_x, int[][] positionBox_y,
                                    int[][] positionZones, Object payload, int n, Map<String, CPIntVar> IDENTIFIERS,
-                                   AtomicInteger counterVars, Action action, ArrayList<ExtendedCPVar> extVars, boolean minrange, int childIdx) {
+                                   AtomicInteger counterVars, Action action, ArrayList<ExtendedCPVar> extVars, boolean minrange, int childIdx, int nbChild, ArrayList<CPIntervalVar> intervals) {
 
 
         int[] zonesAndK = (int[]) payload;
@@ -924,18 +931,21 @@ public class Query {
 
         Team team = (Team) subject;
 
-        CPIntervalVar[] chosenIntervals = new CPIntervalVar[team.players.size()];
         CPIntVar[] playerIds = new CPIntVar[team.players.size()];
         int teamPlayer = 0;
 
         if (isNegated) {
+            CPIntervalVar[] chosenIntervals = new CPIntervalVar[team.players.size()];
             for (Player player : team.players()) {
 
                 CPIntVar player_id;
-                chosenIntervals[teamPlayer] = makeIntervalVar(cp);
+                chosenIntervals[teamPlayer] = makeIntervalVar(cp, 0, n+1);
 
                 if (IDENTIFIERS.get(player.name()) == null) {
                     player_id = makeIntVar(cp, teams.length);
+                    for (CPIntVar v : IDENTIFIERS.values()) {
+                        cp.post(neq(player_id, v));
+                    }
                     IDENTIFIERS.put(player.name, player_id);
                 } else {
                     player_id = IDENTIFIERS.get(player.name);
@@ -980,7 +990,7 @@ public class Query {
                         continue;
                     }
 
-                    CPIntervalVar thisPlayerTrueInterval = makeIntervalVar(cp);
+                    CPIntervalVar thisPlayerTrueInterval = makeIntervalVar(cp, false, 0, n+1);
                     try {
                         if (minrange) {
                             cp.post(new RegularInterval(positionZones[pl_id], thisPlayerTrueInterval, Automaton.A_NOTBSTAR_B(teams.length, zone_start, zone_end)));
@@ -989,18 +999,48 @@ public class Query {
                             int[] paddedArray = Automaton.pad(positionZones[pl_id]);
                             cp.post(new RegularInterval(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADSTAR_BPLUS_PAD(teams.length, zone_start, zone_end)));
                             cp.post(eq(start(thisPlayerTrueInterval), start(paddedInterval)));
-                            cp.post(eq(end(thisPlayerTrueInterval), minus(end(paddedInterval),2)));
+                            cp.post(eq(end(thisPlayerTrueInterval), minus(end(paddedInterval),3)));
                         }
 
-                        CPIntervalVar before = makeIntervalVar(cp, false, 0, n+1);
-                        CPIntervalVar after = makeIntervalVar(cp, false, 0, n+1);
-                        chosenIntervals[teamPlayer++] = before;
-                        chosenIntervals[teamPlayer++] = after;
+                        isThisPlayerVars[pl_id] = isEq(player_id, pl_id);
 
+                        CPIntervalVar before = makeIntervalVar(cp, false, 0, n + 1);
+                        CPIntervalVar after = makeIntervalVar(cp, false, 0, n + 1);
+
+                        CPIntVar earliest = makeIntVar(cp, n + 1);
+                        CPIntVar latest = makeIntVar(cp, n + 1);
+
+                        int isNotAndEvent = nbChild == 0 ? 1 : 0;
+                        if (counterEvent.get() - childIdx - 1 + isNotAndEvent == 0) { //it's the first event
+                            cp.post(eq(earliest, 0));
+                        } else {
+                            cp.post(eq(earliest, end(intervals.get(counterEvent.get() - 1 - childIdx))));
+                        }
+                        if (counterEvent.get() - childIdx + nbChild + isNotAndEvent == intervals.size()) { //it's the last event
+                            cp.post(eq(latest, n));
+                        } else {
+                            cp.post(eq(latest, start(intervals.get(counterEvent.get() + 1))));
+                        }
+
+                        cp.post(eq(start(before), earliest));
                         cp.post(eq(end(before), start(thisPlayerTrueInterval)));
                         cp.post(eq(start(after), end(thisPlayerTrueInterval)));
+                        cp.post(eq(end(after), latest));
 
-                        isThisPlayerVars[pl_id] = isEq(sum(isEq(sum(isEq(start(thisPlayerTrueInterval), start(before)), isEq(end(thisPlayerTrueInterval), end(before)), isEq(player_id, pl_id)), 3), sum(isEq(sum(isEq(start(thisPlayerTrueInterval), start(after)), isEq(end(thisPlayerTrueInterval), end(after)), isEq(player_id, pl_id)), 3))), 1); //exactly one of the two must be true
+                        CPBoolVar startMatchesBefore = isEq(startOr(chosenIntervals[teamPlayer], -1), start(before));
+                        CPBoolVar endMatchesBefore = isEq(endOr(chosenIntervals[teamPlayer], -1), end(before));
+                        CPBoolVar startMatchesAfter = isEq(startOr(chosenIntervals[teamPlayer], -1), start(after));
+                        CPBoolVar endMatchesAfter = isEq(endOr(chosenIntervals[teamPlayer], -1), end(after));
+
+                        CPBoolVar isBefore = makeBoolVar(cp);
+                        cp.post(implies(isBefore, startMatchesBefore));
+                        cp.post(implies(isBefore, endMatchesBefore));
+
+                        CPBoolVar isAfter = makeBoolVar(cp);
+                        cp.post(implies(isAfter, startMatchesAfter));
+                        cp.post(implies(isAfter, endMatchesAfter));
+
+                        cp.post(implies(isThisPlayerVars[pl_id], isEq(sum(isBefore, isAfter), 1)));
 
                     } catch (InconsistencyException e){
                         isThisPlayerVars[pl_id] = makeBoolVar(cp);
@@ -1010,33 +1050,17 @@ public class Query {
                 cp.post(eq(sum(Arrays.stream(isThisPlayerVars)
                         .filter(Objects::nonNull)
                         .toArray(CPBoolVar[]::new)), 1));
+                teamPlayer++;
             }
 
             cp.post(ge(sum(Arrays.stream(chosenIntervals).map(CPIntervalVar::status).toArray(CPIntVar[]::new)), k));
-
-            CPIntVar maxStart = makeIntVar(cp, n);
-            for (CPIntervalVar itv : chosenIntervals) {
-                CPIntVar s = start(itv);
-                CPIntVar active = itv.status(); // 1 if present/active, 0 otherwise
-
-                // If active==1:  maxStart >= s
-                // If active==0:  maxStart >= s - M  (always true)
-                cp.post(ge(maxStart, sum(s, minus(mul(plus(minus(active), 1), n)))));
-            }
-            cp.post(eq(maxStart, event_start));
-
-            CPIntVar minEnd = makeIntVar(cp, n);
-            for (CPIntervalVar itv : chosenIntervals) {
-                CPIntVar e = end(itv);
-                CPIntVar active = itv.status(); // 1 if present/active, 0 otherwise
-
-                // If active==1:  minStart <= e
-                // If active==0:  minStart <= n - s  (always true)
-                cp.post(le(minEnd, sum(e, mul(plus(minus(active), 1), n))));
-            }
-            cp.post(eq(minEnd, event_end));
+            CPIntVar[] starts = Arrays.stream(chosenIntervals).map(itv -> startOr(itv, -1)).toArray(CPIntVar[]::new);
+            cp.post(eq(event_start,  max(starts)));
+            CPIntVar[] ends = Arrays.stream(chosenIntervals).map(itv -> endOr(itv, n+2)).toArray(CPIntVar[]::new);
+            cp.post(eq(event_end, minimum(ends)));
 
         } else {
+            CPIntervalVar[] chosenIntervals = new CPIntervalVar[team.players.size()];
             for (Player player : team.players()) {
 
                 CPIntVar player_id;
@@ -1114,37 +1138,11 @@ public class Query {
                 teamPlayer++;
             }
 
-            //Enforces that if the interval a is present, then c intervals from the array alt must be present and synchronized* with a
-
            cp.post(ge(sum(Arrays.stream(chosenIntervals).map(CPIntervalVar::status).toArray(CPIntVar[]::new)), k));
 
-//            CPIntVar maxStart = makeIntVar(cp, n);
-//            for (CPIntervalVar itv : chosenIntervals) {
-//                CPIntVar s = startOr(itv, 0);
-//                CPIntVar active = itv.status(); // 1 if present/active, 0 otherwise
-//
-//                // If active==1:  maxStart >= s
-//                // If active==0:  maxStart >= s - M  (always true)
-//                cp.post(implies(isEq(active,1), isEq(maxStart, s)));
-//                //cp.post(ge(maxStart, sum(s, minus(mul(plus(minus(active), 1), n)))));
-//            }
-//            cp.post(eq(maxStart, event_start));
-//
-//            CPIntVar minEnd = makeIntVar(cp, n);
-//            for (CPIntervalVar itv : chosenIntervals) {
-//                CPIntVar e = endOr(itv,n+1);
-//                CPIntVar active = itv.status(); // 1 if present/active, 0 otherwise
-//
-//                // If active==1:  minStart <= e
-//                // If active==0:  minStart <= n - s  (always true)
-//                cp.post(implies(isEq(active,1), isEq(minEnd, e)));
-//                //cp.post(le(minEnd, sum(e, mul(plus(minus(active), 1), n))));
-//            }
-//            cp.post(eq(minEnd, event_end));
-
-            CPIntVar[] starts = Arrays.stream(chosenIntervals).filter(itv -> itv.isPresent()).map(itv -> startOr(itv, 0)).toArray(CPIntVar[]::new);
+            CPIntVar[] starts = Arrays.stream(chosenIntervals).map(itv -> startOr(itv, 0)).toArray(CPIntVar[]::new);
             cp.post(eq(event_start,  max(starts)));
-            CPIntVar[] ends = Arrays.stream(chosenIntervals).filter(itv -> itv.isPresent()).map(itv -> endOr(itv, n)).toArray(CPIntVar[]::new);
+            CPIntVar[] ends = Arrays.stream(chosenIntervals).map(itv -> endOr(itv, n)).toArray(CPIntVar[]::new);
             cp.post(eq(event_end, minimum(ends)));
 
         }
@@ -1174,13 +1172,20 @@ public class Query {
                     circles.add(new int[]{(int) Math.pow(total_radius, 2), total_xcenter, total_ycenter});
 
                 for (int[] circle : circles) {
-                    for (CPIntVar pl : playerIds) {
-                        CPBoolVar[] pl_inside_circle = new CPBoolVar[n]; //true = 1, false = 0
-                        for (int f = 0; f < n; f++) {
-                            CPIntVar distx = mul(minus(element(positionBox_x_T[f], pl), circle[1]), minus(element(positionBox_x_T[f], pl), circle[1]));
-                            CPIntVar disty = mul(minus(element(positionBox_y_T[f], pl), circle[2]), minus(element(positionBox_y_T[f], pl), circle[2]));
-                            pl_inside_circle[f] = isLe(sum(distx, disty), circle[0]); //inside the circle
+                    for (int plIdx = 0; plIdx < playerIds.length; plIdx++) {
+                        CPIntVar pl = playerIds[plIdx];
+                        int[] possible_players = new int[teams.length];
+                        pl.fillArray(possible_players);
 
+                        CPBoolVar[] pl_inside_circle = new CPBoolVar[n];
+                        for (int f = 0; f < n; f++) {
+                            int[] insideCircle = new int[teams.length];
+                            for (int pid = 0; pid < teams.length; pid++) {
+                                int dx = positionBox_x_T[f][pid] - circle[1];
+                                int dy = positionBox_y_T[f][pid] - circle[2];
+                                insideCircle[pid] = (dx * dx + dy * dy <= circle[0]) ? 1 : 0;
+                            }
+                            pl_inside_circle[f] = isEq(element(insideCircle, pl), 1);
                         }
                         cp.post(new TrueInterval(pl_inside_circle, eventInterval));
                     }
@@ -1216,15 +1221,18 @@ public class Query {
                                int[][] positionBox_y, int[][] positionZones, Object payload, int n,
                                Map<String, CPIntVar> IDENTIFIERS, AtomicInteger counterVars, Action action, ArrayList<ExtendedCPVar> extVars, int ball_idx, int childIdx, ArrayList<CPIntervalVar> intervals, int nbChild) {
 
-        Set<Integer> playerIds = new HashSet<>();
-
         if (subject instanceof Player player) {
             int[] zones = (int[]) payload;
+            if (zones.length==0){
+                throw new IllegalArgumentException("At least one zone must be specified for POSITION");
+            }
 
-            CPIntVar player_id;
+            CPIntVar player_id = makeIntVar(cp, teams.length);
 
             if (IDENTIFIERS.get(player.name()) == null) {
-                player_id = makeIntVar(cp, teams.length);
+                for (CPIntVar v : IDENTIFIERS.values()) {
+                    cp.post(neq(player_id, v));
+                }
                 IDENTIFIERS.put(player.name, player_id);
             } else {
                 player_id = IDENTIFIERS.get(player.name);
@@ -1241,70 +1249,163 @@ public class Query {
 
             if (player.id() != null) {
                 cp.post(eq(player_id, player.id()));
-                playerIds.add(player.id());
             } else if (player.team() != null) {
                 int team = player.team().equals("left") ? 0 : 1;
                 for (int i = 0; i < teams.length; i++) {
-                    if (teams[i] == team) {
-                        playerIds.add(i);
+                    if (teams[i] != team) {
+                        player_id.remove(i);
                     }
                 }
             } else {
                 for (int i = 0; i < positionZones.length; i++) {
-                    if (teams[i] == 0 || teams[i] == 1) {
-                        playerIds.add(i);
+                    if (teams[i] != 0 && teams[i] != 1) {
+                        player_id.remove(i);
                     }
                 }
             }
 
             if (isNegated) {
-                CPIntervalVar trueInterval = makeIntervalVar(cp, false, 0, n+1);
-                CPIntervalVar[] playersIntervals = new CPIntervalVar[playerIds.size()];
-                int counter = 0;
-                for (int id : playerIds) {
-                    playersIntervals[counter] = makeIntervalVar(cp);
-                    cp.post(new RegularInterval(positionZones[id], playersIntervals[counter], Automaton.AS_PLUS(teams.length, Arrays.stream(zones).boxed().collect(Collectors.toSet()))));
-                    counter++;
-                }
-                // sum of status of playersIntervals == 1
-                CPBoolVar[] playerInZones = makeBoolVarArray(cp, playerIds.size());
-                for (int i = 0; i < playerIds.size(); i++) {
-                    playerInZones[i] = playersIntervals[i].status();
-                }
-                cp.post(eq(sum(playerInZones), 1));
-                //the status of the interval is 1 -> the player_id is the one corresponding to the interval; and eventInterval = playerInterval
-                counter = 0;
-                for (int id : playerIds) {
-                    cp.post(or(not(playerInZones[counter]), isEq(player_id, id), isEq(start(trueInterval), start(playersIntervals[counter])), isEq(end(trueInterval), end(playersIntervals[counter]))));
-                    counter++;
-                }
-                CPIntervalVar before = makeIntervalVar(cp, false, 0, n+1);
-                CPIntervalVar after = makeIntervalVar(cp, false, 0, n+1);
+                int[] possible_players = new int[teams.length];
+                player_id.fillArray(possible_players);
+                CPBoolVar[] isThisPlayerVars = new CPBoolVar[teams.length];
 
-                cp.post(eq(end(before), start(trueInterval)));
-                cp.post(eq(start(after), end(trueInterval)));
+                for (int pl_id : possible_players) {
+                    if (pl_id == 0){
+                        continue;
+                    }
+                    CPIntervalVar thisPlayerTrueInterval = makeIntervalVar(cp, false,0, n + 1);
+                    try {
+                        CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n + 1);
+                        int[] paddedArray = Automaton.pad(positionZones[pl_id]);
+                        cp.post(new RegularInterval(paddedArray, paddedInterval, Automaton.NOTA_APLUS_NOTA(teams.length,Arrays.stream(zones).boxed().collect(Collectors.toSet()))));
+                        cp.post(eq(start(thisPlayerTrueInterval), start(paddedInterval)));
+                        cp.post(eq(end(thisPlayerTrueInterval), minus(end(paddedInterval), 2)));
 
-                cp.post(eq(sum(isEq(sum(isEq(start(eventInterval), start(before)), isEq(end(eventInterval), end(before))), 2), sum(isEq(sum(isEq(start(eventInterval), start(after)), isEq(end(eventInterval), end(after))), 2))), 1)); //exactly one of the two must be true
+                        //isThisPlayerVars[pl_id] = isEq(sum(isEq(player_id, pl_id), isEq(start(thisPlayerTrueInterval), start(eventInterval)), isEq(end(thisPlayerTrueInterval), end(eventInterval))), 3);
+                        isThisPlayerVars[pl_id] = isEq(player_id, pl_id);
+                        CPIntervalVar before = makeIntervalVar(cp, false, 0, n + 1);
+                        CPIntervalVar after = makeIntervalVar(cp, false, 0, n + 1);
+
+                        CPIntVar earliest = makeIntVar(cp, n + 1);
+                        CPIntVar latest = makeIntVar(cp, n + 1);
+
+                        int isNotAndEvent = nbChild == 0 ? 1 : 0;
+                        if (counterEvent.get() - childIdx - 1 + isNotAndEvent == 0) { //it's the first event
+                            cp.post(eq(earliest, 0));
+                        } else {
+                            cp.post(eq(earliest, end(intervals.get(counterEvent.get() - 1 - childIdx))));
+                        }
+                        if (counterEvent.get() - childIdx + nbChild + isNotAndEvent == intervals.size()) { //it's the last event
+                            cp.post(eq(latest, n));
+                        } else {
+                            cp.post(eq(latest, start(intervals.get(counterEvent.get() + 1))));
+                        }
+
+                        cp.post(eq(start(before), earliest));
+                        cp.post(eq(end(before), start(thisPlayerTrueInterval)));
+                        cp.post(eq(start(after), end(thisPlayerTrueInterval)));
+                        cp.post(eq(end(after), latest));
+
+                        CPBoolVar isBefore = isEq(sum(isEq(start(eventInterval), start(before)), isEq(end(eventInterval), end(before)), isThisPlayerVars[pl_id]), 3);
+                        CPBoolVar isAfter = isEq(sum(isEq(start(eventInterval), start(after)), isEq(end(eventInterval), end(after)), isThisPlayerVars[pl_id]), 3);
+                        // if isThisPlayerVars[pl_id] is true, then the player is in the event interval, and the interval is either before or after the event interval, but not both
+                        cp.post(implies(isThisPlayerVars[pl_id], isEq(sum(isBefore, isAfter), 1)));
+
+                    } catch (InconsistencyException e) {
+                        isThisPlayerVars[pl_id] = makeBoolVar(cp);
+                        isThisPlayerVars[pl_id].fix(false);
+                    }
+                }
+                cp.post(eq(sum(Arrays.stream(isThisPlayerVars)
+                        .filter(Objects::nonNull)
+                        .toArray(CPBoolVar[]::new)), 1));
 
             } else {
-                CPIntervalVar[] playersIntervals = new CPIntervalVar[playerIds.size()];
-                int counter = 0;
-                for (int id : playerIds) {
-                    playersIntervals[counter] = makeIntervalVar(cp);
-                    cp.post(new RegularInterval(positionZones[id], playersIntervals[counter], Automaton.AS_PLUS(teams.length, Arrays.stream(zones).boxed().collect(Collectors.toSet()))));
-                    counter++;
+                int[] possible_players = new int[teams.length];
+                player_id.fillArray(possible_players);
+                CPBoolVar[] isThisPlayerVars = new CPBoolVar[teams.length];
+
+                for (int pl_id : possible_players) {
+                    if (pl_id == 0) {
+                        continue;
+                    }
+                    CPIntervalVar thisPlayerTrueInterval = makeIntervalVar(cp, false, 0, n + 1);
+                    try {
+                        CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n + 1);
+                        int[] paddedArray = Automaton.pad(positionZones[pl_id]);
+                        cp.post(new RegularInterval(paddedArray, paddedInterval, Automaton.NOTA_APLUS_NOTA(teams.length,Arrays.stream(zones).boxed().collect(Collectors.toSet()))));
+                        cp.post(eq(start(thisPlayerTrueInterval), start(paddedInterval)));
+                        cp.post(eq(end(thisPlayerTrueInterval), minus(end(paddedInterval), 3)));
+
+                        //isThisPlayerVars[pl_id] = isEq(sum(isEq(player_id, pl_id), isEq(start(thisPlayerTrueInterval), start(eventInterval)), isEq(end(thisPlayerTrueInterval), end(eventInterval))), 3);
+                        isThisPlayerVars[pl_id] = isEq(player_id, pl_id);
+                        cp.post(implies(isThisPlayerVars[pl_id], isEq(start(thisPlayerTrueInterval), start(eventInterval))));
+                        cp.post(implies(isThisPlayerVars[pl_id], isEq(end(thisPlayerTrueInterval), end(eventInterval))));
+
+                    } catch (InconsistencyException e) {
+                        isThisPlayerVars[pl_id] = makeBoolVar(cp);
+                        isThisPlayerVars[pl_id].fix(false);
+                    }
                 }
-                // sum of status of playersIntervals == 1
-                CPBoolVar[] playerInZones = makeBoolVarArray(cp, playerIds.size());
-                for (int i = 0; i < playerIds.size(); i++) {
-                    playerInZones[i] = playersIntervals[i].status();
+                cp.post(eq(sum(Arrays.stream(isThisPlayerVars)
+                        .filter(Objects::nonNull)
+                        .toArray(CPBoolVar[]::new)), 1));
+            }
+
+            // spatial constraints
+            if (event_circle || event_rectangle || total_circle || total_rectangle) {
+
+                //Transposed matrices
+                int[][] positionBox_x_T = new int[n][teams.length];
+                int[][] positionBox_y_T = new int[n][teams.length];
+                for (int playerId = 0; playerId < teams.length; playerId++) {
+                    for (int frame = 0; frame < n; frame++) {
+                        positionBox_x_T[frame][playerId] = positionBox_x[playerId][frame];
+                    }
                 }
-                cp.post(eq(sum(playerInZones), 1));
-                //the status of the interval is 1 -> the player_id is the one corresponding to the interval; and eventInterval = playerInterval
-                counter = 0;
-                for (int id : playerIds) {
-                    cp.post(or(not(playerInZones[counter]), isEq(player_id, id), isEq(start(eventInterval), start(playersIntervals[counter])), isEq(end(eventInterval), end(playersIntervals[counter]))));
-                    counter++;
+                for (int playerId = 0; playerId < teams.length; playerId++) {
+                    for (int frame = 0; frame < n; frame++) {
+                        positionBox_y_T[frame][playerId] = positionBox_y[playerId][frame];
+                    }
+                }
+
+                if (event_circle || total_circle) {
+                    List<int[]> circles = new ArrayList<>();
+                    if (event_circle)
+                        circles.add(new int[]{(int) Math.pow(event_radius, 2), event_xcenter, event_ycenter});
+                    if (total_circle)
+                        circles.add(new int[]{(int) Math.pow(total_radius, 2), total_xcenter, total_ycenter});
+
+                    for (int[] circle : circles) {
+                        CPBoolVar[] pl_inside_circle = new CPBoolVar[n]; //true = 1, false = 0
+                        for (int f = 0; f < n; f++) {
+                            CPIntVar distx = mul(minus(element(positionBox_x_T[f], player_id), circle[1]), minus(element(positionBox_x_T[f], player_id), circle[1]));
+                            CPIntVar disty = mul(minus(element(positionBox_y_T[f], player_id), circle[2]), minus(element(positionBox_y_T[f], player_id), circle[2]));
+                            pl_inside_circle[f] = isLe(sum(distx, disty), circle[0]); //inside the circle
+
+                        }
+                        cp.post(new TrueInterval(pl_inside_circle, eventInterval));
+                    }
+                } else {
+                    List<int[]> rectangles = new ArrayList<>();
+                    if (event_rectangle)
+                        rectangles.add(new int[]{event_xtop, event_ytop, event_w, event_h});
+                    if (total_rectangle)
+                        rectangles.add(new int[]{total_xtop, total_ytop, total_w, total_h});
+
+                    for (int[] rect : rectangles) {
+                        CPBoolVar[] pl_inside_rect = makeBoolVarArray(cp, n);
+                        for (int f = 0; f < n; f++) {
+                            CPIntVar bx = element(positionBox_x_T[f], player_id);
+                            CPIntVar by = element(positionBox_y_T[f], player_id);
+                            CPBoolVar upper_bound_x = isLe(bx, rect[0] + rect[2]);
+                            CPBoolVar lower_bound_x = isGe(bx, rect[0]);
+                            CPBoolVar upper_bound_y = isLe(by, rect[1]);
+                            CPBoolVar lower_bound_y = isGe(by, rect[1]-rect[3]);
+                            pl_inside_rect[f] = isEq(sum(upper_bound_x, lower_bound_x, upper_bound_y, lower_bound_y), 4); //inside the rectangle
+                        }
+                        cp.post(new TrueInterval(pl_inside_rect, eventInterval));
+                    }
                 }
             }
 
@@ -1312,6 +1413,9 @@ public class Query {
 
             int[] zonesAndK = (int[]) payload;
             int[] zones = Arrays.copyOf(zonesAndK, zonesAndK.length - 1);
+            if (zones.length==0){
+                throw new IllegalArgumentException("At least one zone must be specified for POSITION");
+            }
             int k = zonesAndK[zonesAndK.length - 1];
 
             Set<Integer> leftTeamIds = new HashSet<>();
@@ -1502,10 +1606,14 @@ public class Query {
 
         } else { //ball
             int[] zones = (int[]) payload;
+            if (zones.length==0){
+                throw new IllegalArgumentException("At least one zone must be specified for POSITION of the ball");
+            }
 
             if (isNegated) {
-                CPIntervalVar trueInterval = makeIntervalVar(cp, false, 0, n+1);
-                cp.post(new RegularInterval(positionZones[ball_idx], trueInterval, Automaton.AS_PLUS(teams.length, Arrays.stream(zones).boxed().collect(Collectors.toSet()))));
+                CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n+2);
+                int[] paddedPossession = Automaton.pad(positionZones[ball_idx]);
+                cp.post(new RegularInterval(paddedPossession, paddedInterval, Automaton.NOTA_APLUS_NOTA(teams.length, Arrays.stream(zones).boxed().collect(Collectors.toSet()))));
 
                 CPIntervalVar before = makeIntervalVar(cp, false, 0, n+1);
                 CPIntervalVar after = makeIntervalVar(cp, false, 0, n+1);
@@ -1526,56 +1634,20 @@ public class Query {
                 }
 
                 cp.post(eq(start(before), earliest));
-                cp.post(eq(end(before), start(trueInterval)));
-                cp.post(eq(start(after), end(trueInterval)));
+                cp.post(eq(end(before), start(paddedInterval)));
+                cp.post(eq(start(after), end(paddedInterval)));
                 cp.post(eq(end(after), latest));
 
                 CPBoolVar isBefore = isEq(sum(isEq(start(eventInterval), start(before)), isEq(end(eventInterval), end(before))), 2);
                 CPBoolVar isAfter = isEq(sum(isEq(start(eventInterval), start(after)), isEq(end(eventInterval), end(after))), 2);
-                cp.post(eq(sum(isBefore, isAfter),1)); //exactly one of the two must be true            } else {
-                cp.post(new RegularInterval(positionZones[ball_idx], eventInterval, Automaton.AS_PLUS(teams.length, Arrays.stream(zones).boxed().collect(Collectors.toSet()))));
-            }
-        }
-
-        // spatial constraints
-        if (event_circle || event_rectangle || total_circle || total_rectangle) {
-            //TODO : need to change for the NOT
-            if (event_circle || total_circle) {
-                List<double[]> circles = new ArrayList<>();
-                if (event_circle)
-                    circles.add(new double[]{Math.pow(event_radius, 2), event_xcenter, event_ycenter});
-                if (total_circle)
-                    circles.add(new double[]{Math.pow(total_radius, 2), total_xcenter, total_ycenter});
-
-                for (double[] circle : circles) {
-                    CPBoolVar[] inside_circle = makeBoolVarArray(cp, n);
-                    for (int playerId : playerIds) {
-                        for (int f = 0; f < n; f++) {
-                            int dist_x = (int) Math.pow(positionBox_x[playerId][f] - circle[1], 2);
-                            int dist_y = (int) Math.pow(positionBox_y[playerId][f] - circle[2], 2);
-                            inside_circle[f].fix(dist_x + dist_y <= circle[0]);
-                        }
-                        cp.post(new TrueInterval(inside_circle, eventInterval));
-                    }
-                }
+                cp.post(eq(sum(isBefore, isAfter),1)); //exactly one of the two must be true
             } else {
-                List<double[]> rectangles = new ArrayList<>();
-                if (event_rectangle)
-                    rectangles.add(new double[]{event_xtop, event_ytop, event_w, event_h});
-                if (total_rectangle)
-                    rectangles.add(new double[]{total_xtop, total_ytop, total_w, total_h});
-
-                for (double[] rect : rectangles) {
-                    CPBoolVar[] inside_rectangle = makeBoolVarArray(cp, n);
-                    for (int playerId : playerIds) {
-                        for (int f = 0; f < n; f++) {
-                            double dist_x = positionBox_x[playerId][f] - rect[0];
-                            double dist_y = positionBox_y[playerId][f] - rect[1];
-                            inside_rectangle[f].fix(dist_x <= rect[2] && dist_y <= rect[3]);
-                        }
-                        cp.post(new TrueInterval(inside_rectangle, eventInterval));
-                    }
-                }
+                CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n+2);
+                int[] paddedPosition = Automaton.pad(positionZones[ball_idx]);
+                Automaton a = Automaton.NOTA_APLUS_NOTA(teams.length, Arrays.stream(zones).boxed().collect(Collectors.toSet()));
+                cp.post(new RegularInterval(paddedPosition, paddedInterval, a));
+                cp.post(eq(event_start, start(paddedInterval)));
+                cp.post(eq(event_end, minus(end(paddedInterval), 2)));
             }
         }
     }
@@ -1602,17 +1674,17 @@ public class Query {
 
         if (subject instanceof Player player) {
 
-            CPIntVar player_id;
+            CPIntVar player_id = makeIntVar(cp, teams.length);
 
             if (IDENTIFIERS.get(player.name()) == null) {
-                player_id = element(possession, start(eventInterval));
+                if (!isNegated) player_id = element(possession, start(eventInterval));
                 for (CPIntVar v : IDENTIFIERS.values()) {
                     cp.post(neq(player_id, v));
                 }
                 IDENTIFIERS.put(player.name, player_id);
             } else {
                 player_id = IDENTIFIERS.get(player.name);
-                cp.post(eq(player_id, element(possession, start(eventInterval))));
+                if (!isNegated) cp.post(eq(player_id, element(possession, start(eventInterval))));
             }
 
             ExtendedCPVar player_id_ext = new ExtendedCPVar(
@@ -1630,12 +1702,19 @@ public class Query {
 
             if (player.id() != null) {
                 validIds.add(player.id());
+                cp.post(eq(player_id, player.id()));
             } else if (player.team() != null) {
                 if (player.team().equals("left")) {
+                    for (int i : leftTeamIds) {
+                        validIds.add(i);
+                    }
                     for (int i : rightTeamIds) {
                         player_id.remove(i);
                     }
                 } else if (player.team().equals("right")) {
+                    for (int i : rightTeamIds) {
+                        validIds.add(i);
+                    }
                     for (int i : leftTeamIds) {
                         player_id.remove(i);
                     }
@@ -1651,6 +1730,7 @@ public class Query {
             if (isNegated) {
                 CPIntervalVar trueInterval = makeIntervalVar(cp, false, 0, n+1);
                 cp.post(new RegularInterval(possession, trueInterval, Automaton.NOTA_APLUS_NOTA(teams.length, validIds)));
+                cp.post(eq(player_id, element(possession, plus(start(trueInterval),1))));
                 CPIntervalVar before = makeIntervalVar(cp, false, 0, n+1);
                 CPIntervalVar after = makeIntervalVar(cp, false, 0, n+1);
 
