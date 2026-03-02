@@ -234,10 +234,10 @@ public class Automaton {
             else if (x != A && x != B) res[midPad][x] = midPad;
         }
 
-        // Bstate: B -> stay; any not{A,B} -> accept
+        // Bstate: B -> stay; not{B} -> accept
         for (int x = 0; x <= nPlayers; x++) {
             if (x == B) res[Bstate][x] = Bstate;
-            else if (x != A && x != B) res[Bstate][x] = accept;
+            else if (x != B) res[Bstate][x] = accept;
         }
 
         return new Automaton(start, List.of(accept), res);
@@ -523,8 +523,14 @@ public class Automaton {
         for (int a : As) {
             if (a >= 1 && a <= nPlayers) {
 
-                res[a][a] = a; // repeat same A
+                // Allow transitioning to any valid A (including itself)
+                for (int otherA : As) {
+                    if (otherA >= 1 && otherA <= nPlayers) {
+                        res[a][otherA] = otherA;
+                    }
+                }
 
+                // Any non-A symbol ends the A+ block
                 for (int x = 0; x <= nPlayers; x++) {
                     if (!As.contains(x)) {
                         res[a][x] = post; // trailing notA (including 0)
