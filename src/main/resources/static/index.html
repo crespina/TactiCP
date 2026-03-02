@@ -208,6 +208,38 @@
       text-align: center;
     }
 
+    /* ─── Example queries ────────────────────────────────────── */
+    .examples-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .75rem;
+    }
+    .example-card {
+      background: #0f1117;
+      border: 1px solid #3d4468;
+      border-radius: 8px;
+      padding: .75rem;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+    }
+    .example-card:hover {
+      border-color: #7dd3fc;
+      background: #1a1f2e;
+    }
+    .example-label {
+      font-size: .85rem;
+      font-weight: 600;
+      color: #7dd3fc;
+      margin-bottom: .4rem;
+    }
+    .example-card code {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: .72rem;
+      color: #94a3b8;
+      word-break: break-all;
+      line-height: 1.4;
+    }
+
     /* ─── Spinner ───────────────────────────────────────────── */
     .spinner {
       display: none;
@@ -295,7 +327,38 @@
     <video id="main-video" controls></video>
   </div>
 
-  <!-- ── 2. Query input ─────────────────────────────────────── -->
+  <!-- ── 2. Example queries ────────────────────────────────── -->
+  <div class="card">
+    <h2>Example Queries</h2>
+    <div class="examples-grid">
+      <div class="example-card" onclick="loadExample(this)">
+        <div class="example-label">🎯 Pass between two players</div>
+        <code>SELECT(PLAYER("pwc1").PASSTO(PLAYER("pwc2")).MINRANGE()).FROM("SNGS-060, SNGS-061").WHERE(RECTANGLE(-60, 20, 65, 40))</code>
+      </div>
+      <div class="example-card" onclick="loadExample(this)">
+        <div class="example-label">⚽ Ball movement</div>
+        <code>SELECT(BALL().MOVETO(4, 6).WHERE(RADIUS(-20, 10, 35)), BALL().MOVETO(14, 9).MINRANGE()).FROM("SNGS-061").WHERE(RECTANGLE(-100, 100, 810, 810))</code>
+      </div>
+      <div class="example-card" onclick="loadExample(this)">
+        <div class="example-label">🏃 Player movement</div>
+        <code>SELECT(PLAYER("pwc3").MOVETO(1, 6).MINRANGE().WHERE(RADIUS(-20, 20, 20)), PLAYER("pwc3").MOVETO(6, 7)).FROM("SNGS-061")</code>
+      </div>
+      <div class="example-card" onclick="loadExample(this)">
+        <div class="example-label">👥 Team movement</div>
+        <code>SELECT(TEAM("t1", PLAYER("pwc3"), PLAYER("pleft", "left"), PLAYER("p1", 1)).MOVETO(11, 10, 3)).FROM("SNGS-060").WHERE(RECTANGLE(-20,-20,40,20))</code>
+      </div>
+      <div class="example-card" onclick="loadExample(this)">
+        <div class="example-label">📍 Ball position</div>
+        <code>SELECT(POSITION(BALL(), 1, 4)).FROM("SNGS-060").WHERE(RADIUS(0, 0, 10))</code>
+      </div>
+      <div class="example-card" onclick="loadExample(this)">
+        <div class="example-label">🔒 Player possession</div>
+        <code>SELECT(POSSESSION(PLAYER("pwc4"))).FROM("SNGS-061").WHERE(RECTANGLE(-20, 20, 20, 20), START(100), END(200), WITHIN(50), MIN_DURATION(20))</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 3. Query input ─────────────────────────────────────── -->
   <div class="card">
     <h2>Query</h2>
     <div class="query-row">
@@ -623,6 +686,14 @@
   document.getElementById('query-input').addEventListener('keydown', e => {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) runQuery();
   });
+
+  // Load an example query into the input
+  function loadExample(card) {
+    const code = card.querySelector('code').textContent.trim();
+    document.getElementById('query-input').value = code;
+    document.getElementById('query-input').scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('query-input').focus();
+  }
 
   // ─────────────────────────────────────────────────────────────
   // Init
