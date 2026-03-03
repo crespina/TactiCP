@@ -59,7 +59,7 @@ public class Query {
                 int[] teams = instance.teams;
                 int n = instance.n;
                 int ball_idx = instance.ball_idx;
-                Possession p = new Possession(cp, instance);
+                Possession p = new Possession(cp, instance, true);
                 int[] possession = p.result;
                 Position pos = new Position(cp, instance);
                 int[][] positionZones = pos.position;
@@ -621,7 +621,7 @@ public class Query {
             if (minrange) {
                 cp.post(new RegularInterval(possession, trueInterval, Automaton.A_0STAR_B(teams.length, passersIds, receiversIds)));
             } else {
-                cp.post(new RegularInterval(possession, trueInterval, Automaton.APLUS_0STAR_BPLUS(teams.length, passersIds, receiversIds)));
+                cp.post(new RegularInterval(possession, trueInterval, Automaton.APLUS_0STAR_BPLUS(teams.length, passersIds, receiversIds))); //TODO: ADD PADDING FOR MAXIMALITY
             }
             CPIntervalVar before = makeIntervalVar(cp, false, 0, n+1);
             CPIntervalVar after = makeIntervalVar(cp, false, 0, n+1);

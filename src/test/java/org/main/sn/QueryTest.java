@@ -151,6 +151,13 @@ public class QueryTest {
         assertEquals(0, event9.interval.start);
         assertEquals(21, event9.interval.end);
 
+        //NOT MINRANGED
+        Event e4 = pwc1.PASSTO(pwc2);
+        SelectExpr s4 = SELECT(e4).FROM("SNGS-060, SNGS-061").WHERE(RECTANGLE(-60, 20, 65, 40)); //toutes les passes
+
+        List<Result> results4 = s4.search();
+        assertEquals(5, results4.size());
+
     }
 
     @Test
