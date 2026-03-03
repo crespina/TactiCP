@@ -9,7 +9,7 @@ public interface Where {
     Kind kind();
     int[] values();
 
-    enum Kind { START, END, WITHIN, MIN_DURATION, RECTANGLE, RADIUS, ATMOST, ATLEAST, COUNT}
+    enum Kind { START, END, WITHIN, MIN_DURATION, RECTANGLE, RADIUS, ATMOST, ATLEAST}
 
     static Where of(Kind kind, int... values) {
         return new SimpleWhere(kind, values);

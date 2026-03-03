@@ -10,8 +10,10 @@ import java.util.*;
 public class Possession implements ConstraintPattern {
 
     int[] result;
+    boolean withTracking;
 
-    public Possession(CPSolver cp, Instance instance) {
+    public Possession(CPSolver cp, Instance instance, boolean withTracking) {
+        this.withTracking = withTracking;
         apply(cp, instance);
     }
 
@@ -143,14 +145,17 @@ public class Possession implements ConstraintPattern {
 
                 // 2) Compute distance player-ball with tracking information
                 double[] distancesTracking = new double[acc[0].length]; // distances[playersID] = distance to the ball for this player
+                if (withTracking) {
+                    for (Map.Entry<Integer, GameStateReconstructionInstance.PlayerInfo> pEntry : fd.players.entrySet()) {
+                        GameStateReconstructionInstance.PlayerInfo pi = pEntry.getValue();
+                        if (pi == null || pi.pos() == null) continue;
 
-                for (Map.Entry<Integer, GameStateReconstructionInstance.PlayerInfo> pEntry : fd.players.entrySet()) {
-                    GameStateReconstructionInstance.PlayerInfo pi = pEntry.getValue();
-                    if (pi == null || pi.pos() == null) continue;
-
-                    double dist_x = pi.pos().x_center() - ball.pos().x_center();
-                    double dist_y = pi.pos().y_center() - pi.pos().h() / 2 - ball.pos().y_center();
-                    distancesTracking[pi.trackId()] = Math.hypot(dist_x, dist_y);
+                        double dist_x = pi.pos().x_center() - ball.pos().x_center();
+                        double dist_y = pi.pos().y_center() - pi.pos().h() / 2 - ball.pos().y_center();
+                        distancesTracking[pi.trackId()] = Math.hypot(dist_x, dist_y);
+                    }
+                } else {
+                    Arrays.fill(distancesTracking, 0);
                 }
 
                 // 3) Compute a score based on the trajectory of the ball
@@ -164,7 +169,6 @@ public class Possession implements ConstraintPattern {
                 double bestDist = Double.POSITIVE_INFINITY;
                 double secondBestDist = Double.POSITIVE_INFINITY;
                 int closest_player = -1;
-                int second_closest_player = -1;
                 double wtrack = 0.5 / 1000.0;
                 double wrecons = 0.5 / 64.0;
 

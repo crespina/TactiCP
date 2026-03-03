@@ -96,10 +96,14 @@ public class Factory {
     }
 
     public static Event OR(Event... events) {
+        if (events.length < 1)
+            throw new IllegalArgumentException("OR requires at least two events");
         return new OrEvent(events);
     }
 
     public static Event AND(Event... events) {
+        if (events.length < 1)
+            throw new IllegalArgumentException("AND requires at least two events");
         return new AndEvent(events);
     }
 

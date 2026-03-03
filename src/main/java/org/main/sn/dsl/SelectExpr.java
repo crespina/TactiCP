@@ -96,6 +96,17 @@ public final class SelectExpr {
         return this;
     }
 
+    public SelectExpr SEARCH(String mode){
+        if (mode.equalsIgnoreCase("all")) {
+            this.searchMode = 0;
+        } else if (mode.equalsIgnoreCase("first")) {
+            this.searchMode = 1;
+        } else {
+            throw new IllegalArgumentException("Invalid search mode: " + mode);
+        }
+        return this;
+    }
+
 
     private void applyWhereParts() {
         for (Where w : whereParts) {
@@ -190,6 +201,16 @@ public final class SelectExpr {
                 out.forEach(System.out::println);
             }
 
+        } else {
+            throw new IllegalStateException("No matches specified for sequence");
+        }
+    }
+
+    public int COUNT(){
+        Query query = new Query();
+        if (!matches.isEmpty()) {
+            List<Result> results = query.apply(this);
+            return results.size();
         } else {
             throw new IllegalStateException("No matches specified for sequence");
         }
