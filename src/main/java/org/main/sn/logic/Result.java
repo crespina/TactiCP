@@ -70,7 +70,11 @@ public class Result {
                 out.add(pad + " Players in the team " + tm.playerIds + " | frames: " + tm.interval);
             } else if (e instanceof PositionEvent psn) {
                 out.add(pad + "EVENT # " + psn.eventIdx + (psn.negated ? " IS NOT IN ZONE" : " IS IN ZONE"));
-                out.add(pad + (psn.playerIds.size() > 1 ? "TEAM " : "PLAYER ") + psn.playerIds + " | frames: " + psn.interval);
+                if (psn.playerIds.size() == 0) {
+                    out.add(pad + "BALL " + " | frames: " + psn.interval);
+                } else {
+                    out.add(pad + (psn.playerIds.size() > 1 ? "TEAM " : "PLAYER ") + psn.playerIds + " | frames: " + psn.interval);
+                }
             } else if (e instanceof  BallMoveEvent bme) {
                 out.add(pad + "EVENT # " + bme.eventIdx + (bme.negated ? " BALL DOES NOT MOVE TO" : " BALL MOVES TO"));
                 out.add(pad + "frames: " + bme.interval);

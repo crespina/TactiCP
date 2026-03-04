@@ -463,7 +463,7 @@ public class Query {
 
                         ball_inside_circle[f] = dist_x + dist_y <= circle[0] ? 1 : 0;
                     }
-                    cp.post(new RegularInterval(ball_inside_circle, eventInterval, Automaton.APLUS(teams.length, Set.of(1))));
+                    cp.post(new RegularInterval(ball_inside_circle, eventInterval, Automaton.APLUS(1, Set.of(1))));
                 }
             } else {
                 List<double[]> rectangles = new ArrayList<>();
@@ -480,7 +480,7 @@ public class Query {
                         double by = positionBox_y[ball_idx][f];
                         ball_inside_rectangle[f] = (bx >= rect[0] && bx <= rect[0] + rect[2] && by <= rect[1] && by >= rect[1]-rect[3]) ? 1 : 0;
                     }
-                    cp.post(new RegularInterval(ball_inside_rectangle, eventInterval, Automaton.APLUS(teams.length, Set.of(1))));
+                    cp.post(new RegularInterval(ball_inside_rectangle, eventInterval, Automaton.APLUS(1, Set.of(1))));
                 }
             }
         }
@@ -654,7 +654,7 @@ public class Query {
             if (minrange) {
                 cp.post(new RegularInterval(possession, eventInterval, Automaton.A_0STAR_B(teams.length, passersIds, receiversIds)));
             } else {
-                cp.post(new RegularInterval(possession, eventInterval, Automaton.APLUS_0STAR_BPLUS(teams.length, passersIds, receiversIds)));
+                cp.post(new RegularInterval(possession, eventInterval, Automaton.APLUS_0STAR_BPLUS(teams.length, passersIds, receiversIds))); //TODO:PADDING
             }
         }
 
