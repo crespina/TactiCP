@@ -3,42 +3,201 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Geometric Pattern Matching</title>
+  <title>TactiCP - Football Pattern Retrieval</title>
   <style>
+    /* ─── Theme variables ──────────────────────────────────── */
+    :root {
+      /* Dark theme (default) */
+      --bg-body: #0f1117;
+      --text-main: #e2e8f0;
+      --accent: #7dd3fc;
+      --card-bg: #1e2130;
+      --card-border: #2d3148;
+      --heading-muted: #94a3b8;
+      --input-bg: #0f1117;
+      --input-border: #3d4468;
+      --btn-bg: #2563eb;
+      --btn-hover: #1d4ed8;
+      --btn-disabled-bg: #374151;
+      --btn-disabled-color: inherit;
+      --status-muted: #64748b;
+      --result-card-bg: #262b40;
+      --result-card-border: #3d4468;
+      --badge-bg: #1e3a5f;
+      --badge-color: #7dd3fc;
+      --result-text-color: #a5f3fc;
+      --example-bg: #0f1117;
+      --example-hover-bg: #1a1f2e;
+      --example-code-color: #94a3b8;
+      --spinner-border: #3d4468;
+      --spinner-active: #7dd3fc;
+      --nav-btn-bg: #374151;
+      --nav-btn-hover: #4b5563;
+      --nav-btn-disabled-bg: #1f2937;
+      --nav-btn-disabled-color: #4b5563;
+      --clip-bg: #000;
+      --clip-label-color: #64748b;
+      --toggle-bg: #374151;
+      --toggle-knob: #e2e8f0;
+    }
+
+    [data-theme="light"] {
+      --bg-body: #f0f2f5;
+      --text-main: #1e293b;
+      --accent: #0369a1;
+      --card-bg: #ffffff;
+      --card-border: #d1d5db;
+      --heading-muted: #475569;
+      --input-bg: #f8fafc;
+      --input-border: #cbd5e1;
+      --btn-bg: #2563eb;
+      --btn-hover: #1d4ed8;
+      --btn-disabled-bg: #d1d5db;
+      --btn-disabled-color: #6b7280;
+      --status-muted: #64748b;
+      --result-card-bg: #f1f5f9;
+      --result-card-border: #cbd5e1;
+      --badge-bg: #dbeafe;
+      --badge-color: #1e40af;
+      --result-text-color: #0c4a6e;
+      --example-bg: #f8fafc;
+      --example-hover-bg: #e0e7ef;
+      --example-code-color: #475569;
+      --spinner-border: #cbd5e1;
+      --spinner-active: #0369a1;
+      --nav-btn-bg: #d1d5db;
+      --nav-btn-hover: #9ca3af;
+      --nav-btn-disabled-bg: #e5e7eb;
+      --nav-btn-disabled-color: #9ca3af;
+      --clip-bg: #111;
+      --clip-label-color: #64748b;
+      --toggle-bg: #cbd5e1;
+      --toggle-knob: #ffffff;
+    }
+
     /* ─── Reset & base ─────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Segoe UI', system-ui, sans-serif;
-      background: #0f1117;
-      color: #e2e8f0;
+      background: var(--bg-body);
+      color: var(--text-main);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 2rem 1rem;
-      gap: 2rem;
+      padding: clamp(1rem, 2vw, 2rem);
+      gap: 1.5rem;
+      transition: background .3s, color .3s;
     }
 
     h1 {
-      font-size: 1.8rem;
+      font-size: clamp(1.1rem, 2.5vw, 1.8rem);
       font-weight: 700;
-      color: #7dd3fc;
+      color: var(--accent);
       letter-spacing: .04em;
+    }
+
+    /* ─── Two-column layout ───────────────────────────────── */
+    .main-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      width: 100%;
+      max-width: 1600px;
+    }
+    .left-column, .right-column {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      min-width: 0;
+    }
+
+    /* Large screens: give more room to results */
+    @media (min-width: 1200px) {
+      .main-layout {
+        grid-template-columns: 2fr 3fr;
+      }
+    }
+    /* Medium screens: equal halves */
+    @media (max-width: 1199px) and (min-width: 901px) {
+      .main-layout {
+        grid-template-columns: 1fr 1fr;
+      }
+      .examples-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    /* Small screens: single column */
+    @media (max-width: 900px) {
+      .main-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ─── Theme toggle ─────────────────────────────────────── */
+    .header-row {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      max-width: 1600px;
+      justify-content: center;
+      position: relative;
+    }
+    .header-row h1 {
+      text-align: center;
+    }
+    .header-row .theme-toggle {
+      position: absolute;
+      right: 0;
+    }
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      cursor: pointer;
+      user-select: none;
+      font-size: .85rem;
+      color: var(--heading-muted);
+    }
+    .theme-toggle .toggle-track {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      background: var(--toggle-bg);
+      border-radius: 12px;
+      transition: background .3s;
+    }
+    .theme-toggle .toggle-knob {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      background: var(--toggle-knob);
+      border-radius: 50%;
+      transition: transform .3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    [data-theme="light"] .toggle-knob {
+      transform: translateX(20px);
     }
 
     /* ─── Section cards ─────────────────────────────────────── */
     .card {
-      background: #1e2130;
-      border: 1px solid #2d3148;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
       border-radius: 12px;
-      padding: 1.5rem;
+      padding: clamp(1rem, 1.5vw, 1.5rem);
       width: 100%;
-      max-width: 900px;
+      transition: background .3s, border-color .3s;
     }
     .card h2 {
-      font-size: 1rem;
+      font-size: clamp(.8rem, 1.1vw, 1rem);
       font-weight: 600;
-      color: #94a3b8;
+      color: var(--heading-muted);
       text-transform: uppercase;
       letter-spacing: .08em;
       margin-bottom: 1rem;
@@ -52,22 +211,23 @@
       flex-wrap: wrap;
     }
     select {
-      background: #0f1117;
-      color: #e2e8f0;
-      border: 1px solid #3d4468;
+      background: var(--input-bg);
+      color: var(--text-main);
+      border: 1px solid var(--input-border);
       border-radius: 8px;
       padding: .5rem .75rem;
-      font-size: .95rem;
+      font-size: clamp(.8rem, 1.2vw, .95rem);
       cursor: pointer;
       flex: 1;
-      min-width: 200px;
+      min-width: 0;
+      width: 100%;
     }
     video {
       width: 100%;
       border-radius: 8px;
       margin-top: 1rem;
       background: #000;
-      max-height: 420px;
+      max-height: clamp(200px, 30vw, 420px);
       display: none;
     }
     video.visible { display: block; }
@@ -77,37 +237,37 @@
     textarea {
       flex: 1;
       min-width: 0;
-      min-height: 80px;
-      background: #0f1117;
-      color: #e2e8f0;
-      border: 1px solid #3d4468;
+      min-height: clamp(60px, 8vw, 80px);
+      background: var(--input-bg);
+      color: var(--text-main);
+      border: 1px solid var(--input-border);
       border-radius: 8px;
-      padding: .75rem;
+      padding: clamp(.5rem, 1vw, .75rem);
       font-family: 'JetBrains Mono', 'Fira Code', monospace;
-      font-size: .9rem;
+      font-size: clamp(.75rem, 1vw, .9rem);
       resize: vertical;
     }
-    textarea:focus { outline: none; border-color: #7dd3fc; }
+    textarea:focus { outline: none; border-color: var(--accent); }
     button {
-      background: #2563eb;
+      background: var(--btn-bg);
       color: #fff;
       border: none;
       border-radius: 8px;
-      padding: .75rem 1.5rem;
-      font-size: .95rem;
+      padding: clamp(.5rem, 1vw, .75rem) clamp(.75rem, 1.5vw, 1.5rem);
+      font-size: clamp(.8rem, 1.1vw, .95rem);
       font-weight: 600;
       cursor: pointer;
       transition: background .2s;
       align-self: flex-end;
       white-space: nowrap;
     }
-    button:hover { background: #1d4ed8; }
-    button:disabled { background: #374151; cursor: not-allowed; }
+    button:hover { background: var(--btn-hover); }
+    button:disabled { background: var(--btn-disabled-bg); color: var(--btn-disabled-color); cursor: not-allowed; }
 
     /* ─── Status bar ────────────────────────────────────────── */
     #status {
       font-size: .88rem;
-      color: #64748b;
+      color: var(--status-muted);
       min-height: 1.4em;
     }
     #status.error { color: #f87171; }
@@ -119,7 +279,7 @@
     /* counter badge */
     .result-counter {
       font-size: .88rem;
-      color: #94a3b8;
+      color: var(--heading-muted);
       margin-bottom: .75rem;
     }
 
@@ -139,28 +299,29 @@
 
     /* result card inside carousel */
     .result-card {
-      background: #262b40;
-      border: 1px solid #3d4468;
+      background: var(--result-card-bg);
+      border: 1px solid var(--result-card-border);
       border-radius: 10px;
-      padding: 1.25rem;
+      padding: clamp(.75rem, 1.3vw, 1.25rem);
+      transition: background .3s, border-color .3s;
     }
     .result-card .instance-badge {
       display: inline-block;
-      background: #1e3a5f;
-      color: #7dd3fc;
+      background: var(--badge-bg);
+      color: var(--badge-color);
       border-radius: 6px;
       padding: .2rem .7rem;
-      font-size: .78rem;
+      font-size: clamp(.68rem, .9vw, .78rem);
       font-weight: 600;
       margin-bottom: .75rem;
     }
     .result-text {
-      background: #0f1117;
+      background: var(--input-bg);
       border-radius: 8px;
-      padding: .85rem 1rem;
+      padding: clamp(.5rem, 1vw, .85rem) clamp(.6rem, 1.1vw, 1rem);
       font-family: 'JetBrains Mono', 'Fira Code', monospace;
-      font-size: .82rem;
-      color: #a5f3fc;
+      font-size: clamp(.72rem, .95vw, .82rem);
+      color: var(--result-text-color);
       white-space: pre-wrap;
       line-height: 1.6;
       margin-bottom: 1rem;
@@ -168,20 +329,20 @@
 
     /* sub-video clip */
     .clip-wrapper {
-      background: #000;
+      background: var(--clip-bg);
       border-radius: 8px;
       overflow: hidden;
     }
     .clip-wrapper video {
       width: 100%;
-      max-height: 380px;
+      max-height: clamp(200px, 28vw, 380px);
       display: block;
       margin: 0;
       border-radius: 0;
     }
     .clip-label {
       font-size: .8rem;
-      color: #64748b;
+      color: var(--clip-label-color);
       text-align: center;
       padding: .3rem 0 .5rem;
     }
@@ -195,15 +356,15 @@
       margin-top: 1rem;
     }
     .carousel-nav button {
-      background: #374151;
+      background: var(--nav-btn-bg);
       padding: .5rem 1.25rem;
       font-size: .9rem;
     }
-    .carousel-nav button:hover { background: #4b5563; }
-    .carousel-nav button:disabled { background: #1f2937; color: #4b5563; }
+    .carousel-nav button:hover { background: var(--nav-btn-hover); }
+    .carousel-nav button:disabled { background: var(--nav-btn-disabled-bg); color: var(--nav-btn-disabled-color); }
     .carousel-page {
       font-size: .9rem;
-      color: #94a3b8;
+      color: var(--heading-muted);
       min-width: 80px;
       text-align: center;
     }
@@ -211,41 +372,92 @@
     /* ─── Example queries ────────────────────────────────────── */
     .examples-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
       gap: .75rem;
     }
     .example-card {
-      background: #0f1117;
-      border: 1px solid #3d4468;
+      background: var(--example-bg);
+      border: 1px solid var(--input-border);
       border-radius: 8px;
-      padding: .75rem;
+      padding: clamp(.5rem, 1vw, .75rem);
       cursor: pointer;
       transition: border-color .2s, background .2s;
     }
     .example-card:hover {
-      border-color: #7dd3fc;
-      background: #1a1f2e;
+      border-color: var(--accent);
+      background: var(--example-hover-bg);
     }
     .example-label {
-      font-size: .85rem;
+      font-size: clamp(.75rem, 1vw, .85rem);
       font-weight: 600;
-      color: #7dd3fc;
+      color: var(--accent);
       margin-bottom: .4rem;
     }
     .example-card code {
       font-family: 'JetBrains Mono', 'Fira Code', monospace;
-      font-size: .72rem;
-      color: #94a3b8;
+      font-size: clamp(.62rem, .8vw, .72rem);
+      color: var(--example-code-color);
       word-break: break-all;
       line-height: 1.4;
+    }
+
+    /* ─── Syntax guide ─────────────────────────────────────── */
+    .syntax-guide {
+      font-size: clamp(.78rem, 1vw, .88rem);
+      line-height: 1.6;
+      color: var(--text-main);
+    }
+    .syntax-guide p {
+      margin-bottom: .75rem;
+    }
+    .syntax-guide h3 {
+      font-size: clamp(.75rem, 1vw, .88rem);
+      font-weight: 700;
+      color: var(--accent);
+      margin: 1rem 0 .5rem;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .syntax-guide dl {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: .3rem .75rem;
+      margin-bottom: .5rem;
+    }
+    .syntax-guide dt {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: clamp(.7rem, .9vw, .82rem);
+      color: var(--result-text-color);
+      white-space: nowrap;
+    }
+    .syntax-guide dd {
+      color: var(--heading-muted);
+      font-size: clamp(.72rem, .95vw, .84rem);
+    }
+    .syntax-guide code {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: .85em;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 4px;
+      padding: .1rem .35rem;
+      color: var(--result-text-color);
+    }
+    .syntax-tip {
+      margin-top: 1rem;
+      padding: .6rem .75rem;
+      background: var(--badge-bg);
+      border-radius: 8px;
+      color: var(--badge-color);
+      font-size: clamp(.72rem, .95vw, .84rem);
     }
 
     /* ─── Spinner ───────────────────────────────────────────── */
     .spinner {
       display: none;
       width: 20px; height: 20px;
-      border: 3px solid #3d4468;
-      border-top-color: #7dd3fc;
+      border: 3px solid var(--spinner-border);
+      border-top-color: var(--spinner-active);
       border-radius: 50%;
       animation: spin .8s linear infinite;
       flex-shrink: 0;
@@ -262,13 +474,13 @@
       margin-bottom: 1rem;
     }
     .result-textbox label {
-      color: #94a3b8;
+      color: var(--heading-muted);
       font-size: .85rem;
     }
     #solution-select {
-      background: #0f1117;
-      color: #e2e8f0;
-      border: 1px solid #3d4468;
+      background: var(--input-bg);
+      color: var(--text-main);
+      border: 1px solid var(--input-border);
       border-radius: 6px;
       padding: .35rem .5rem;
       font-size: .85rem;
@@ -277,9 +489,9 @@
     }
     #result-text {
       grid-column: 1 / -1;
-      background: #0f1117;
-      color: #a5f3fc;
-      border: 1px solid #3d4468;
+      background: var(--input-bg);
+      color: var(--result-text-color);
+      border: 1px solid var(--input-border);
       border-radius: 8px;
       padding: .75rem;
       min-height: 140px;
@@ -295,13 +507,13 @@
       gap: .4rem;
     }
     .inline-results label {
-      color: #94a3b8;
+      color: var(--heading-muted);
       font-size: .85rem;
     }
     #inline-result-text {
-      background: #0f1117;
-      color: #a5f3fc;
-      border: 1px solid #3d4468;
+      background: var(--input-bg);
+      color: var(--result-text-color);
+      border: 1px solid var(--input-border);
       border-radius: 8px;
       padding: .75rem;
       min-height: 120px;
@@ -314,83 +526,157 @@
 </head>
 <body>
 
-  <h1>⚽ Constraint-based mining of spatio-temporal soccer tactics</h1>
-
-  <!-- ── 1. Video selector ──────────────────────────────────── -->
-  <div class="card" id="video-card">
-    <h2>Select Instance</h2>
-    <div class="video-row">
-      <select id="instance-select">
-        <option value="">Loading instances…</option>
-      </select>
-    </div>
-    <video id="main-video" controls></video>
-  </div>
-
-  <!-- ── 2. Example queries ────────────────────────────────── -->
-  <div class="card">
-    <h2>Example Queries</h2>
-    <div class="examples-grid">
-      <div class="example-card" onclick="loadExample(this)">
-        <div class="example-label">🎯 Pass between two players</div>
-        <code>SELECT(PLAYER("pwc1").PASSTO(PLAYER("pwc2")).MINRANGE()).FROM("SNGS-060, SNGS-061").WHERE(RECTANGLE(-60, 20, 65, 40))</code>
-      </div>
-      <div class="example-card" onclick="loadExample(this)">
-        <div class="example-label">⚽ Ball movement</div>
-        <code>SELECT(BALL().MOVETO(4, 6).WHERE(RADIUS(-20, 10, 35)), BALL().MOVETO(14, 9).MINRANGE()).FROM("SNGS-061").WHERE(RECTANGLE(-100, 100, 810, 810))</code>
-      </div>
-      <div class="example-card" onclick="loadExample(this)">
-        <div class="example-label">🏃 Player movement</div>
-        <code>SELECT(PLAYER("pwc3").MOVETO(1, 6).MINRANGE().WHERE(RADIUS(-20, 20, 20)), PLAYER("pwc3").MOVETO(6, 7)).FROM("SNGS-061")</code>
-      </div>
-      <div class="example-card" onclick="loadExample(this)">
-        <div class="example-label">👥 Team movement</div>
-        <code>SELECT(TEAM("t1", PLAYER("pwc3"), PLAYER("pleft", "left"), PLAYER("p1", 1)).MOVETO(11, 10, 3)).FROM("SNGS-060").WHERE(RECTANGLE(-20,-20,40,20))</code>
-      </div>
-      <div class="example-card" onclick="loadExample(this)">
-        <div class="example-label">📍 Ball position</div>
-        <code>SELECT(POSITION(BALL(), 1, 4)).FROM("SNGS-060").WHERE(RADIUS(0, 0, 10))</code>
-      </div>
-      <div class="example-card" onclick="loadExample(this)">
-        <div class="example-label">🔒 Player possession</div>
-        <code>SELECT(POSSESSION(PLAYER("pwc4"))).FROM("SNGS-061").WHERE(RECTANGLE(-20, 20, 20, 20), START(100), END(200), WITHIN(50), MIN_DURATION(20))</code>
+  <div class="header-row">
+    <h1>⚽ TactiCP - Football Pattern Retrieval</h1>
+    <div class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle dark / light mode">
+      <span class="toggle-label" id="theme-label">🌙</span>
+      <div class="toggle-track">
+        <div class="toggle-knob"></div>
       </div>
     </div>
   </div>
 
-  <!-- ── 3. Query input ─────────────────────────────────────── -->
-  <div class="card">
-    <h2>Query</h2>
-    <div class="query-row">
-      <textarea id="query-input" spellcheck="false"
-        placeholder='e.g.  SELECT(PLAYER("p1").PASSTO(PLAYER("p2")).MINRANGE()).FROM("SNGS-060").SEARCH(0)'></textarea>
-      <button id="run-btn" onclick="runQuery()">▶ Run</button>
-      <div class="spinner" id="spinner"></div>
-    </div>
-    <div id="status"></div>
-    <div id="inline-results" class="inline-results" style="display:none;">
-      <label for="inline-result-text">Result output</label>
-      <textarea id="inline-result-text" readonly></textarea>
-    </div>
-  </div>
+  <!-- ── Two-column layout ────────────────────────────────── -->
+  <div class="main-layout">
+    <!-- ── Left column ──────────────────────────────────────── -->
+    <div class="left-column">
+      <!-- ── 1. Video selector ──────────────────────────────── -->
+      <div class="card" id="video-card">
+        <h2>Select Instance</h2>
+        <div class="video-row">
+          <select id="instance-select">
+            <option value="">Loading instances…</option>
+          </select>
+        </div>
+        <video id="main-video" controls></video>
+      </div>
 
-  <!-- ── 3. Results ─────────────────────────────────────────── -->
-  <div class="card" id="results-section">
-    <h2>Results</h2>
-    <div class="result-counter" id="result-counter"></div>
+      <!-- ── 2. Example queries ─────────────────────────────── -->
+      <div class="card">
+        <h2>Example Queries</h2>
+        <div class="examples-grid">
+          <div class="example-card" onclick="loadExample(this)">
+            <div class="example-label">🎯 Pass between two players</div>
+            <code>SELECT(PLAYER("pwc1").PASSTO(PLAYER("pwc2")).MINRANGE()).FROM("SNGS-060, SNGS-061").WHERE(RECTANGLE(-60, 20, 65, 40))</code>
+          </div>
+          <div class="example-card" onclick="loadExample(this)">
+            <div class="example-label">⚽ Ball movement</div>
+            <code>SELECT(BALL().MOVETO(4, 6).WHERE(RADIUS(-20, 10, 35)), BALL().MOVETO(14, 9).MINRANGE()).FROM("SNGS-061").WHERE(RECTANGLE(-100, 100, 810, 810))</code>
+          </div>
+          <div class="example-card" onclick="loadExample(this)">
+            <div class="example-label">🏃 Player movement</div>
+            <code>SELECT(PLAYER("pwc3").MOVETO(1, 6).MINRANGE().WHERE(RADIUS(-20, 20, 20)), PLAYER("pwc3").MOVETO(6, 7)).FROM("SNGS-061")</code>
+          </div>
+          <div class="example-card" onclick="loadExample(this)">
+            <div class="example-label">👥 Team movement</div>
+            <code>SELECT(TEAM("t1", PLAYER("pwc3"), PLAYER("pleft", "left"), PLAYER("p1", 1)).MOVETO(11, 10, 3)).FROM("SNGS-060").WHERE(RECTANGLE(-20,-20,40,20))</code>
+          </div>
+          <div class="example-card" onclick="loadExample(this)">
+            <div class="example-label">📍 Ball position</div>
+            <code>SELECT(POSITION(BALL(), 1, 4)).FROM("SNGS-060").WHERE(RADIUS(0, 0, 10))</code>
+          </div>
+          <div class="example-card" onclick="loadExample(this)">
+            <div class="example-label">🔒 Player possession</div>
+            <code>SELECT(POSSESSION(PLAYER("pwc4"))).FROM("SNGS-061").WHERE(RECTANGLE(-20, 20, 20, 20), START(100), END(200), WITHIN(50), MIN_DURATION(20))</code>
+          </div>
+        </div>
+      </div>
+      <!-- ── 3. Syntax guide ──────────────────────────────── -->
+      <div class="card">
+        <h2>Syntax Guide</h2>
+        <div class="syntax-guide">
+          <p>Queries follow the pattern: <code>SELECT(…).FROM(…).WHERE(…)</code></p>
 
-    <div class="result-textbox">
-      <label for="result-text">Solution text</label>
-      <select id="solution-select"></select>
-      <textarea id="result-text" readonly></textarea>
+          <h3>SELECT — What to search for</h3>
+          <dl>
+            <dt><code>PLAYER("identifier")</code></dt>
+            <dd>Declare a player variable. Optionally specify a team affiliation or ID: <code>PLAYER("identifier", "left")</code>, <code>PLAYER("identifier", 1)</code>.</dd>
+
+            <dt><code>BALL()</code></dt>
+            <dd>Reference the ball.</dd>
+
+            <dt><code>TEAM("identifier", PLAYER(…), …)</code></dt>
+            <dd>Group several players into a team.</dd>
+
+            <dt><code>.MOVETO(x, y)</code></dt>
+            <dd>Constrain an entity to move from zone x to zone y.</dd>
+
+            <dt><code>.PASSTO(PLAYER(...))</code></dt>
+            <dd>Constrain a player to pass the ball to another player.</dd>
+
+            <dt><code>.MINRANGE()</code></dt>
+            <dd>Minimise the time range of the movement or action.</dd>
+
+            <dt><code>POSITION(entity, zones...)</code></dt>
+            <dd>Constrain an entity to be in the zones</dd>
+
+            <dt><code>POSSESSION(entity)</code></dt>
+            <dd>Constrain an entity to have ball possession.</dd>
+          </dl>
+
+          <h3>FROM — Which instances to search</h3>
+          <p>Specify one or more instance IDs: <code>.FROM("SNGS-060")</code> or <code>.FROM("SNGS-060, SNGS-061", ...)</code>.</p>
+
+          <h3>WHERE — Spatial &amp; temporal constraints</h3>
+          <dl>
+            <dt><code>RECTANGLE(x, y, w, h)</code></dt>
+            <dd>Restrict the search to a rectangular area.</dd>
+
+            <dt><code>RADIUS(x, y, r)</code></dt>
+            <dd>Restrict the search to a circular area centered at <code>(x, y)</code> with radius <code>r</code>.</dd>
+
+            <dt><code>START(frame)</code> / <code>END(frame)</code></dt>
+            <dd>Limit the temporal window to specific frame boundaries.</dd>
+
+            <dt><code>WITHIN(n)</code></dt>
+            <dd>The pattern must occur within <code>n</code> frames.</dd>
+
+            <dt><code>MIN_DURATION(n)</code></dt>
+            <dd>The pattern must last at least <code>n</code> frames.</dd>
+          </dl>
+
+          <p class="syntax-tip">💡 <strong>Tip:</strong> Append <code>.SEARCH(1)</code> to your query to get the first solution.</p>
+        </div>
+      </div>
     </div>
 
-    <div class="carousel" id="carousel">
-      <div class="carousel-track" id="carousel-track"></div>
-      <div class="carousel-nav">
-        <button id="prev-btn" onclick="navigate(-1)">← Prev</button>
-        <span class="carousel-page" id="carousel-page"></span>
-        <button id="next-btn" onclick="navigate(1)">Next →</button>
+    <!-- ── Right column ─────────────────────────────────────── -->
+    <div class="right-column">
+      <!-- ── 4. Query input ─────────────────────────────────── -->
+      <div class="card">
+        <h2>Query</h2>
+        <div class="query-row">
+          <textarea id="query-input" spellcheck="false"
+            placeholder='e.g.  SELECT(PLAYER("p1").PASSTO(PLAYER("p2")).MINRANGE()).FROM("SNGS-060").SEARCH(0)'></textarea>
+          <button id="run-btn" onclick="runQuery()">▶ Run</button>
+          <div class="spinner" id="spinner"></div>
+        </div>
+        <div id="status"></div>
+        <div id="inline-results" class="inline-results" style="display:none;">
+          <label for="inline-result-text">Result output</label>
+          <textarea id="inline-result-text" readonly></textarea>
+        </div>
+      </div>
+
+      <!-- ── 4. Results ─────────────────────────────────────── -->
+      <div class="card" id="results-section">
+        <h2>Results</h2>
+        <div class="result-counter" id="result-counter"></div>
+
+        <div class="result-textbox">
+          <label for="result-text">Solution text</label>
+          <select id="solution-select"></select>
+          <textarea id="result-text" readonly></textarea>
+        </div>
+
+        <div class="carousel" id="carousel">
+          <div class="carousel-track" id="carousel-track"></div>
+          <div class="carousel-nav">
+            <button id="prev-btn" onclick="navigate(-1)">← Prev</button>
+            <span class="carousel-page" id="carousel-page"></span>
+            <button id="next-btn" onclick="navigate(1)">Next →</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -694,6 +980,32 @@
     document.getElementById('query-input').scrollIntoView({ behavior: 'smooth' });
     document.getElementById('query-input').focus();
   }
+
+  // ─────────────────────────────────────────────────────────────
+  // Theme toggle (dark / light)
+  // ─────────────────────────────────────────────────────────────
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.getElementById('theme-label').textContent = theme === 'light' ? '☀️' : '🌙';
+    localStorage.setItem('theme', theme);
+  }
+
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+  }
+
+  // Restore saved preference (or respect OS preference)
+  (function initTheme() {
+    const saved = localStorage.getItem('theme');
+    if (saved) {
+      applyTheme(saved);
+    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+      applyTheme('light');
+    } else {
+      applyTheme('dark');
+    }
+  })();
 
   // ─────────────────────────────────────────────────────────────
   // Init
