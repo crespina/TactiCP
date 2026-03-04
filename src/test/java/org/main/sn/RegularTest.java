@@ -131,6 +131,26 @@ public class RegularTest extends CPSolverTest {
 
     }
 
+    @ParameterizedTest
+    @MethodSource("getSolver")
+    public void SimpleTest7(CPSolver cp) {
+        int[] x = new int[]{1,1,1,1,1,1,1,1,1,1,0,1};
+
+        CPIntervalVar itv_1 = CPFactory.makeIntervalVar(cp);
+        itv_1.setPresent();
+
+        Automaton a = Automaton.APLUS(3, Set.of(1));
+        cp.post(new RegularInterval(x, itv_1, a));
+        cp.fixPoint();
+        assertEquals(0, itv_1.startMin());
+        assertEquals(12, itv_1.endMax());
+
+        itv_1.setEndMax(11);
+        cp.fixPoint();
+        assertEquals(0, itv_1.startMin());
+        assertEquals(10, itv_1.endMax());
+    }
+
 
 
 
