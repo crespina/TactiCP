@@ -179,6 +179,8 @@ public class Factory {
         return new K(k);
     }
 
+    //TODO : START MIN START MAX
+
 }
 
 

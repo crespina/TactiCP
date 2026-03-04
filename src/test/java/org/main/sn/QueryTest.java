@@ -24,7 +24,7 @@ public class QueryTest {
         Ball b = BALL();
 
         //ball move to
-        SelectExpr s = SELECT(b.MOVETO(4, 6).WHERE(RADIUS(-20, 10, 35)), b.MOVETO(14, 9).MINRANGE()).FROM("SNGS-061").WHERE(RECTANGLE(-100, 100, 810, 810)); //toutes les passes
+        SelectExpr s = SELECT(b.MOVETO(4, 6).WHERE(RADIUS(-20, 10, 35)), b.MOVETO(14, 9).MINRANGE()).FROM("SNGS-061").WHERE(RECTANGLE(-100,100,810,810)); //toutes les passes
 
         List<Result> results = s.search();
         assertEquals(2, results.size());
@@ -47,8 +47,12 @@ public class QueryTest {
         assertEquals(456, ballMoveEvent2.interval.start);
         assertEquals(458, ballMoveEvent2.interval.end);
 
+        Result.BallMoveEvent ballMoveEvent22 = (Result.BallMoveEvent) results.get(1).events.get(1);
+        assertEquals(510, ballMoveEvent22.interval.start);
+        assertEquals(512, ballMoveEvent22.interval.end);
+
         //NOT
-        SelectExpr snot = SELECT(NOT(b.MOVETO(4, 6))).FROM("SNGS-061").WHERE(RADIUS(0, 0, 400)); //toutes les passes
+        SelectExpr snot = SELECT(NOT(b.MOVETO(4, 6))).WHERE(RADIUS(0, 0, 400)).FROM("SNGS-061"); //toutes les passes
 
         List<Result> resultsnot = snot.search();
         assertEquals(2, resultsnot.size());
