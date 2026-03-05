@@ -133,7 +133,7 @@ public class Query {
                     cp.post(le(end(lastVar), total_end));
                 }
             } catch (InconsistencyException e) {
-                System.out.println("No solution found for instance " + instance.name);
+                //System.out.println("No solution found for instance " + instance.name);
                 continue;
             }
 
@@ -930,6 +930,12 @@ public class Query {
         }
 
         Team team = (Team) subject;
+
+        if (team.name().equals("left")) {
+            team = new Team("left", leftTeamIds);
+        } else if (team.name().equals("right")) {
+            team = new Team("right", rightTeamIds);
+        }
 
         CPIntVar[] playerIds = new CPIntVar[team.players.size()];
         int teamPlayer = 0;
