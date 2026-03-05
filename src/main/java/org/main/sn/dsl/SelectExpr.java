@@ -159,6 +159,8 @@ public final class SelectExpr {
         for (String token : tokens) {
             if (token.startsWith("SNGS-")) {
                 selected.add(findSNGS(token));
+            } else if (token.startsWith("scalability-")) {
+                selected.add(findScalability(token));
             }
         }
 
@@ -177,6 +179,15 @@ public final class SelectExpr {
                 return candidate;
             }
         }
+        throw new IllegalArgumentException("Unknown SNGS folder: " + name);
+    }
+
+    private static Path findScalability(String name) {
+        Path candidate = ROOT.resolve("scalability").resolve(name.substring("scalability-".length()));
+        if (Files.exists(candidate)) {
+            return candidate;
+        }
+
         throw new IllegalArgumentException("Unknown SNGS folder: " + name);
     }
 

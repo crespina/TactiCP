@@ -37,7 +37,7 @@ public class GameStateReconstructionInstance implements Instance {
 
             int frameId;
             try {
-                frameId = (int) (Long.parseLong(ann.imageId) % 1000 );
+                frameId = (int) (Long.parseLong(ann.imageId) % 1000000 );
             } catch (NumberFormatException e) {
                 continue; // skip weird frames
             }
