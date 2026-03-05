@@ -21,9 +21,14 @@ def plot_results():
         0.366,0.402,0.423,0.426,0.521,0.482,0.544,0.589,0.64
     ])
 
-    # Plot mean
-    plt.figure(figsize=(12,6))
-    plt.plot(matches, times, marker='o', label="Mean Time")
+    fig, ax = plt.subplots()
+    ax.plot(matches, times, marker='o', color='blue', linestyle='')
+
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+
     plt.xlabel("Number of Matches")
     plt.ylabel("Time (s)")
     plt.title("Mean Scalability Results Over Two Runs")
@@ -53,9 +58,14 @@ def plot_results_500():
         0.366,0.402,0.423,0.426,0.521,0.482,0.544,0.589,0.64
     ])
 
-    # Plot mean
-    plt.figure(figsize=(12,6))
-    plt.plot(matches, times, marker='o', label="Execution Time")
+    fig, ax = plt.subplots()
+    ax.plot(matches, times, marker='o', color='blue', linestyle='')
+
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+
     plt.xlabel("Number of Frames")
     plt.ylabel("Time (s)")
     plt.title("Execution Time on Larger Instances")
@@ -131,7 +141,7 @@ def analyze_complexity():
 
     return quad_coeffs
 
-analyze_complexity()
+#analyze_complexity()
 
 
 def extrapolated_curve():
@@ -174,4 +184,4 @@ def extrapolated_curve():
     plt.legend()
     plt.show()
 
-extrapolated_curve()
+#extrapolated_curve()

@@ -1,23 +1,37 @@
 import matplotlib.pyplot as plt
 
 def plot_matches_time():
-    matches = list(range(1, 51))
+    matches = list(range(1, 91))
     times = [
-        0.577, 0.204, 0.22, 0.286, 0.333, 0.453, 0.455, 0.505, 0.538, 0.548,
-        0.622, 0.707, 0.719, 0.763, 0.847, 0.88, 0.956, 1.061, 1.068, 1.102,
-        1.18, 1.228, 1.266, 1.289, 1.347, 1.397, 1.46, 1.472, 1.587, 1.583,
-        1.636, 1.665, 1.779, 1.818, 1.825, 1.844, 1.856, 1.901, 1.955, 1.993,
-        2.062, 2.088, 2.266, 2.224, 2.316, 2.406, 2.474, 2.461, 2.527, 2.616
+        0.504, 0.191, 0.198, 0.234, 0.278, 0.396, 0.43, 0.379, 0.423, 0.464,
+        0.526, 0.564, 0.613, 0.677, 0.69, 0.743, 0.786, 0.852, 0.905, 0.963,
+        1.008, 1.156, 1.146, 1.17, 1.245, 1.257, 1.345, 1.398, 1.433, 1.507,
+        1.541, 1.585, 1.681, 1.695, 1.719, 1.772, 1.839, 1.888, 1.941, 2.016,
+        2.105, 2.101, 2.167, 2.237, 2.291, 2.362, 2.41, 2.415, 2.47, 2.521,
+        2.548, 2.608, 2.66, 2.745, 2.794, 2.872, 2.911, 2.939, 2.997, 3.043,
+        3.137, 3.129, 3.205, 3.293, 3.264, 3.411, 3.378, 3.518, 3.473, 3.49,
+        3.626, 3.657, 3.672, 3.721, 3.713, 3.728, 3.728, 3.92, 3.945, 4.641,
+        4.184, 4.069, 4.277, 4.266, 4.318, 4.522, 4.531, 5.064, 5.103, 4.824
     ]
 
-    plt.figure()
-    plt.plot(matches, times, marker='o')
-    plt.xlabel("Number of Matches")
-    plt.ylabel("Time (s)")
-    plt.title("Execution Time vs Number of Matches")
-    plt.grid(True)
+    fig, ax = plt.subplots()
+    ax.plot(matches, times, marker='o', color='blue', linestyle='')
+
+    # Remove top and right spines
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+
+    # Optional: remove the remaining spines for a fully frameless look
+    # ax.spines['bottom'].set_visible(False)
+    # ax.spines['left'].set_visible(False)
+
+    ax.set_xlabel("Number of Matches")
+    ax.set_ylabel("Time (s)")
+    ax.grid(True, linestyle='--', alpha=0.5)
     plt.tight_layout()
-    plt.savefig("./exectimes.png")
+    plt.savefig("./exectimes.png", transparent=True)  # transparent background
     plt.show()
 
 plot_matches_time()
