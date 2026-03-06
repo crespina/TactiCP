@@ -31,8 +31,8 @@ public abstract class Event {
                 case STARTMAX -> this.timeStartMax = w.values()[0];
                 case ENDMIN -> this.timeEndMin = w.values()[0];
                 case ENDMAX -> this.timeEndMax = w.values()[0];
-                case WITHIN -> this.maxDuration = w.values()[0];
-                case MIN_DURATION -> this.minDuration = w.values()[0];
+                case MAXDURATION -> this.maxDuration = w.values()[0];
+                case MINDURATION -> this.minDuration = w.values()[0];
                 case RADIUS -> {
                     this.xcenter = w.values()[0];
                     this.ycenter = w.values()[1];

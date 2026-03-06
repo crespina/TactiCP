@@ -155,11 +155,11 @@ public class Factory {
     }
 
     public static Where WITHIN(int frames) {
-        return Where.of(Where.Kind.WITHIN, frames);
+        return Where.of(Where.Kind.MAXDURATION, frames);
     }
 
     public static Where MIN_DURATION(int frames) {
-        return Where.of(Where.Kind.MIN_DURATION, frames);
+        return Where.of(Where.Kind.MINDURATION, frames);
     }
 
     public static Where RECTANGLE(int xtop, int ytop, int w, int h) {
