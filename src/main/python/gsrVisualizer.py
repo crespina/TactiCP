@@ -163,7 +163,8 @@ def draw_and_write_video(frames_positions, total_frames, out_path, fps=25, figsi
         img = cv2.resize(img, (width, height))
         img_bgr = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         writer.write(img_bgr)
-        if f in [20, 31, 43]:
+
+        if f in [179, 248]: #HERE
             cv2.imwrite(f"frame_{f}.png", img_bgr)
 
     writer.release()
