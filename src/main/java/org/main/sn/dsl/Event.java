@@ -3,8 +3,10 @@ package org.main.sn.dsl;
 public abstract class Event {
     private final Action action;
     private final Entity subject;
-    public int timeStart = -1;
-    public int timeEnd = -1;
+    public int timeStartMin = -1;
+    public int timeEndMin = -1;
+    public int timeStartMax = -1;
+    public int timeEndMax = -1;
     public int maxDuration = -1;
     public int minDuration = -1;
     public int xtop = -1;
@@ -25,8 +27,10 @@ public abstract class Event {
     public Event WHERE(Where... parts) {
         for (Where w : parts) {
             switch (w.kind()) {
-                case START -> this.timeStart = w.values()[0];
-                case END -> this.timeEnd = w.values()[0];
+                case STARTMIN -> this.timeStartMin = w.values()[0];
+                case STARTMAX -> this.timeStartMax = w.values()[0];
+                case ENDMIN -> this.timeEndMin = w.values()[0];
+                case ENDMAX -> this.timeEndMax = w.values()[0];
                 case WITHIN -> this.maxDuration = w.values()[0];
                 case MIN_DURATION -> this.minDuration = w.values()[0];
                 case RADIUS -> {
@@ -47,55 +51,11 @@ public abstract class Event {
         return this;
     }
 
-    public Event WITHIN(int amount) {
-        if (amount < 0) {
-            throw new IllegalArgumentException("Duration must be a non-negative value.");
-        }
-        this.maxDuration = amount; //in frame
-        return this;
-    }
-
     public Event MINRANGE() {
         this.isMinrange = true;
         return this;
     }
 
-    public Event start(int time) {
-        if (time < 0) {
-            throw new IllegalArgumentException("Start time must be a non-negative value.");
-        }
-        this.timeStart = time; //in frame
-        return this;
-    }
-
-    public Event end(int time) {
-        if (time < 0) {
-            throw new IllegalArgumentException("End time must be a non-negative value.");
-        }
-        this.timeEnd = time; //in frame
-        return this;
-    }
-
-    public Event radius(int radius, int xcenter, int ycenter) {
-        this.radius = radius;
-        if (radius <= 0) {
-            throw new IllegalArgumentException("Radius must be a positive value.");
-        }
-        this.xcenter = xcenter;
-        this.ycenter = ycenter;
-        return this;
-    }
-
-    public Event RECTANGLE(int xtop, int ytop, int w, int h) {
-        this.xtop = xtop;
-        this.ytop = ytop;
-        if (w <= 0 || h <= 0) {
-            throw new IllegalArgumentException("Width and height must be positive values.");
-        }
-        this.w = w;
-        this.h = h;
-        return this;
-    }
 
     public Event not() {
         this.isNegated = true;

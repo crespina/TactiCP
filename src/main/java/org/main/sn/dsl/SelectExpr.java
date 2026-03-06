@@ -17,8 +17,10 @@ public final class SelectExpr {
     public final List<GameStateReconstructionInstance> matches = new ArrayList<>();
     public int maxDuration = -1;
     public int minDuration = -1;
-    public int start = -1;
-    public int end = -1;
+    public int startMin = -1;
+    public int startMax = -1;
+    public int endMin = -1;
+    public int endMax = -1;
     public int xcenter = -1;
     public int ycenter = -1;
     public int radius = -1;
@@ -40,50 +42,6 @@ public final class SelectExpr {
         Collections.addAll(steps, exprs);
     }
 
-    public SelectExpr start(int start) {
-        if (start < 0) {
-            throw new IllegalArgumentException("Start time must be a non-negative value.");
-        }
-        this.start = start;
-        return this;
-    }
-
-    public SelectExpr end(int end) {
-        if (end < 0) {
-            throw new IllegalArgumentException("End time must be a non-negative value.");
-        }
-        this.end = end;
-        return this;
-    }
-
-    public SelectExpr within(int duration) {
-        if (duration < 0) {
-            throw new IllegalArgumentException("Duration must be a non-negative value.");
-        }
-        this.maxDuration = duration;
-        return this;
-    }
-
-    public SelectExpr radius(int xcenter, int ycenter, int radius) {
-        if (radius < 0) {
-            throw new IllegalArgumentException("Radius must be a non-negative value.");
-        }
-        this.radius = radius;
-        this.xcenter = xcenter;
-        this.ycenter = ycenter;
-        return this;
-    }
-
-    public SelectExpr rectangle(int xtop, int ytop, int w, int h) {
-        if (w < 0 || h < 0) {
-            throw new IllegalArgumentException("Width and height must be non-negative values.");
-        }
-        this.xtop = xtop;
-        this.ytop = ytop;
-        this.w = w;
-        this.h = h;
-        return this;
-    }
 
     public SelectExpr WHERE(Where... parts) {
         if (parts != null) for (Where p : parts) if (p != null) whereParts.add(p);
@@ -111,8 +69,10 @@ public final class SelectExpr {
     private void applyWhereParts() {
         for (Where w : whereParts) {
             switch (w.kind()) {
-                case START -> this.start = w.values()[0];
-                case END -> this.end = w.values()[0];
+                case STARTMIN -> this.startMin = w.values()[0];
+                case STARTMAX -> this.startMax = w.values()[0];
+                case ENDMIN -> this.endMin = w.values()[0];
+                case ENDMAX -> this.endMax = w.values()[0];
                 case WITHIN -> this.maxDuration = w.values()[0];
                 case MIN_DURATION -> this.minDuration = w.values()[0];
                 case RADIUS -> {

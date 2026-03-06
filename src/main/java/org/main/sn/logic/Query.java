@@ -31,8 +31,10 @@ public class Query {
         final List<GameStateReconstructionInstance> matches = seq.matches;
         int total_max_duration = seq.maxDuration;
         int total_min_duration = seq.minDuration;
-        int total_start = seq.start;
-        int total_end = seq.end;
+        int total_start_min = seq.startMin;
+        int total_start_max = seq.startMax;
+        int total_end_min = seq.endMin;
+        int total_end_max = seq.endMax;
         int total_radius = seq.radius;
         int total_xcenter = seq.xcenter;
         int total_ycenter = seq.ycenter;
@@ -126,11 +128,17 @@ public class Query {
                 if (total_min_duration != -1) {
                     cp.post(ge(sum(end(lastVar), minus(start(firstVar))), total_min_duration));
                 }
-                if (total_start != -1) {
-                    cp.post(ge(start(firstVar), total_start));
+                if (total_start_min != -1) {
+                    cp.post(ge(start(firstVar), total_start_min));
                 }
-                if (total_end != -1) {
-                    cp.post(le(end(lastVar), total_end));
+                if (total_start_max != -1) {
+                    cp.post(le(start(firstVar), total_start_max));
+                }
+                if (total_end_min != -1) {
+                    cp.post(ge(end(lastVar), total_end_min));
+                }
+                if (total_end_max != -1) {
+                    cp.post(le(end(lastVar), total_end_max));
                 }
             } catch (InconsistencyException e) {
                 //System.out.println("No solution found for instance " + instance.name);
@@ -280,9 +288,12 @@ public class Query {
 
         Action action = event.action();
         Entity subject = event.subject();
-        int event_timeStart = event.timeStart;
-        int event_timeEnd = event.timeEnd;
-        int event_duration = event.maxDuration;
+        int event_timeStartMin = event.timeStartMin;
+        int event_timeStartMax = event.timeStartMax;
+        int event_timeEndMin = event.timeEndMin;
+        int event_timeEndMax = event.timeEndMax;
+        int event_durationMax = event.maxDuration;
+        int event_durationMin = event.minDuration;
         int event_radius = event.radius;
         int event_xcenter = event.xcenter;
         int event_ycenter = event.ycenter;
@@ -310,14 +321,23 @@ public class Query {
             cp.post(endBeforeStart(intervals.get(counterEvent.get() - 1), eventInterval, 1));
         }
 
-        if (event_timeStart != -1) {
-            cp.post(ge(event_start, event_timeStart));
+        if (event_timeStartMin != -1) {
+            cp.post(ge(event_start, event_timeStartMin));
         }
-        if (event_timeEnd != -1) {
-            cp.post(le(event_end, event_timeEnd));
+        if (event_timeStartMax != -1) {
+            cp.post(le(event_end, event_timeStartMax));
         }
-        if (event_duration != -1) {
-            cp.post(le(length(eventInterval), event_duration));
+        if (event_timeEndMin != -1) {
+            cp.post(ge(event_start, event_timeEndMin));
+        }
+        if (event_timeEndMax != -1) {
+            cp.post(le(event_end, event_timeEndMax));
+        }
+        if (event_durationMax != -1) {
+            cp.post(le(length(eventInterval), event_durationMax));
+        }
+        if (event_durationMin != -1) {
+            cp.post(ge(length(eventInterval), event_durationMin));
         }
 
         switch (action.name) {

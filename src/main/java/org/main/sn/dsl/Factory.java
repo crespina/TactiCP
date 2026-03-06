@@ -138,12 +138,20 @@ public class Factory {
             return new BallEvent(new Action("POSITION", zones));
     }
 
-    public static Where START(int frame) {
-        return Where.of(Where.Kind.START, frame);
+    public static Where STARTMIN(int frame) {
+        return Where.of(Where.Kind.STARTMIN, frame);
     }
 
-    public static Where END(int frame) {
-        return Where.of(Where.Kind.END, frame);
+    public static Where STARTMAX(int frame) {
+        return Where.of(Where.Kind.STARTMAX, frame);
+    }
+
+    public static Where ENDMIN(int frame) {
+        return Where.of(Where.Kind.ENDMIN, frame);
+    }
+
+    public static Where ENDMAX(int frame) {
+        return Where.of(Where.Kind.ENDMAX, frame);
     }
 
     public static Where WITHIN(int frames) {
