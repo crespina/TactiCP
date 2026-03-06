@@ -11,18 +11,6 @@ public class Main {
     public static void main(String[] args) throws IOException {
 
 
-        //SCALABLE TEST
-        Player p11 = PLAYER("p11", 11);
-        Player p2 = PLAYER("p2");
-        Ball b = BALL();
-
-        long start = System.currentTimeMillis();
-        SelectExpr s5 = SELECT(AND(p11.PASSTO(p2).MINRANGE(),NOT(b.MOVETO(4,1)).MINRANGE())).FROM("SNGS-061"); //ball move to zone
-        s5.searchAndPrint();
-        long finish = System.currentTimeMillis();
-        long timeElapsed = finish - start;
-        System.out.println(timeElapsed);
-
         //ZONE DE TEST
 
 //        SelectExpr moveto = SELECT((POSITION(PLAYER("p1",2),4)).MINRANGE(), POSITION(PLAYER("p1",2),10).MINRANGE()).FROM("SNGS-060").SEARCH(0);
@@ -38,13 +26,15 @@ public class Main {
 
         // Test passTo
         // -----------
+        SelectExpr x = SELECT(PLAYER("p1").PASSTO(PLAYER("p2")).MINRANGE()).FROM("SNGS-060"); //toutes les passes
+        System.out.println(x.COUNT());
 
-//        long start = System.currentTimeMillis();
-//        SelectExpr s1 = SELECT(PLAYER("p1").PASSTO(PLAYER("p2")).MINRANGE()).FROM("SNGS-060").WHERE(START(20), END(400), WITHIN(200)).SEARCH(1); //toutes les passes
-//        //s1.searchAndPrint();
-//        long finish = System.currentTimeMillis();
-//        long timeElapsed = finish - start;
-//        System.out.println(timeElapsed);
+        long start = System.currentTimeMillis();
+        SelectExpr s1 = SELECT(PLAYER("p1").PASSTO(PLAYER("p2")).MINRANGE()).FROM("SNGS-060"); //toutes les passes
+        System.out.println(s1.COUNT());
+        long finish = System.currentTimeMillis();
+        long timeElapsed = finish - start;
+        System.out.println(timeElapsed);
 //
 //
 //        System.out.println("-------------------");
