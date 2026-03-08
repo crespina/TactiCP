@@ -60,6 +60,80 @@ public class Automaton {
         return new Automaton(0, List.of(accept), res);
     }
 
+    //inverse
+    public static Automaton NOT_contains_A_0STAR_B(int nPlayers, Set<Integer> As, Set<Integer> Bs) {
+        // inputs: 0..nPlayers (0 is zero-token), states as described in explanation
+        for (int x : As) {
+            if (x < 1 || x > nPlayers) throw new IllegalArgumentException("As contains out-of-range value: " + x);
+        }
+        for (int x : Bs) {
+            if (x < 1 || x > nPlayers) throw new IllegalArgumentException("Bs contains out-of-range value: " + x);
+        }
+
+        int inputs = nPlayers + 1;
+        int start = 0;
+        int seen = nPlayers + 1;      // we have consumed >=1 token and are not inside an A...0* run
+        int found = nPlayers + 2;     // trap state: forbidden substring was observed
+        int states = nPlayers + 3;
+
+        int[][] res = new int[states][inputs];
+        for (int i = 0; i < states; i++) {
+            Arrays.fill(res[i], -1);
+        }
+
+        // --- transitions from start (no token consumed yet) ---
+        // on 0 -> seen (consumed a token, no A started)
+        res[start][0] = seen;
+        // on non-zero x:
+        for (int x = 1; x <= nPlayers; x++) {
+            if (As.contains(x)) {
+                // start potential A = x
+                res[start][x] = x;        // state x means "we saw A = x (and possibly zeros later)"
+            } else {
+                res[start][x] = seen;     // generic seen state
+            }
+        }
+
+        // --- transitions for the "seen" state (we have consumed >=1, no active A-run) ---
+        res[seen][0] = seen; // zeros keep us in seen
+        for (int x = 1; x <= nPlayers; x++) {
+            if (As.contains(x)) {
+                res[seen][x] = x;    // a new A starts
+            } else {
+                res[seen][x] = seen; // stay in seen
+            }
+        }
+
+        // --- transitions for states a = 1..nPlayers (these are "we saw A=a and maybe zeros") ---
+        for (int a = 1; a <= nPlayers; a++) {
+            // if 'a' is not actually an A, this state will be unreachable but harmless.
+            // on 0 -> remain in the same a-state (A 0* ...)
+            res[a][0] = a;
+
+            for (int x = 1; x <= nPlayers; x++) {
+                // If x is a B and x != a -> forbidden pattern A ... B found => go to trap
+                if (Bs.contains(x) && x != a) {
+                    res[a][x] = found;
+                } else if (As.contains(x)) {
+                    // start a new A = x (note: B-check took precedence above)
+                    res[a][x] = x;
+                } else {
+                    // neither B (that would complete) nor an A -> fall back to 'seen'
+                    res[a][x] = seen;
+                }
+            }
+        }
+
+        // --- trap state loops to itself on any input ---
+        for (int x = 0; x < inputs; x++) res[found][x] = found;
+
+        // --- accepting states: all states except start and found (ensures empty string rejected) ---
+        List<Integer> accepting = new ArrayList<>();
+        for (int i = 1; i < found; i++) accepting.add(i); // 1 .. nPlayers and 'seen'
+
+        return new Automaton(start, accepting, res);
+    }
+
     //minimal pass
     public static Automaton A_0STAR_B(int nPlayers, Set<Integer> As, Set<Integer> Bs) {
         //n is the number of possible inputs excluding 0 (i.e. the number of players)
@@ -238,6 +312,46 @@ public class Automaton {
         for (int x = 0; x <= nPlayers; x++) {
             if (x == B) res[Bstate][x] = Bstate;
             else if (x != B) res[Bstate][x] = accept;
+        }
+
+        return new Automaton(start, List.of(accept), res);
+    }
+
+    public static Automaton PAD_APLUS_PADSTAR_BPLUS_PAD(int nPlayers, Set<Integer> As, Set<Integer> Bs) {
+        int inputs = nPlayers + 1; // symbols 0...nPlayers
+        int states = 6;
+        int[][] res = new int[states][inputs];
+        for (int i = 0; i < states; i++) Arrays.fill(res[i], -1);
+
+        int start = 0, afterLead = 1, Astate = 2, midPad = 3, Bstate = 4, accept = 5;
+
+        // from start: any not in As (including 0) -> afterLead
+        for (int x = 0; x <= nPlayers; x++) {
+            if (!As.contains(x)) res[start][x] = afterLead;
+        }
+
+        // afterLead: must see any A in As to begin A+
+        for (int x = 0; x <= nPlayers; x++) {
+            if (As.contains(x)) res[afterLead][x] = Astate;
+        }
+
+        // Astate: A -> stay in Astate; B -> go to Bstate; any not in As or Bs -> midPad
+        for (int x = 0; x <= nPlayers; x++) {
+            if (As.contains(x))      res[Astate][x] = Astate;
+            else if (Bs.contains(x)) res[Astate][x] = Bstate;
+            else                     res[Astate][x] = midPad; // includes 0
+        }
+
+        // midPad: loop on not in As or Bs; on any B -> Bstate; any A is invalid here
+        for (int x = 0; x <= nPlayers; x++) {
+            if (Bs.contains(x))                        res[midPad][x] = Bstate;
+            else if (!As.contains(x) && !Bs.contains(x)) res[midPad][x] = midPad;
+        }
+
+        // Bstate: any B -> stay; not in Bs -> accept
+        for (int x = 0; x <= nPlayers; x++) {
+            if (Bs.contains(x)) res[Bstate][x] = Bstate;
+            else                res[Bstate][x] = accept;
         }
 
         return new Automaton(start, List.of(accept), res);

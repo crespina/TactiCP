@@ -73,8 +73,8 @@ public final class SelectExpr {
                 case STARTMAX -> this.startMax = w.values()[0];
                 case ENDMIN -> this.endMin = w.values()[0];
                 case ENDMAX -> this.endMax = w.values()[0];
-                case MAX_DURATION -> this.maxDuration = w.values()[0];
-                case MIN_DURATION -> this.minDuration = w.values()[0];
+                case MAXDURATION -> this.maxDuration = w.values()[0];
+                case MINDURATION -> this.minDuration = w.values()[0];
                 case RADIUS -> {
                     this.xcenter = w.values()[0];
                     this.ycenter = w.values()[1];
