@@ -10,13 +10,19 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.main.sn.logic.RegularInterval;
 import org.main.util.Automaton;
 import org.maxicp.cp.CPSolverTest;
+import org.maxicp.cp.engine.core.CPIntVar;
 import org.maxicp.cp.engine.core.CPIntervalVar;
 import org.maxicp.cp.engine.core.CPSolver;
 import org.maxicp.cp.CPFactory;
+import org.maxicp.search.DFSearch;
+import org.maxicp.search.Searches;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.maxicp.cp.CPFactory.*;
 
 
 public class RegularTest extends CPSolverTest {
@@ -150,6 +156,44 @@ public class RegularTest extends CPSolverTest {
         assertEquals(0, itv_1.startMin());
         assertEquals(10, itv_1.endMax());
     }
+
+    @ParameterizedTest
+    @MethodSource("getSolver")
+    public void SimpleTest8(CPSolver cp) {
+        int[] x = new int[]{0,1,1,1,0,0,0,2,2,2,0,0,0,1,1,1,0,0,0,2,2,2,0,0,0};
+
+        CPIntervalVar itv_1 = CPFactory.makeIntervalVar(cp);
+        itv_1.setPresent();
+
+        Automaton a = Automaton.A_0STAR_B(3, Set.of(1), Set.of(2));
+        cp.post(new RegularInterval(x, itv_1, a));
+
+        DFSearch search = makeDfs(cp, Searches.firstFailBinary(start(itv_1), end(itv_1)));
+
+        search.onSolution(() -> {
+            System.out.println(itv_1);
+        });
+
+        search.solve();
+
+
+        CPIntervalVar itv_2 = CPFactory.makeIntervalVar(cp);
+        itv_2.setPresent();
+
+        Automaton nota = Automaton.NOT_contains_A_0STAR_B(3, Set.of(1), Set.of(2));
+        cp.post(new RegularInterval(x, itv_2, nota));
+
+        DFSearch search2 = makeDfs(cp, Searches.firstFailBinary(start(itv_2), end(itv_2)));
+
+        search2.onSolution(() -> {
+            System.out.println(itv_2);
+        });
+
+        search2.solve();
+
+    }
+
+
 
 
 

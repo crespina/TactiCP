@@ -157,10 +157,10 @@ public class QueryTest {
 
         //NOT MINRANGED
         Event e4 = pwc1.PASSTO(pwc2);
-        SelectExpr s4 = SELECT(e4).FROM("SNGS-060, SNGS-061").WHERE(RECTANGLE(-60, 20, 65, 40)); //toutes les passes
+        SelectExpr s4 = SELECT(e4).FROM("SNGS-060, SNGS-061");
 
         List<Result> results4 = s4.search();
-        assertEquals(5, results4.size());
+        assertEquals(7, results4.size());
 
     }
 
@@ -315,7 +315,7 @@ public class QueryTest {
 
         //BALL POSITION
         Ball b = BALL();
-        SelectExpr s1 = SELECT(POSITION(b, 1,4)).FROM("SNGS-060").WHERE(RADIUS(0,0,10));
+        SelectExpr s1 = SELECT(POSITION(b, 1,4)).FROM("SNGS-060").WHERE(RADIUS(-10,0,30));
         List<Result> results1 = s1.search();
         assertEquals(3, results1.size());
         Result r1 = results1.get(0);
@@ -343,7 +343,7 @@ public class QueryTest {
         assertEquals(433, positionEvent3.interval.end);
 
         //not
-        SelectExpr s1not = SELECT(NOT(POSITION(b, 1,4))).FROM("SNGS-060").WHERE(RADIUS(0,0,10));
+        SelectExpr s1not = SELECT(NOT(POSITION(b, 1,4))).FROM("SNGS-060");
         List<Result> results1not = s1not.search();
         assertEquals(5, results1not.size());
         Result r1not = results1not.get(0);
@@ -360,48 +360,66 @@ public class QueryTest {
 
         //wc
         Player pwc4 = PLAYER("pwc4");
-        SelectExpr spl1 = SELECT(POSITION(pwc4,12)).FROM("SNGS-060").WHERE(RECTANGLE(-50, 0, 20, 20), START(150), END(500), WITHIN(200),MIN_DURATION(50));
+        SelectExpr spl1 = SELECT(POSITION(pwc4,12)).FROM("SNGS-060").WHERE(RECTANGLE(-50, 0, 20, 20), STARTMIN(150), ENDMAX(500), WITHIN(200),MIN_DURATION(50));
         List<Result> resultspl1 = spl1.search();
-        assertEquals(1, resultspl1.size());
+        assertEquals(2, resultspl1.size());
+
         Result rpl1 = resultspl1.get(0);
-        assertEquals("SNGS-061", rpl1.instance);
+        assertEquals("SNGS-060", rpl1.instance);
         List<Result.ResultEvent> eventspl1 = rpl1.events;
         assertEquals(1, eventspl1.size());
         Result.ResultEvent eventpl1 = eventspl1.getFirst();
         assertEquals("POSITION", eventpl1.type);
         Result.PositionEvent positionEventpl1 = (Result.PositionEvent) eventpl1;
-        assertEquals(List.of(14), positionEventpl1.playerIds);
-        assertEquals(116, positionEventpl1.interval.start);
-        assertEquals(140, positionEventpl1.interval.end);
+        assertEquals(List.of(3), positionEventpl1.playerIds);
+        assertEquals(198, positionEventpl1.interval.start);
+        assertEquals(279, positionEventpl1.interval.end);
+
+        Result rpl2 = resultspl1.get(1);
+        assertEquals("SNGS-060", rpl2.instance);
+        List<Result.ResultEvent> eventspl2 = rpl2.events;
+        assertEquals(1, eventspl2.size());
+        Result.ResultEvent eventpl2 = eventspl2.getFirst();
+        assertEquals("POSITION", eventpl1.type);
+        Result.PositionEvent positionEventpl2 = (Result.PositionEvent) eventpl2;
+        assertEquals(List.of(22), positionEventpl2.playerIds);
+        assertEquals(171, positionEventpl2.interval.start);
+        assertEquals(295, positionEventpl2.interval.end);
 
         //team
         Player pleft4 = PLAYER("pleft4", "left");
         SelectExpr s2 = SELECT(POSITION(pleft4,12)).FROM("SNGS-060").WHERE(RADIUS(-50,0,30));
         List<Result> results2 = s2.search();
-        assertEquals(2, results2.size());
+        assertEquals(1, results2.size());
 
         Result r2pl = results2.get(0);
-        assertEquals("SNGS-061", r2pl.instance);
+        assertEquals("SNGS-060", r2pl.instance);
         List<Result.ResultEvent> events2pl = r2pl.events;
         assertEquals(1, events2pl.size());
         Result.ResultEvent event2pl = events2pl.getFirst();
         assertEquals("POSITION", event2pl.type);
         Result.PositionEvent positionionEvent2pl = (Result.PositionEvent) event2pl;
-        assertEquals(List.of(11), positionionEvent2pl.playerIds);
-        assertEquals(50, positionionEvent2pl.interval.start);
-        assertEquals(85, positionionEvent2pl.interval.end);
+        assertEquals(List.of(22), positionionEvent2pl.playerIds);
+        assertEquals(171, positionionEvent2pl.interval.start);
+        assertEquals(295, positionionEvent2pl.interval.end);
 
         //id
         Player p22 = PLAYER("p22", 22);
         SelectExpr s3 = SELECT(NOT(POSITION(p22,12))).FROM("SNGS-060");
         List<Result> results3 = s3.search();
-        assertEquals(4, results3.size());
+        assertEquals(2, results3.size());
 
         Result not0 = results3.get(0);
         Result.PositionEvent notevent0 = (Result.PositionEvent) not0.events.getFirst();
         assertEquals(List.of(22), notevent0.playerIds);
         assertEquals(0, notevent0.interval.start);
-        assertEquals(115, notevent0.interval.end);
+        assertEquals(171, notevent0.interval.end);
+
+        Result not1 = results3.get(1);
+        Result.PositionEvent notevent1 = (Result.PositionEvent) not1.events.getFirst();
+        assertEquals(List.of(22), notevent1.playerIds);
+        assertEquals(296, notevent1.interval.start);
+        assertEquals(750, notevent1.interval.end);
 
 
     }
@@ -413,7 +431,7 @@ public class QueryTest {
 
         //wc
         Player pwc4 = PLAYER("pwc4");
-        SelectExpr s1 = SELECT(POSSESSION(pwc4)).FROM("SNGS-061").WHERE(RECTANGLE(-20, 20, 20, 20), START(100), END(200), WITHIN(50),MIN_DURATION(20));
+        SelectExpr s1 = SELECT(POSSESSION(pwc4)).FROM("SNGS-061").WHERE(RECTANGLE(-30, 5, 20, 20), STARTMIN(100), ENDMAX(200), WITHIN(50),MIN_DURATION(20));
         List<Result> results1 = s1.search();
         assertEquals(1, results1.size());
         Result r1 = results1.get(0);
