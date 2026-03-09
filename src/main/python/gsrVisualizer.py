@@ -83,6 +83,7 @@ def draw_and_write_video(frames_positions, total_frames, out_path, fps=25, figsi
     ax.set_xlim(xmin, xmax)
     ax.set_ylim(ymin, ymax)
     ax.set_aspect("equal", adjustable="box")
+    fig.tight_layout()
 
     width, height = int(figsize[0] * 100), int(figsize[1] * 100)
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
@@ -98,35 +99,10 @@ def draw_and_write_video(frames_positions, total_frames, out_path, fps=25, figsi
         #ax.invert_yaxis()
 
         draw_zones(ax)
-        # central zones
-        annotate_zone(ax, 4, -15.6, -10)
-        annotate_zone(ax, 3, 15.6, -10)
-        annotate_zone(ax, 1, -15.6, 10)
-        annotate_zone(ax, 2, 15.6, 10)
 
-        # bottom zones
-        annotate_zone(ax, 11, -15.6, -30)
-        annotate_zone(ax, 10, 15.6, -30)
+        ax.set_axis_off()
 
-        # top zones
-        annotate_zone(ax, 6, -15.6, 30)
-        annotate_zone(ax, 7, 15.6, 30)
-
-        # side zones
-        annotate_zone(ax, 13, -54, 0)
-        annotate_zone(ax, 14, 54, 0)
-
-        # corner-ish fallback zones
-        annotate_zone(ax, 12, -40, -30)
-        annotate_zone(ax, 9, 40, -30)
-        annotate_zone(ax, 5, -40, 30)
-        annotate_zone(ax, 8, 40, 30)
-
-        ax.set_xlabel("pitch x")
-        ax.set_ylabel("pitch y")
-        ax.set_title(f"Frame {f+1}/{total_frames}")
-
-        ax.add_patch(plt.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin, fill=False, linewidth=1.0))
+        ax.add_patch(plt.Rectangle((xmin, ymin), xmax - xmin, ymax - ymin, fill=False, linewidth=1.0, clip_on=False))
         anns = frames_positions.get(f, [])
 
         for a in anns:
@@ -141,17 +117,11 @@ def draw_and_write_video(frames_positions, total_frames, out_path, fps=25, figsi
             if a.get("role") == "ball" or team == "ball":
                 ax.scatter(a["x"], a["y"], s=40, marker="o",
                            edgecolors="k", linewidths=0.5, color=color)
-                ax.text(a["x"], a["y"] + 0.1, "ball",
-                        ha="center", va="bottom", fontsize=7)
                 continue
 
             # players
             ax.scatter(a["x"], a["y"], s=150, marker="o",
                        edgecolors="k", linewidths=0.5, color=color)
-
-            label = str(a.get("track_id", ""))
-            ax.text(a["x"], a["y"] + 0.2, label,
-                    ha="center", va="bottom", fontsize=8, weight="bold")
 
         # frame → numpy
         fig.canvas.draw()
@@ -164,8 +134,8 @@ def draw_and_write_video(frames_positions, total_frames, out_path, fps=25, figsi
         img_bgr = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         writer.write(img_bgr)
 
-        if f in [109, 305, 397]: #HERE
-            cv2.imwrite(f"frame_{f}.png", img_bgr)
+        if f in [350]: #HERE I SAVE FRAMES
+            cv2.imwrite(f"frame_{f}_060.png", img_bgr)
 
     writer.release()
     plt.close(fig)
@@ -229,7 +199,7 @@ def main(args):
             teams.add(p["team"])
     team_colors = {}
     team_colors["ball"] = "black"
-    team_colors["left"] = "white"
+    team_colors["left"] = "red"
     team_colors["right"] = "blue"
 
     draw_and_write_video(frames_all, args.total_frames, args.output, fps=args.fps, team_colors=team_colors)

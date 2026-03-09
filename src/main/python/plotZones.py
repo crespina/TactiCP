@@ -8,11 +8,11 @@ mpl.rcParams.update({
     "font.family": "serif",
     "font.serif": ["Latin Modern Roman", "DejaVu Serif", "serif"],
     "mathtext.fontset": "cm",   # Computer Modern — the classic LaTeX look
-    "font.size": 16,
-    "axes.titlesize": 20,
-    "axes.labelsize": 18,
-    "xtick.labelsize": 14,
-    "ytick.labelsize": 14,
+    "font.size": 22,
+    "axes.titlesize": 26,
+    "axes.labelsize": 24,
+    "xtick.labelsize": 20,
+    "ytick.labelsize": 20,
 })
 
 
@@ -40,7 +40,7 @@ def annotate_zone(ax, zone_id, x, y):
     ax.text(
         x, y, str(zone_id),
         ha="center", va="center",
-        fontsize=16, color="gray", alpha=0.7, weight="bold"
+        fontsize=22, color="gray", alpha=0.7, weight="bold"
     )
 
 
@@ -86,14 +86,10 @@ def plot_zones(out_path=None):
     annotate_zone(ax,  5, -40,  30)
     annotate_zone(ax,  8,  40,  30)
 
-    ax.set_xlabel("pitch x")
-    ax.set_ylabel("pitch y")
-    ax.set_title("Pitch Zone Decomposition")
-
     plt.tight_layout()
 
     if out_path:
-        fig.savefig(out_path, dpi=150)
+        fig.savefig(out_path, format="pdf")
         print(f"Saved to {out_path}")
     else:
         plt.show()
