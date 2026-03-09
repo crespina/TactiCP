@@ -115,13 +115,13 @@ def draw_and_write_video(frames_positions, total_frames, out_path, fps=25, figsi
 
             # ball
             if a.get("role") == "ball" or team == "ball":
-                ax.scatter(a["x"], a["y"], s=40, marker="o",
-                           edgecolors="k", linewidths=0.5, color=color)
+                ax.scatter(a["x"], a["y"], s=80, marker="o",
+                           edgecolors="k", linewidths=0.5, color=color, zorder=10, alpha=0.7)
                 continue
 
             # players
             ax.scatter(a["x"], a["y"], s=150, marker="o",
-                       edgecolors="k", linewidths=0.5, color=color)
+                       edgecolors="k", linewidths=0.5, color=color, zorder=5)
 
         # frame → numpy
         fig.canvas.draw()
@@ -134,8 +134,8 @@ def draw_and_write_video(frames_positions, total_frames, out_path, fps=25, figsi
         img_bgr = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         writer.write(img_bgr)
 
-        if f in [350]: #HERE I SAVE FRAMES
-            cv2.imwrite(f"frame_{f}_060.png", img_bgr)
+        if f in [99]: #HERE I SAVE FRAMES
+            cv2.imwrite(f"frame_{f}_061.png", img_bgr)
 
     writer.release()
     plt.close(fig)
