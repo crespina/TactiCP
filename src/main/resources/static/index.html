@@ -625,20 +625,21 @@
             <dt><code>RADIUS(x, y, r)</code></dt>
             <dd>Restrict the search to a circular area centered at <code>(x, y)</code> with radius <code>r</code>.</dd>
 
-            <dt>
-              <code>STARTMIN(frame)</code><br>
-              <code>STARTMAX(frame)</code><br>
-              <code>ENDMIN(frame)</code><br>
-              <code>ENDMAX(frame)</code>
-            </dt>
-            <dd>Limit the temporal window to specific frame boundaries.</dd>
+            <dt><code>STARTMIN(frame)</code></dt>
+            <dd>Restrict the minimal starting time</dd>
+            <dt><code>STARTMAX(frame)</code></dt>
+            <dd>Restrict the maximal starting time</dd>
+            <dt><code>ENDMIN(frame)</code></dt>
+            <dd>Restrict the minimal ending time</dd>
+            <dt><code>ENDMAX(frame)</code></dt>
+            <dd>Restrict the maximal ending time</dd>
+
+            <dt><code>MINDURATION(nFrames)</code></dt>
+            <dd>Limit the minimal length of the pattern.</dd>
+            <dt><code>MAXDURATION(nFrames)</code></dt>
+            <dd>Limit the maximal length of the pattern.</dd>
 
 
-            <dt>
-              <code>MAXDURATION(nFrames)</code><br>
-              <code> MINDURATION(nFrames)</code>
-            </dt>
-            <dd>Limit the length of the pattern.</dd>
           </dl>
 
           <p class="syntax-tip">💡 <strong>Tip:</strong> Append <code>.SEARCH(1)</code> to your query to get the first solution.</p>
