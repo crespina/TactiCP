@@ -154,11 +154,11 @@ public class Factory {
         return Where.of(Where.Kind.ENDMAX, frame);
     }
 
-    public static Where WITHIN(int frames) {
+    public static Where MAXDURATION(int frames) {
         return Where.of(Where.Kind.MAXDURATION, frames);
     }
 
-    public static Where MIN_DURATION(int frames) {
+    public static Where MINDURATION(int frames) {
         return Where.of(Where.Kind.MINDURATION, frames);
     }
 
