@@ -100,14 +100,14 @@ public final class SelectExpr {
                 .collect(Collectors.toSet());
 
         //"all" = all splits
-        if (tokens.contains("all")) {
+        if (tokens.contains("all") | tokens.contains("ALL")) {
             tokens.addAll(SPLITS);
         }
 
         //handle split names
         for (String split : SPLITS) {
-            if (tokens.contains(split)) {
-                Path splitDir = ROOT.resolve(split);
+            if (tokens.contains(split)  | tokens.contains(split.toUpperCase())) {
+                Path splitDir = ROOT.resolve(split.toLowerCase());
                 try (Stream<Path> s = Files.list(splitDir)) {
                     s.filter(Files::isDirectory)
                             .forEach(selected::add);
