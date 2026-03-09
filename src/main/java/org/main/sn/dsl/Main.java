@@ -23,13 +23,8 @@ public class Main {
 //
 //        Team t = TEAM("t1");
 //        SelectExpr ambig = SELECT(POSITION(t, 3, 7, 8)).FROM("SNGS-060");
-        SelectExpr smin = SELECT(
-                PLAYER("p3", 13).MOVETO(1, 6).MINRANGE().WHERE(MINDURATION(50)),
-                POSSESSION(PLAYER("p3")).WHERE(RADIUS(-20, 20, 30))
-        )
-                .WHERE(MAXDURATION(150), STARTMIN(100)).FROM("SNGS-060");
+        SELECT(BALL().MOVETO(4, 1).MINRANGE()).FROM("all").WHERE(ATLEAST(2)).searchAndPrint();
 
-        smin.searchAndPrint();
         // Test passTo
         // -----------
         SelectExpr x = SELECT(PLAYER("p1").PASSTO(PLAYER("p2")).MINRANGE()).FROM("SNGS-060"); //toutes les passes

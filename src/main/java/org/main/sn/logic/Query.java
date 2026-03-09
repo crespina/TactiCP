@@ -171,7 +171,15 @@ public class Query {
             } else {
                 search.solve();
             }
+
+            if (atLeast>=0) {
+                if (solutionCounter.get() < atLeast) {
+                    //System.out.println("Number of solutions found (" + solutionCounter.get() + ") is less than the specified atLeast value (" + atLeast + ").");
+                    r.subList(r.size() -  solutionCounter.get(), r.size()).clear();
+                }
+            }
         }
+
 
         return r;
     }
