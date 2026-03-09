@@ -360,7 +360,7 @@ public class QueryTest {
 
         //wc
         Player pwc4 = PLAYER("pwc4");
-        SelectExpr spl1 = SELECT(POSITION(pwc4,12)).FROM("SNGS-060").WHERE(RECTANGLE(-50, 0, 20, 20), STARTMIN(150), ENDMAX(500), WITHIN(200),MIN_DURATION(50));
+        SelectExpr spl1 = SELECT(POSITION(pwc4,12)).FROM("SNGS-060").WHERE(RECTANGLE(-50, 0, 20, 20), STARTMIN(150), ENDMAX(500), MAXDURATION(200),MINDURATION(50));
         List<Result> resultspl1 = spl1.search();
         assertEquals(2, resultspl1.size());
 
@@ -431,7 +431,7 @@ public class QueryTest {
 
         //wc
         Player pwc4 = PLAYER("pwc4");
-        SelectExpr s1 = SELECT(POSSESSION(pwc4)).FROM("SNGS-061").WHERE(RECTANGLE(-30, 5, 20, 20), STARTMIN(100), ENDMAX(200), WITHIN(50),MIN_DURATION(20));
+        SelectExpr s1 = SELECT(POSSESSION(pwc4)).FROM("SNGS-061").WHERE(RECTANGLE(-30, 5, 20, 20), STARTMIN(100), ENDMAX(200), MAXDURATION(50),MINDURATION(20));
         List<Result> results1 = s1.search();
         assertEquals(1, results1.size());
         Result r1 = results1.get(0);
