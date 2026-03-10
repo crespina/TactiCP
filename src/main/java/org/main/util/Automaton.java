@@ -608,55 +608,85 @@ public class Automaton {
         return new Automaton(0, acceptingStates, res);
     }
 
+//    public static Automaton NOTA_APLUS_NOTA(int nPlayers, Set<Integer> As) {
+//
+//        int inputs = nPlayers + 1; // symbols 0..nPlayers
+//        int states = nPlayers + 3;
+//        int[][] res = new int[states][inputs];
+//        for (int i = 0; i < states; i++) Arrays.fill(res[i], -1);
+//
+//        int start = 0;
+//        int preA = nPlayers + 1;
+//        int post = nPlayers + 2;
+//
+//        // from start: any notA (including 0) → preA
+//        for (int x = 0; x <= nPlayers; x++) {
+//            if (!As.contains(x)) {
+//                res[start][x] = preA;
+//            }
+//        }
+//
+//        // from preA: first A of the A+ block
+//        for (int a : As) {
+//            if (a >= 1 && a <= nPlayers) {
+//                res[preA][a] = a;
+//            }
+//        }
+//
+//        // A+ part
+//        for (int a : As) {
+//            if (a >= 1 && a <= nPlayers) {
+//
+//                // Allow transitioning to any valid A (including itself)
+//                for (int otherA : As) {
+//                    if (otherA >= 1 && otherA <= nPlayers) {
+//                        res[a][otherA] = otherA;
+//                    }
+//                }
+//
+//                // Any non-A symbol ends the A+ block
+//                for (int x = 0; x <= nPlayers; x++) {
+//                    if (!As.contains(x)) {
+//                        res[a][x] = post; // trailing notA (including 0)
+//                    }
+//                }
+//            }
+//        }
+//
+//        List<Integer> acceptingStates = new ArrayList<>();
+//        acceptingStates.add(post);
+//
+//        return new Automaton(start, acceptingStates, res);
+//    }
+
     public static Automaton NOTA_APLUS_NOTA(int nPlayers, Set<Integer> As) {
 
-        int inputs = nPlayers + 1; // symbols 0..nPlayers
-        int states = nPlayers + 3;
+        int inputs = nPlayers + 1;
+        int states = 4;
         int[][] res = new int[states][inputs];
         for (int i = 0; i < states; i++) Arrays.fill(res[i], -1);
 
-        int start = 0;
-        int preA = nPlayers + 1;
-        int post = nPlayers + 2;
+        int start = 0, preA = 1, Astate = 2, post = 3;
 
-        // from start: any notA (including 0) → preA
+        // start: exactly one notA -> preA
         for (int x = 0; x <= nPlayers; x++) {
-            if (!As.contains(x)) {
-                res[start][x] = preA;
-            }
+            if (!As.contains(x)) res[start][x] = preA;
         }
 
-        // from preA: first A of the A+ block
-        for (int a : As) {
-            if (a >= 1 && a <= nPlayers) {
-                res[preA][a] = a;
-            }
+        // preA: first A of the A+ block -> Astate
+        for (int x = 0; x <= nPlayers; x++) {
+            if (As.contains(x)) res[preA][x] = Astate;
         }
 
-        // A+ part
-        for (int a : As) {
-            if (a >= 1 && a <= nPlayers) {
-
-                // Allow transitioning to any valid A (including itself)
-                for (int otherA : As) {
-                    if (otherA >= 1 && otherA <= nPlayers) {
-                        res[a][otherA] = otherA;
-                    }
-                }
-
-                // Any non-A symbol ends the A+ block
-                for (int x = 0; x <= nPlayers; x++) {
-                    if (!As.contains(x)) {
-                        res[a][x] = post; // trailing notA (including 0)
-                    }
-                }
-            }
+        // Astate: any A -> stay; exactly one notA -> post (accept)
+        for (int x = 0; x <= nPlayers; x++) {
+            if (As.contains(x))  res[Astate][x] = Astate;
+            else                 res[Astate][x] = post;
         }
 
-        List<Integer> acceptingStates = new ArrayList<>();
-        acceptingStates.add(post);
+        // post: accept, no further transitions
 
-        return new Automaton(start, acceptingStates, res);
+        return new Automaton(start, List.of(post), res);
     }
 
     public static Automaton AS_PLUS(int nPlayers, Set<Integer> As) {
@@ -721,6 +751,14 @@ public class Automaton {
         padded[0] = 0;
         System.arraycopy(input, 0, padded, 1, input.length);
         padded[padded.length - 1] = 0;
+        return padded;
+    }
+
+    public static int[] pad(int[] input, int sentinel) {
+        int[] padded = new int[input.length + 2];
+        padded[0] = sentinel;
+        System.arraycopy(input, 0, padded, 1, input.length);
+        padded[padded.length - 1] = sentinel;
         return padded;
     }
 }

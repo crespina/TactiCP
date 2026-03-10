@@ -326,26 +326,26 @@ public class QueryTest {
         assertEquals("POSITION", event1.type);
         Result.PositionEvent positionEvent1 = (Result.PositionEvent) event1;
         assertEquals(1, positionEvent1.interval.start);
-        assertEquals(157, positionEvent1.interval.end);
+        assertEquals(156, positionEvent1.interval.end);
 
         Result r2 = results1.get(1);
         List<Result.ResultEvent> events2 = r2.events;
         Result.ResultEvent event2 = events2.getFirst();
         Result.PositionEvent positionEvent2 = (Result.PositionEvent) event2;
         assertEquals(277, positionEvent2.interval.start);
-        assertEquals(307, positionEvent2.interval.end);
+        assertEquals(306, positionEvent2.interval.end);
 
         Result r3 = results1.get(2);
         List<Result.ResultEvent> events3 = r3.events;
         Result.ResultEvent event3 = events3.getFirst();
         Result.PositionEvent positionEvent3 = (Result.PositionEvent) event3;
         assertEquals(397, positionEvent3.interval.start);
-        assertEquals(433, positionEvent3.interval.end);
+        assertEquals(432, positionEvent3.interval.end);
 
         //not
         SelectExpr s1not = SELECT(NOT(POSITION(b, 1,4))).FROM("SNGS-060");
         List<Result> results1not = s1not.search();
-        assertEquals(5, results1not.size());
+        assertEquals(3, results1not.size());
         Result r1not = results1not.get(0);
         assertEquals("SNGS-060", r1not.instance);
         List<Result.ResultEvent> events1not = r1not.events;
@@ -353,14 +353,28 @@ public class QueryTest {
         Result.ResultEvent event1not = events1not.getFirst();
         assertEquals("POSITION", event1not.type);
         Result.PositionEvent positionEvent1not = (Result.PositionEvent) event1not;
-        assertEquals(0, positionEvent1not.interval.start);
-        assertEquals(277, positionEvent1not.interval.end);
+        assertEquals(157, positionEvent1not.interval.start);
+        assertEquals(276, positionEvent1not.interval.end);
+
+        Result r2not = results1not.get(1);
+        List<Result.ResultEvent> events2not = r2not.events;
+        Result.ResultEvent event2not = events2not.getFirst();
+        Result.PositionEvent positionEvent2not = (Result.PositionEvent) event2not;
+        assertEquals(307, positionEvent2not.interval.start);
+        assertEquals(396, positionEvent2not.interval.end);
+
+        Result r3not = results1not.get(2);
+        List<Result.ResultEvent> events3not = r3not.events;
+        Result.ResultEvent event3not = events3not.getFirst();
+        Result.PositionEvent positionEvent3not = (Result.PositionEvent) event3not;
+        assertEquals(433, positionEvent3not.interval.start);
+        assertEquals(750, positionEvent3not.interval.end);
 
         //PLAYER POSITION
 
         //wc
         Player pwc4 = PLAYER("pwc4");
-        SelectExpr spl1 = SELECT(POSITION(pwc4,12)).FROM("SNGS-060").WHERE(RECTANGLE(-50, 0, 20, 20), STARTMIN(150), ENDMAX(500), MAXDURATION(200),MINDURATION(50));
+        SelectExpr spl1 = SELECT(POSITION(pwc4,12)).FROM("SNGS-060").WHERE(STARTMIN(150), ENDMAX(500), MAXDURATION(200), MINDURATION(50), RECTANGLE(-50,0,30,30));
         List<Result> resultspl1 = spl1.search();
         assertEquals(2, resultspl1.size());
 
@@ -413,7 +427,7 @@ public class QueryTest {
         Result.PositionEvent notevent0 = (Result.PositionEvent) not0.events.getFirst();
         assertEquals(List.of(22), notevent0.playerIds);
         assertEquals(0, notevent0.interval.start);
-        assertEquals(171, notevent0.interval.end);
+        assertEquals(170, notevent0.interval.end);
 
         Result not1 = results3.get(1);
         Result.PositionEvent notevent1 = (Result.PositionEvent) not1.events.getFirst();
@@ -443,7 +457,7 @@ public class QueryTest {
         Result.PossessionEvent possessionEvent1 = (Result.PossessionEvent) event1;
         assertEquals(List.of(14), possessionEvent1.playerIds);
         assertEquals(116, possessionEvent1.interval.start);
-        assertEquals(140, possessionEvent1.interval.end);
+        assertEquals(139, possessionEvent1.interval.end);
 
         //team
         Player pleft4 = PLAYER("pleft4", "left");
@@ -460,19 +474,19 @@ public class QueryTest {
         Result.PossessionEvent possessionEvent2 = (Result.PossessionEvent) event2;
         assertEquals(List.of(11), possessionEvent2.playerIds);
         assertEquals(50, possessionEvent2.interval.start);
-        assertEquals(85, possessionEvent2.interval.end);
+        assertEquals(84, possessionEvent2.interval.end);
 
         Result r3 = results2.get(1);
         Result.PossessionEvent events3 = (Result.PossessionEvent) r3.events.getFirst();
         assertEquals(List.of(14), events3.playerIds);
         assertEquals(116, events3.interval.start);
-        assertEquals(140, events3.interval.end);
+        assertEquals(139, events3.interval.end);
 
         //id
         Player p14 = PLAYER("p14", 14);
         SelectExpr s3 = SELECT(NOT(POSSESSION(p14))).FROM("SNGS-061");
         List<Result> results3 = s3.search();
-        assertEquals(4, results3.size());
+        assertEquals(3, results3.size());
 
         Result not0 = results3.get(0);
         Result.PossessionEvent notevent0 = (Result.PossessionEvent) not0.events.getFirst();
@@ -483,8 +497,8 @@ public class QueryTest {
         Result not1 = results3.get(1);
         Result.PossessionEvent notevent1 = (Result.PossessionEvent) not1.events.getFirst();
         assertEquals(List.of(14), notevent1.playerIds);
-        assertEquals(0, notevent1.interval.start);
-        assertEquals(357, notevent1.interval.end);
+        assertEquals(140, notevent1.interval.start);
+        assertEquals(356, notevent1.interval.end);
 
         Result not2 = results3.get(2);
         Result.PossessionEvent notevent2 = (Result.PossessionEvent) not2.events.getFirst();
