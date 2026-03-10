@@ -18,7 +18,11 @@ import java.io.IOException;
  */
 public class QueryEvaluator {
 
-    public static SelectExpr evaluate(String dslQuery) throws IOException {
+    /**
+     * Evaluates the DSL query and returns either a {@link SelectExpr}
+     * (for normal search queries) or an {@link Integer} (for COUNT queries).
+     */
+    public static Object evaluate(String dslQuery) throws IOException {
         // Import all static factory methods into scope
         String script = """
                 import static org.main.sn.dsl.Factory.*
@@ -28,10 +32,10 @@ public class QueryEvaluator {
         Binding binding = new Binding();
         GroovyShell shell = new GroovyShell(QueryEvaluator.class.getClassLoader(), binding);
         Object result = shell.evaluate(script);
-        if (result instanceof SelectExpr se) {
-            return se;
+        if (result instanceof SelectExpr || result instanceof Integer) {
+            return result;
         }
-        throw new IllegalArgumentException("Query did not evaluate to a SelectExpr. Got: "
+        throw new IllegalArgumentException("Query did not evaluate to a SelectExpr or COUNT. Got: "
                 + (result == null ? "null" : result.getClass().getName()));
     }
 }

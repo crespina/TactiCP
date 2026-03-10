@@ -158,13 +158,20 @@ public class QueryController {
     @PostMapping("/query")
     public ResponseEntity<QueryResponse> runQuery(@RequestBody QueryRequest request) {
         try {
-            SelectExpr expr = QueryEvaluator.evaluate(request.query());
+            Object evaluated = QueryEvaluator.evaluate(request.query());
+
+            if (evaluated instanceof Integer count) {
+                // COUNT() query – return the count without full results
+                return ResponseEntity.ok(new QueryResponse(true, null, List.of(), "Count: " + count, count));
+            }
+
+            SelectExpr expr = (SelectExpr) evaluated;
             List<Result> results = expr.search();
             List<Map<String, Object>> jsonResults = toJson(results);
             String fullText = results.isEmpty() ? "" : String.join("\n", results.getFirst().formatAll(results));
-            return ResponseEntity.ok(new QueryResponse(true, null, jsonResults, fullText));
+            return ResponseEntity.ok(new QueryResponse(true, null, jsonResults, fullText, null));
         } catch (Exception e) {
-            return ResponseEntity.ok(new QueryResponse(false, e.getMessage(), List.of(), ""));
+            return ResponseEntity.ok(new QueryResponse(false, e.getMessage(), List.of(), "", null));
         }
     }
 
@@ -220,6 +227,6 @@ public class QueryController {
 
     // DTO records
     public record QueryRequest(String query) {}
-    public record QueryResponse(boolean success, String error, List<Map<String, Object>> results, String fullText) {}
+    public record QueryResponse(boolean success, String error, List<Map<String, Object>> results, String fullText, Integer count) {}
 }
 
