@@ -163,7 +163,7 @@ public class Query {
                 r.add(parseSolution(solnb, extVars, instance.name));
             });
 
-            if (searchMode != -1 || atMost != -1 || atLeast != -1) {
+            if (searchMode != -1 || atMost != -1) {
                 if (searchMode == 0) search.solve();
                 else if (searchMode >= 1) search.solve(statistics -> statistics.numberOfSolutions() == searchMode);
                 else if (atMost >= 0) search.solve(statistics -> statistics.numberOfSolutions() <= atMost);
