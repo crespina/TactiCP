@@ -20,6 +20,7 @@ public class GameStateReconstructionInstance implements Instance {
     public int[] teams; //teams[playerID] = team of the player "left" = 0 or "right"=1 (None if not applicable)
     public double[][] dx, dy, acc, dthetas;
     public String name;
+    public int nbZones = 14;
 
     public GameStateReconstructionInstance(String instanceFolderPath) {
         this.name = instanceFolderPath.substring(instanceFolderPath.lastIndexOf('/') +1);;

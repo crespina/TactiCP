@@ -153,4 +153,29 @@ public class TrueIntervalTest extends CPSolverTest {
 
         assertTrue(array[9].isTrue());
     }
+
+    @ParameterizedTest
+    @MethodSource("getSolver")
+    public void simpleTest3(CPSolver cp) {
+        CPIntervalVar interval = makeIntervalVar(cp);
+        CPBoolVar[] array = CPFactory.makeBoolVarArray(cp, 10);
+        interval.setPresent();
+        CPIntVar start = start(interval);
+        CPIntVar end = end(interval);
+
+        cp.post(new TrueInterval(array, interval));
+
+        assertEquals(0, start.min());
+        assertEquals(10, end.max());
+
+        for (int i = 2; i <= 7; i++) {
+            array[i].fix(true);
+        }
+        cp.fixPoint();
+
+        interval.setStartMin(4);
+        interval.setEndMax(6);
+        cp.fixPoint();
+        System.out.println(interval);
+    }
 }
