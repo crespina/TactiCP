@@ -275,6 +275,27 @@
 
     /* ─── Results section ───────────────────────────────────── */
     #results-section { display: none; }
+    #count-section   { display: none; }
+
+    /* count result box */
+    .count-result-box {
+      display: flex;
+      align-items: baseline;
+      gap: .75rem;
+      padding: 1.5rem;
+      border-radius: .5rem;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+    }
+    .count-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #4ade80;
+    }
+    .count-label {
+      font-size: 1.1rem;
+      color: var(--heading-muted);
+    }
 
     /* counter badge */
     .result-counter {
@@ -753,6 +774,15 @@
           </div>
         </div>
       </div>
+
+      <!-- ── 4b. Count Result ───────────────────────────────── -->
+      <div class="card" id="count-section" style="display:none;">
+        <h2>Count Result</h2>
+        <div class="count-result-box">
+          <span class="count-value" id="count-value">0</span>
+          <span class="count-label">solution(s) matched</span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -914,6 +944,16 @@
 
       if (!data.success) {
         setStatus('Error: ' + data.error, 'error');
+        return;
+      }
+
+      // COUNT() query – display the count in a dedicated panel
+      if (data.count !== null && data.count !== undefined) {
+        setStatus('COUNT query completed.', 'ok');
+        document.getElementById('count-value').textContent = data.count;
+        const countSection = document.getElementById('count-section');
+        countSection.style.display = 'block';
+        countSection.scrollIntoView({ behavior: 'smooth' });
         return;
       }
 
@@ -1092,6 +1132,8 @@
   // ─────────────────────────────────────────────────────────────
   function clearResults() {
     document.getElementById('results-section').style.display = 'none';
+    document.getElementById('count-section').style.display = 'none';
+    document.getElementById('count-value').textContent = '0';
     document.getElementById('carousel-track').innerHTML = '';
     document.getElementById('result-text').value = '';
     document.getElementById('solution-select').innerHTML = '';
