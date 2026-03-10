@@ -782,25 +782,25 @@
       { re: /\b(MAXDURATION|MINDURATION|MAX_DURATION|MIN_DURATION|STARTMIN|STARTMAX|ENDMIN|ENDMAX|START|END|WITHIN|RADIUS|RECTANGLE|ATMOST|ATLEAST|MINRANGE|MIN_RANGE)\b/g, cls: 'dsl-kw-constraint' },
       // Dataset keywords
       { re: /\b(TRAIN|TEST|VALID|ALL|FIRST)\b/g, cls: 'dsl-kw-dataset' },
-      // Numbers (standalone)
-      { re: /\b(-?\d+(?:\.\d+)?)\b/g, cls: 'dsl-number' },
+      // Numbers (standalone — not inside placeholders)
+      { re: /(?<!\x00)(-?\b\d+(?:\.\d+)?\b)(?!\x00)/g, cls: 'dsl-number' },
     ];
 
     // Apply token replacements; use a placeholder approach to avoid double-matching
     let uid = 0;
-    const placeholders = {};
+    const placeholders = [];
 
     for (const { re, cls } of tokens) {
       s = s.replace(re, (match) => {
-        const key = `\x00${uid++}\x00`;
-        placeholders[key] = `<span class="${cls}">${match}</span>`;
-        return key;
+        const idx = uid++;
+        placeholders.push(`<span class="${cls}">${match}</span>`);
+        return `\x00\x00${idx}\x00\x00`;
       });
     }
 
-    // Restore placeholders
-    for (const [key, val] of Object.entries(placeholders)) {
-      s = s.split(key).join(val);
+    // Restore placeholders (reverse order so inner indices aren't corrupted)
+    for (let i = placeholders.length - 1; i >= 0; i--) {
+      s = s.replace(`\x00\x00${i}\x00\x00`, placeholders[i]);
     }
 
     // Ensure trailing newline so the highlight div matches textarea height
