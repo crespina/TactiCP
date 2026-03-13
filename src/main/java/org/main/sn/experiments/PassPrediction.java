@@ -27,11 +27,11 @@ public class PassPrediction {
                             double startTime = System.currentTimeMillis();
 
                             SelectExpr pass = SELECT(PLAYER("p1").PASSTO(PLAYER("p2"))).FROM(sngsId);
-                            List<Result> r = pass.search();
+                            pass.searchAndPrint();
 
                             double endTime = System.currentTimeMillis();
                             System.out.println(
-                                    sngsId + " -> " + r.size() + " matches in " + (endTime - startTime) + " ms"
+                                    sngsId + " -> " + (endTime - startTime) + " ms"
                             );
                         } catch (Exception e) {
                             System.err.println("Failed on " + sngsId + ": " + e.getMessage());
