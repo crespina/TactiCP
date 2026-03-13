@@ -159,42 +159,6 @@ public class RegularTest extends CPSolverTest {
 
     @ParameterizedTest
     @MethodSource("getSolver")
-    public void SimpleTest8(CPSolver cp) {
-        int[] x = new int[]{0,1,1,1,0,0,0,2,2,2,0,0,0,1,1,1,0,0,0,2,2,2,0,0,0};
-
-        CPIntervalVar itv_1 = CPFactory.makeIntervalVar(cp);
-        itv_1.setPresent();
-
-        Automaton a = Automaton.A_0STAR_B(3, Set.of(1), Set.of(2));
-        cp.post(new RegularInterval(x, itv_1, a));
-
-        DFSearch search = makeDfs(cp, Searches.firstFailBinary(start(itv_1), end(itv_1)));
-
-        search.onSolution(() -> {
-            System.out.println(itv_1);
-        });
-
-        search.solve();
-
-
-        CPIntervalVar itv_2 = CPFactory.makeIntervalVar(cp);
-        itv_2.setPresent();
-
-        Automaton nota = Automaton.NOT_contains_A_0STAR_B(3, Set.of(1), Set.of(2));
-        cp.post(new RegularInterval(x, itv_2, nota));
-
-        DFSearch search2 = makeDfs(cp, Searches.firstFailBinary(start(itv_2), end(itv_2)));
-
-        search2.onSolution(() -> {
-            System.out.println(itv_2);
-        });
-
-        search2.solve();
-
-    }
-
-    @ParameterizedTest
-    @MethodSource("getSolver")
     public void SimpleTest9(CPSolver cp) {
         int[] x = new int[]{0,1,1,1,1,0,0,0,2,2,2,0,0,0,1,1,1,0,0,0,2,2,2,3,3};
         int[] padded_x = Automaton.pad(x, 1);

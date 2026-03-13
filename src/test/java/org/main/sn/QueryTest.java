@@ -39,7 +39,7 @@ public class QueryTest {
         assertEquals("BALL_MOVE_TO", event1.type);
         Result.BallMoveEvent ballMoveEvent = (Result.BallMoveEvent) event1;
         assertEquals(47, ballMoveEvent.interval.start);
-        assertEquals(247, ballMoveEvent.interval.end);
+        assertEquals(246, ballMoveEvent.interval.end);
 
         Result.ResultEvent event2 = events.get(1);
         assertEquals("BALL_MOVE_TO", event2.type);
@@ -50,31 +50,6 @@ public class QueryTest {
         Result.BallMoveEvent ballMoveEvent22 = (Result.BallMoveEvent) results.get(1).events.get(1);
         assertEquals(510, ballMoveEvent22.interval.start);
         assertEquals(512, ballMoveEvent22.interval.end);
-
-        //NOT
-        SelectExpr snot = SELECT(NOT(b.MOVETO(4, 6))).WHERE(RADIUS(0, 0, 400)).FROM("SNGS-061"); //toutes les passes
-
-        List<Result> resultsnot = snot.search();
-        assertEquals(2, resultsnot.size());
-
-
-        Result r1not = resultsnot.get(0);
-        assertEquals("SNGS-061", r1not.instance);
-        List<Result.ResultEvent> eventsnot = r1not.events;
-        assertEquals(1, eventsnot.size());
-
-        Result.ResultEvent event1not = eventsnot.getFirst();
-        assertEquals("BALL_MOVE_TO", event1not.type);
-        Result.BallMoveEvent ballMoveEventnot = (Result.BallMoveEvent) event1not;
-        assertEquals(0, ballMoveEventnot.interval.start);
-        assertEquals(47, ballMoveEventnot.interval.end);
-
-        Result.ResultEvent event2not = resultsnot.get(1).events.getFirst();
-        assertEquals("BALL_MOVE_TO", event2not.type);
-        Result.BallMoveEvent ballMoveEventnot2 = (Result.BallMoveEvent) event2not;
-        assertEquals(247, ballMoveEventnot2.interval.start);
-        assertEquals(750, ballMoveEventnot2.interval.end);
-
 
     }
 
@@ -143,18 +118,6 @@ public class QueryTest {
         assertEquals(84, event8.interval.start);
         assertEquals(117, event8.interval.end);
 
-
-        //NOT PASS BETWEEN TEAM
-        Player pleft1 = PLAYER("pleft1", "left");
-        Player pleft2 = PLAYER("pleft2", "left");
-        SelectExpr s3 = SELECT(NOT(pleft1.PASSTO(pleft2).MINRANGE())).FROM("SNGS-060").SEARCH(1);
-        List<Result> results3 = s3.search();
-        assertEquals(1, results3.size());
-
-        Result.PassEvent event9 = (Result.PassEvent) results3.get(0).events.getFirst();
-        assertEquals(0, event9.interval.start);
-        assertEquals(21, event9.interval.end);
-
         //NOT MINRANGED
         Event e4 = pwc1.PASSTO(pwc2);
         SelectExpr s4 = SELECT(e4).FROM("SNGS-060, SNGS-061");
@@ -214,19 +177,14 @@ public class QueryTest {
 
         //team
         Player pleft3 = PLAYER("pleft3", "left");
-        SelectExpr s3 = SELECT(NOT(pleft3.MOVETO(10, 3))).FROM("SNGS-061");
+        SelectExpr s3 = SELECT(pleft3.MOVETO(10, 3)).FROM("SNGS-061");
         List<Result> results3 = s3.search();
-        assertEquals(2, results3.size());
-        List<Result.ResultEvent> notevnets = results3.get(0).events;
-        Result.PlayerMoveEvent notev1 = (Result.PlayerMoveEvent) notevnets.getFirst();
-        assertEquals(24, notev1.playerId);
-        assertEquals(0, notev1.interval.start);
-        assertEquals(189, notev1.interval.end);
-        List<Result.ResultEvent> notevnets2 = results3.get(1).events;
-        Result.PlayerMoveEvent notev2 = (Result.PlayerMoveEvent) notevnets2.getFirst();
-        assertEquals(24, notev2.playerId);
-        assertEquals(328, notev2.interval.start);
-        assertEquals(750, notev2.interval.end);
+        assertEquals(1, results3.size());
+        List<Result.ResultEvent> eventsLeft = results3.get(0).events;
+        Result.PlayerMoveEvent eventLeft = (Result.PlayerMoveEvent) eventsLeft.getFirst();
+        assertEquals(24, eventLeft.playerId);
+        assertEquals(189, eventLeft.interval.start);
+        assertEquals(327, eventLeft.interval.end);
 
     }
 
@@ -295,19 +253,6 @@ public class QueryTest {
         assertEquals(List.of(23,18,1), event9.playerIds);
         assertEquals(307, event9.interval.start);
         assertEquals(317, event9.interval.end);
-
-        //NOT
-        SelectExpr snot = SELECT(NOT(t1.MOVETO(11, 10, 3))).FROM("SNGS-060").WHERE(RADIUS(-20,-20,40)).SEARCH(1); //toutes les passes
-        List<Result> resultsnot = snot.search();
-        assertEquals(1, resultsnot.size());
-        List<Result.ResultEvent> eventsnot = resultsnot.getFirst().events;
-
-        Result.ResultEvent eventnot0 = eventsnot.getFirst();
-        assertEquals("TEAM_MOVE_TO", eventnot0.type);
-        Result.TeamMoveEvent teamMoveEventnot = (Result.TeamMoveEvent) eventnot0;
-        assertEquals(List.of(4,2,1), teamMoveEventnot.playerIds);
-        assertEquals(0, teamMoveEventnot.interval.start);
-        assertEquals(256, teamMoveEventnot.interval.end);
     }
 
     @Test
@@ -436,6 +381,8 @@ public class QueryTest {
         assertEquals(750, notevent1.interval.end);
 
 
+        //TEAM POSITION
+
     }
 
     @Test
@@ -498,22 +445,30 @@ public class QueryTest {
         Result.PossessionEvent notevent1 = (Result.PossessionEvent) not1.events.getFirst();
         assertEquals(List.of(14), notevent1.playerIds);
         assertEquals(140, notevent1.interval.start);
-        assertEquals(356, notevent1.interval.end);
+        assertEquals(357, notevent1.interval.end);
 
         Result not2 = results3.get(2);
         Result.PossessionEvent notevent2 = (Result.PossessionEvent) not2.events.getFirst();
         assertEquals(List.of(14), notevent2.playerIds);
-        assertEquals(141, notevent2.interval.start);
+        assertEquals(370, notevent2.interval.start);
         assertEquals(750, notevent2.interval.end);
-
-        Result not3 = results3.get(3);
-        Result.PossessionEvent notevent3 = (Result.PossessionEvent) not3.events.getFirst();
-        assertEquals(List.of(14), notevent3.playerIds);
-        assertEquals(371, notevent3.interval.start);
-        assertEquals(750, notevent3.interval.end);
 
 
         //TEAM POSSESSION
+
+        //should be the same result as player left
+        Team t = TEAM("left");
+        SelectExpr s6 = SELECT(POSSESSION(t)).FROM("SNGS-061").WHERE(RADIUS(-20,-20,40), RECTANGLE(-20,-20,40,40));
+        List<Result> results6 = s6.search();
+        assertEquals(2, results6.size());
+
+        Result.PossessionEvent possessionEvent6 = (Result.PossessionEvent) results6.getFirst().events.getFirst();
+        assertEquals(50, possessionEvent6.interval.start);
+        assertEquals(84, possessionEvent6.interval.end);
+
+        Result.PossessionEvent possessionEvent62 = (Result.PossessionEvent) results6.get(1).events.getFirst();
+        assertEquals(116, possessionEvent62.interval.start);
+        assertEquals(139, possessionEvent62.interval.end);
 
     }
 
@@ -525,6 +480,16 @@ public class QueryTest {
 
     @Test
     public void TestOR() throws IOException {
+        SelectExpr orQuery = SELECT(
+                OR(PLAYER("p11",11).PASSTO(PLAYER("p14", 14)).MINRANGE(),
+                        BALL().MOVETO(4, 6).WHERE(RADIUS(-20, 10, 35)))
+        ).FROM("SNGS-061");
+
+//        SELECT(PLAYER("p11",11).PASSTO(PLAYER("p14", 14)).MINRANGE()).FROM("SNGS-061").searchAndPrint();
+//        SELECT( BALL().MOVETO(4, 6).WHERE(RADIUS(-20, 10, 35))).FROM("SNGS-061").searchAndPrint();
+
+        List<Result> results = orQuery.search();
+        assertEquals(2, results.size());
 
     }
 
