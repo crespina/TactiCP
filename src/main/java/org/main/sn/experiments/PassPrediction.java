@@ -1,12 +1,14 @@
 package org.main.sn.experiments;
 
 import org.main.sn.dsl.SelectExpr;
+import org.main.sn.logic.Result;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
+import java.util.List;
 
 import static org.main.sn.dsl.Factory.*;
 
@@ -25,11 +27,11 @@ public class PassPrediction {
                             double startTime = System.currentTimeMillis();
 
                             SelectExpr pass = SELECT(PLAYER("p1").PASSTO(PLAYER("p2"))).FROM(sngsId);
-                            int count = pass.COUNT();
+                            List<Result> r = pass.search();
 
                             double endTime = System.currentTimeMillis();
                             System.out.println(
-                                    sngsId + " -> " + count + " matches in " + (endTime - startTime) + " ms"
+                                    sngsId + " -> " + r.size() + " matches in " + (endTime - startTime) + " ms"
                             );
                         } catch (Exception e) {
                             System.err.println("Failed on " + sngsId + ": " + e.getMessage());

@@ -1,12 +1,23 @@
-package org.main.sn.dsl;
+package org.main.sn.experiments;
+
+import org.main.sn.dsl.Ball;
+import org.main.sn.dsl.Player;
+import org.main.sn.dsl.SelectExpr;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import static org.main.sn.dsl.Factory.*;
+import static org.main.sn.dsl.Factory.AND;
+import static org.main.sn.dsl.Factory.BALL;
+import static org.main.sn.dsl.Factory.NOT;
+import static org.main.sn.dsl.Factory.PLAYER;
+import static org.main.sn.dsl.Factory.POSITION;
+import static org.main.sn.dsl.Factory.POSSESSION;
+import static org.main.sn.dsl.Factory.SELECT;
 
-public class ScalabilityBenchmark {
+public class Scalability {
 
     public static void main(String[] args) throws Exception {
 
@@ -222,4 +233,5 @@ public class ScalabilityBenchmark {
             System.out.println(matchFolders[i - 1] + " , time = " + elapsed);
         }
     }
+
 }
