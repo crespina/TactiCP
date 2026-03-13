@@ -10,6 +10,15 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
 
+        SelectExpr stest = SELECT(POSSESSION(TEAM("left"))).FROM("SNGS-061");
+        stest.searchAndPrint();
+
+        double start_time = System.currentTimeMillis();
+        SelectExpr pass = SELECT(PLAYER("p1").PASSTO(PLAYER("p2"))).FROM("train");
+        pass.searchAndPrint();
+        double end_time = System.currentTimeMillis();
+        System.out.println("Execution time: " + (end_time - start_time) + " milliseconds");
+
 
         //ZONE DE TEST
 

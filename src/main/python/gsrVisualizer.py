@@ -134,7 +134,7 @@ def draw_and_write_video(frames_positions, total_frames, out_path, fps=25, figsi
         img_bgr = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         writer.write(img_bgr)
 
-        if f in [99]: #HERE I SAVE FRAMES
+        if f in [116,139,179]: #HERE I SAVE FRAMES
             cv2.imwrite(f"frame_{f}_061.png", img_bgr)
 
     writer.release()
