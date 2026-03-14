@@ -191,10 +191,11 @@ public class Possession implements ConstraintPattern {
                 if (displacement_ball_score > 47 && bestDist < threshold * 3) {
                     result[frameID] = closest_player;
                 } else {
+
                     if (bestDist < threshold) {
                         result[frameID] = closest_player;
                     } else {
-                        if (bestDist < threshold * 2 && secondBestDist > 2 * bestDist) {
+                        if (bestDist < threshold * 2 && secondBestDist > 4 * threshold) {
                             result[frameID] = closest_player;
                         } else {
                             result[frameID] = 0;
@@ -206,27 +207,27 @@ public class Possession implements ConstraintPattern {
 
             //if possession less than 3 frames, not really possession :
 
-            int i = 0;
-            while (i < result.length) {
-                int currentPlayer = result[i];
-                int j = i;
-
-                while (j < result.length && result[j] == currentPlayer) {
-                    j++;
-                }
-
-                int possessionLength = j - i;
-
-                // If the streak is too short, overwrite it with the previous player's ID
-                if (possessionLength <= 5) {
-                    int previousPlayer = (i > 0) ? result[i - 1] : result[j]; // fallback to next if at start
-                    for (int k = i; k < j; k++) {
-                        result[k] = previousPlayer;
-                    }
-                }
-
-                i = j;
-            }
+//            int i = 0;
+//            while (i < result.length) {
+//                int currentPlayer = result[i];
+//                int j = i;
+//
+//                while (j < result.length && result[j] == currentPlayer) {
+//                    j++;
+//                }
+//
+//                int possessionLength = j - i;
+//
+//                // If the streak is too short, overwrite it with the previous player's ID
+//                if (possessionLength <= 4) {
+//                    int previousPlayer = (i > 0) ? result[i - 1] : result[j]; // fallback to next if at start
+//                    for (int k = i; k < j; k++) {
+//                        result[k] = previousPlayer;
+//                    }
+//                }
+//
+//                i = j;
+//            }
             this.result = result;
         }
     }

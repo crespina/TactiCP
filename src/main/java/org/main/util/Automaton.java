@@ -105,6 +105,55 @@ public class Automaton {
         return new Automaton(0, List.of(accept), res);
     }
 
+    // A 0+ B  (one or more zeros required between A and B)
+    public static Automaton A_0PLUS_B(int nPlayers, Set<Integer> As, Set<Integer> Bs) {
+        for (int x : As) {
+            if (x < 1 || x > nPlayers) throw new IllegalArgumentException("As contains out-of-range value: " + x);
+        }
+        for (int x : Bs) {
+            if (x < 1 || x > nPlayers) throw new IllegalArgumentException("Bs contains out-of-range value: " + x);
+        }
+
+        int inputs = nPlayers + 1;
+        // States:
+        //   0               → start
+        //   1..nPlayers     → read A=a, no zeros seen yet  (layer 1)
+        //   nPlayers+1..2*nPlayers → read A=a, ≥1 zero seen (layer 2)
+        //   2*nPlayers+1    → accept
+        int states = 2 * nPlayers + 2;
+        int accept = 2 * nPlayers + 1;
+
+        int[][] res = new int[states][inputs];
+        for (int i = 0; i < states; i++) Arrays.fill(res[i], -1);
+
+        // From start: only valid A symbols
+        for (int a = 1; a <= nPlayers; a++) {
+            if (As.contains(a)) {
+                res[0][a] = a; // → layer-1 state for 'a'
+            }
+        }
+
+        for (int a = 1; a <= nPlayers; a++) {
+            if (!As.contains(a)) continue;
+
+            int layer1 = a;               // waiting for first 0
+            int layer2 = nPlayers + a;    // ≥1 zero seen
+
+            // Layer 1: only 0 advances us; anything else is a dead end
+            res[layer1][0] = layer2;
+
+            // Layer 2: 0 loops; valid B (≠ a) goes to accept
+            res[layer2][0] = layer2;
+            for (int b = 1; b <= nPlayers; b++) {
+                if (Bs.contains(b) && b != a) {
+                    res[layer2][b] = accept;
+                }
+            }
+        }
+
+        return new Automaton(0, List.of(accept), res);
+    }
+
     //minimal movement
     public static Automaton A_NOTBSTAREXCEPT0_B(int nPlayers, int A, int B) {
         //n is the number of possible inputs excluding 0 (i.e. the number of players); A and B are the start and the end respectively
@@ -275,6 +324,47 @@ public class Automaton {
         }
 
         // Bstate: any B -> stay; not in Bs -> accept
+        for (int x = 0; x <= nPlayers; x++) {
+            if (Bs.contains(x)) res[Bstate][x] = Bstate;
+            else                res[Bstate][x] = accept;
+        }
+
+        return new Automaton(start, List.of(accept), res);
+    }
+
+    public static Automaton PAD_APLUS_PADPLUS_BPLUS_PAD(int nPlayers, Set<Integer> As, Set<Integer> Bs) {
+        int inputs = nPlayers + 1;
+        int states = 6;
+        int[][] res = new int[states][inputs];
+        for (int i = 0; i < states; i++) Arrays.fill(res[i], -1);
+
+        int start = 0, afterLead = 1, Astate = 2, midPad = 3, Bstate = 4, accept = 5;
+
+        // from start: any not in As (including 0) -> afterLead
+        for (int x = 0; x <= nPlayers; x++) {
+            if (!As.contains(x)) res[start][x] = afterLead;
+        }
+
+        // afterLead: must see any A in As to begin A+
+        for (int x = 0; x <= nPlayers; x++) {
+            if (As.contains(x)) res[afterLead][x] = Astate;
+        }
+
+        // Astate: A -> stay; not-A and not-B -> midPad; B -> INVALID (-1)
+        // (B is no longer a direct transition — at least one PAD is now required)
+        for (int x = 0; x <= nPlayers; x++) {
+            if (As.contains(x))                            res[Astate][x] = Astate;
+            else if (!Bs.contains(x))                      res[Astate][x] = midPad;
+            // Bs.contains(x): stays -1 — must go through midPad first
+        }
+
+        // midPad: loop on not-A not-B; on any B -> Bstate; A is invalid
+        for (int x = 0; x <= nPlayers; x++) {
+            if (Bs.contains(x))                              res[midPad][x] = Bstate;
+            else if (!As.contains(x) && !Bs.contains(x))    res[midPad][x] = midPad;
+        }
+
+        // Bstate: any B -> stay; not-B -> accept
         for (int x = 0; x <= nPlayers; x++) {
             if (Bs.contains(x)) res[Bstate][x] = Bstate;
             else                res[Bstate][x] = accept;
