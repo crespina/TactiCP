@@ -612,11 +612,13 @@ public class Query {
             throw new IllegalArgumentException("Negation of PASS_TO is not supported.");
         } else {
             if (minrange) {
-                cp.post(new RegularInterval(possession, eventInterval, Automaton.A_0STAR_B(teams.length, passersIds, receiversIds)));
+                //cp.post(new RegularInterval(possession, eventInterval, Automaton.A_0STAR_B(teams.length, passersIds, receiversIds)));
+                cp.post(new RegularInterval(possession, eventInterval, Automaton.A_0PLUS_B(teams.length, passersIds, receiversIds)));
             } else {
                 CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n + 1);
                 int[] paddedArray = Automaton.pad(possession);
-                cp.post(new RegularInterval(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADSTAR_BPLUS_PAD(teams.length, passersIds, receiversIds)));
+                //cp.post(new RegularInterval(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADSTAR_BPLUS_PAD(teams.length, passersIds, receiversIds)));
+                cp.post(new RegularInterval(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADPLUS_BPLUS_PAD(teams.length, passersIds, receiversIds)));
                 cp.post(eq(start(eventInterval), start(paddedInterval)));
                 cp.post(eq(end(eventInterval), minus(end(paddedInterval), 3)));
             }
