@@ -13,7 +13,7 @@ import java.util.ArrayList;
  * Ensures that the subsequence x[interval.start ... interval.end-1]
  * is recognized by the automaton
  */
-public class RegularInterval extends AbstractCPConstraint {
+public class SubstringRegular extends AbstractCPConstraint {
     private final int[] x; // fixed sequence
     private final CPIntervalVar interval; // variable representing start and end of matching subsequence
     private final int[][] transitionFct;
@@ -32,7 +32,7 @@ public class RegularInterval extends AbstractCPConstraint {
      * @param automaton an automaton defined by its transition function, initial state and accepting states
      * The transition function is a 2D array: {states} x {domain values} -> {states}
      */
-    public RegularInterval(int[] x, CPIntervalVar interval, Automaton automaton) {
+    public SubstringRegular(int[] x, CPIntervalVar interval, Automaton automaton) {
         super(interval.getSolver());
         this.x = x;
         this.interval = interval;

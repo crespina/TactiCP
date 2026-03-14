@@ -10,8 +10,9 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
 
+        int s = SELECT(PLAYER("pwc1","left").PASSTO(PLAYER("pwc2","left")).MINRANGE()).WHERE(STARTMIN(0)).FROM("SNGS-060").COUNT();
 
-        SelectExpr pass = SELECT(PLAYER("p1").PASSTO(PLAYER("p2")).MINRANGE()).FROM("SNGS-061");
+        SelectExpr pass = SELECT(PLAYER("p1").PASSTO(PLAYER("p2")).MINRANGE()).FROM("SNGS-060,SNGS-061");
         pass.searchAndPrint();
 
 

@@ -427,11 +427,11 @@ public class Query {
             throw new IllegalArgumentException("Negation of BALL_MOVE_TO is not supported.");
         } else {
             if (minrange) {
-                cp.post(new RegularInterval(positionZones[ball_idx], eventInterval, Automaton.A_NOTBSTAR_B(teams.length, zone_start, zone_end)));
+                cp.post(new SubstringRegular(positionZones[ball_idx], eventInterval, Automaton.A_NOTBSTAR_B(teams.length, zone_start, zone_end)));
             } else {
                 CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n + 1);
                 int[] paddedArray = Automaton.pad(positionZones[ball_idx]);
-                cp.post(new RegularInterval(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADSTAR_BPLUS_PAD(teams.length, zone_start, zone_end)));
+                cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADSTAR_BPLUS_PAD(teams.length, zone_start, zone_end)));
                 cp.post(eq(startOr(eventInterval, n), start(paddedInterval)));
                 cp.post(eq(endOr(eventInterval, 0), minus(end(paddedInterval), 3)));
             }
@@ -455,7 +455,7 @@ public class Query {
 
                         ball_inside_circle[f] = dist_x + dist_y <= circle[0] ? 1 : 0;
                     }
-                    cp.post(new RegularInterval(ball_inside_circle, eventInterval, Automaton.APLUS(1, Set.of(1))));
+                    cp.post(new SubstringRegular(ball_inside_circle, eventInterval, Automaton.APLUS(1, Set.of(1))));
                 }
             } else {
                 List<double[]> rectangles = new ArrayList<>();
@@ -472,7 +472,7 @@ public class Query {
                         double by = positionBox_y[ball_idx][f];
                         ball_inside_rectangle[f] = (bx >= rect[0] && bx <= rect[0] + rect[2] && by <= rect[1] && by >= rect[1] - rect[3]) ? 1 : 0;
                     }
-                    cp.post(new RegularInterval(ball_inside_rectangle, eventInterval, Automaton.APLUS(1, Set.of(1))));
+                    cp.post(new SubstringRegular(ball_inside_rectangle, eventInterval, Automaton.APLUS(1, Set.of(1))));
                 }
             }
         }
@@ -612,13 +612,13 @@ public class Query {
             throw new IllegalArgumentException("Negation of PASS_TO is not supported.");
         } else {
             if (minrange) {
-                //cp.post(new RegularInterval(possession, eventInterval, Automaton.A_0STAR_B(teams.length, passersIds, receiversIds)));
-                cp.post(new RegularInterval(possession, eventInterval, Automaton.A_0PLUS_B(teams.length, passersIds, receiversIds)));
+                //cp.post(new SubstringRegular(possession, eventInterval, Automaton.A_0STAR_B(teams.length, passersIds, receiversIds)));
+                cp.post(new SubstringRegular(possession, eventInterval, Automaton.A_0PLUS_B(teams.length, passersIds, receiversIds)));
             } else {
                 CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n + 1);
                 int[] paddedArray = Automaton.pad(possession);
-                //cp.post(new RegularInterval(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADSTAR_BPLUS_PAD(teams.length, passersIds, receiversIds)));
-                cp.post(new RegularInterval(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADPLUS_BPLUS_PAD(teams.length, passersIds, receiversIds)));
+                //cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADSTAR_BPLUS_PAD(teams.length, passersIds, receiversIds)));
+                cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADPLUS_BPLUS_PAD(teams.length, passersIds, receiversIds)));
                 cp.post(eq(start(eventInterval), start(paddedInterval)));
                 cp.post(eq(end(eventInterval), minus(end(paddedInterval), 3)));
             }
@@ -641,7 +641,7 @@ public class Query {
                         double dist_y = Math.pow(positionBox_y[ball_idx][f] - circle[2], 2);
                         ball_inside_circle[f] = dist_x + dist_y <= circle[0] ? 1 : 0;
                     }
-                    cp.post(new RegularInterval(ball_inside_circle, eventInterval, Automaton.APLUS(teams.length, Set.of(1))));
+                    cp.post(new SubstringRegular(ball_inside_circle, eventInterval, Automaton.APLUS(teams.length, Set.of(1))));
                 }
             } else {
                 List<double[]> rectangles = new ArrayList<>();
@@ -657,7 +657,7 @@ public class Query {
                         double by = positionBox_y[ball_idx][f];
                         ball_inside_rectangle[f] = (bx >= rect[0] && bx <= rect[0] + rect[2] && by <= rect[1] && by >= rect[1] - rect[3]) ? 1 : 0;
                     }
-                    cp.post(new RegularInterval(ball_inside_rectangle, eventInterval, Automaton.APLUS(teams.length, Set.of(1))));
+                    cp.post(new SubstringRegular(ball_inside_rectangle, eventInterval, Automaton.APLUS(teams.length, Set.of(1))));
                 }
             }
         }
@@ -731,11 +731,11 @@ public class Query {
                 CPIntervalVar thisPlayerTrueInterval = makeIntervalVar(cp, false, 0, n + 1);
                 try {
                     if (minrange) {
-                        cp.post(new RegularInterval(positionZones[pl_id], thisPlayerTrueInterval, Automaton.A_NOTBSTAR_B(teams.length, zone_start, zone_end)));
+                        cp.post(new SubstringRegular(positionZones[pl_id], thisPlayerTrueInterval, Automaton.A_NOTBSTAR_B(teams.length, zone_start, zone_end)));
                     } else {
                         CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n + 1);
                         int[] paddedArray = Automaton.pad(positionZones[pl_id]);
-                        cp.post(new RegularInterval(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADSTAR_BPLUS_PAD(teams.length, zone_start, zone_end)));
+                        cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADSTAR_BPLUS_PAD(teams.length, zone_start, zone_end)));
                         cp.post(eq(start(thisPlayerTrueInterval), start(paddedInterval)));
                         cp.post(eq(end(thisPlayerTrueInterval), minus(end(paddedInterval), 3)));
                     }
@@ -909,11 +909,11 @@ public class Query {
                     CPIntervalVar thisPlayerInterval = makeIntervalVar(cp, false, 0, n + 1);
                     try {
                         if (minrange) {
-                            cp.post(new RegularInterval(positionZones[pl_id], thisPlayerInterval, Automaton.A_NOTBSTAR_B(teams.length, zone_start, zone_end)));
+                            cp.post(new SubstringRegular(positionZones[pl_id], thisPlayerInterval, Automaton.A_NOTBSTAR_B(teams.length, zone_start, zone_end)));
                         } else {
                             CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n + 1);
                             int[] paddedArray = Automaton.pad(positionZones[pl_id]);
-                            cp.post(new RegularInterval(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADSTAR_BPLUS_PAD(teams.length, zone_start, zone_end)));
+                            cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADSTAR_BPLUS_PAD(teams.length, zone_start, zone_end)));
                             cp.post(eq(start(thisPlayerInterval), start(paddedInterval)));
                             cp.post(eq(end(thisPlayerInterval), minus(end(paddedInterval), 3)));
                         }
@@ -1073,10 +1073,10 @@ public class Query {
                         int[] otherZones = java.util.stream.IntStream.rangeClosed(0, nbZones)
                                 .filter(z -> Arrays.stream(zones).noneMatch(v -> v == z))
                                 .toArray();
-                        cp.post(new RegularInterval(paddedArray, paddedInterval, Automaton.NOTA_APLUS_NOTA(nbZones, Arrays.stream(otherZones).boxed().collect(Collectors.toSet()))));
+                        cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.NOTA_APLUS_NOTA(nbZones, Arrays.stream(otherZones).boxed().collect(Collectors.toSet()))));
                     } else {
                         int[] paddedArray = Automaton.pad(positionZones[pl_id]);
-                        cp.post(new RegularInterval(paddedArray, paddedInterval, Automaton.NOTA_APLUS_NOTA(nbZones, Arrays.stream(zones).boxed().collect(Collectors.toSet()))));
+                        cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.NOTA_APLUS_NOTA(nbZones, Arrays.stream(zones).boxed().collect(Collectors.toSet()))));
                     }
                     cp.post(eq(start(thisPlayerTrueInterval), start(paddedInterval)));
                     cp.post(eq(end(thisPlayerTrueInterval), minus(end(paddedInterval), 3)));
@@ -1243,11 +1243,11 @@ public class Query {
                             int[] otherZones = java.util.stream.IntStream.rangeClosed(0, nbZones)
                                     .filter(z -> Arrays.stream(zones).noneMatch(v -> v == z))
                                     .toArray();
-                            cp.post(new RegularInterval(paddedArray, paddedInterval, Automaton.NOTA_APLUS_NOTA(nbZones, Arrays.stream(otherZones).boxed().collect(Collectors.toSet()))));
+                            cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.NOTA_APLUS_NOTA(nbZones, Arrays.stream(otherZones).boxed().collect(Collectors.toSet()))));
 
                         } else {
                             int[] paddedArray = Automaton.pad(positionZones[pl_id]);
-                            cp.post(new RegularInterval(paddedArray, paddedInterval, Automaton.NOTA_APLUS_NOTA(nbZones, Arrays.stream(zones).boxed().collect(Collectors.toSet()))));
+                            cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.NOTA_APLUS_NOTA(nbZones, Arrays.stream(zones).boxed().collect(Collectors.toSet()))));
                         }
                         cp.post(eq(start(thisPlayerInterval), start(paddedInterval)));
                         cp.post(eq(end(thisPlayerInterval), minus(end(paddedInterval), 3)));
@@ -1350,10 +1350,10 @@ public class Query {
                 int[] otherZones = java.util.stream.IntStream.rangeClosed(0, nbZones)
                         .filter(z -> Arrays.stream(zones).noneMatch(v -> v == z))
                         .toArray();
-                cp.post(new RegularInterval(paddedArray, paddedInterval, Automaton.NOTA_APLUS_NOTA(nbZones, Arrays.stream(otherZones).boxed().collect(Collectors.toSet()))));
+                cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.NOTA_APLUS_NOTA(nbZones, Arrays.stream(otherZones).boxed().collect(Collectors.toSet()))));
             } else {
                 int[] paddedArray = Automaton.pad(positionZones[ball_idx]);
-                cp.post(new RegularInterval(paddedArray, paddedInterval, Automaton.NOTA_APLUS_NOTA(nbZones, Arrays.stream(zones).boxed().collect(Collectors.toSet()))));
+                cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.NOTA_APLUS_NOTA(nbZones, Arrays.stream(zones).boxed().collect(Collectors.toSet()))));
             }
             cp.post(eq(event_start, start(paddedInterval)));
             cp.post(eq(event_end, minus(end(paddedInterval), 3)));
@@ -1374,7 +1374,7 @@ public class Query {
 
                             ball_inside_circle[f] = dist_x + dist_y <= circle[0] ? 1 : 0;
                         }
-                        cp.post(new RegularInterval(ball_inside_circle, eventInterval, Automaton.APLUS(1, Set.of(1))));
+                        cp.post(new SubstringRegular(ball_inside_circle, eventInterval, Automaton.APLUS(1, Set.of(1))));
                     }
                 } else {
                     List<double[]> rectangles = new ArrayList<>();
@@ -1391,7 +1391,7 @@ public class Query {
                             double by = positionBox_y[ball_idx][f];
                             ball_inside_rectangle[f] = (bx >= rect[0] && bx <= rect[0] + rect[2] && by <= rect[1] && by >= rect[1] - rect[3]) ? 1 : 0;
                         }
-                        cp.post(new RegularInterval(ball_inside_rectangle, eventInterval, Automaton.APLUS(1, Set.of(1))));
+                        cp.post(new SubstringRegular(ball_inside_rectangle, eventInterval, Automaton.APLUS(1, Set.of(1))));
                     }
                 }
             }
@@ -1480,10 +1480,10 @@ public class Query {
                 Set<Integer> complementIds = allPossessionValues.stream()
                         .filter(v -> !validIds.contains(v))
                         .collect(Collectors.toSet());
-                cp.post(new RegularInterval(paddedPossession, paddedInterval, Automaton.NOTA_APLUS_NOTA(teams.length, complementIds)));
+                cp.post(new SubstringRegular(paddedPossession, paddedInterval, Automaton.NOTA_APLUS_NOTA(teams.length, complementIds)));
             } else {
                 int[] paddedPossession = Automaton.pad(possession);
-                cp.post(new RegularInterval(paddedPossession, paddedInterval, Automaton.NOTA_APLUS_NOTA(teams.length, validIds)));
+                cp.post(new SubstringRegular(paddedPossession, paddedInterval, Automaton.NOTA_APLUS_NOTA(teams.length, validIds)));
 
             }
             cp.post(eq(event_start, start(paddedInterval)));
@@ -1505,7 +1505,7 @@ public class Query {
                             double dist_y = Math.pow(positionBox_y[ball_idx][f] - circle[2], 2);
                             ball_inside_circle[f] = dist_x + dist_y <= circle[0] ? 1 : 0;
                         }
-                        cp.post(new RegularInterval(ball_inside_circle, eventInterval, Automaton.APLUS(teams.length, Set.of(1))));
+                        cp.post(new SubstringRegular(ball_inside_circle, eventInterval, Automaton.APLUS(teams.length, Set.of(1))));
                     }
                 } else {
                     List<double[]> rectangles = new ArrayList<>();
@@ -1521,7 +1521,7 @@ public class Query {
                             double by = positionBox_y[ball_idx][f];
                             ball_inside_rectangle[f] = (bx >= rect[0] && bx <= rect[0] + rect[2] && by <= rect[1] && by >= rect[1] - rect[3]) ? 1 : 0;
                         }
-                        cp.post(new RegularInterval(ball_inside_rectangle, eventInterval, Automaton.APLUS(teams.length, Set.of(1))));
+                        cp.post(new SubstringRegular(ball_inside_rectangle, eventInterval, Automaton.APLUS(teams.length, Set.of(1))));
                     }
                 }
             }
@@ -1569,13 +1569,13 @@ public class Query {
                     Set<Integer> complementIds = allPossessionValues.stream()
                             .filter(v -> !teamIds.contains(v))
                             .collect(Collectors.toSet());
-                    cp.post(new RegularInterval(paddedPossession, paddedInterval, Automaton.NOTA_APLUS_NOTA(teams.length, complementIds)));
+                    cp.post(new SubstringRegular(paddedPossession, paddedInterval, Automaton.NOTA_APLUS_NOTA(teams.length, complementIds)));
                     cp.post(eq(start(eventInterval), start(paddedInterval)));
                     cp.post(eq(end(eventInterval), minus(end(paddedInterval), 3)));
                 } else {
                     CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n + 2);
                     int[] paddedPossession = Automaton.pad(possession);
-                    cp.post(new RegularInterval(paddedPossession, paddedInterval, Automaton.NOTA_APLUS_NOTA(teams.length, teamIds)));
+                    cp.post(new SubstringRegular(paddedPossession, paddedInterval, Automaton.NOTA_APLUS_NOTA(teams.length, teamIds)));
                     cp.post(eq(start(eventInterval), start(paddedInterval)));
                     cp.post(eq(end(eventInterval), minus(end(paddedInterval), 3)));
 
@@ -1644,10 +1644,10 @@ public class Query {
                                 Set<Integer> complementIds = allPossessionValues.stream()
                                         .filter(v -> v != pl_id)
                                         .collect(Collectors.toSet());
-                                cp.post(new RegularInterval(paddedPossession, paddedInterval, Automaton.NOTA_APLUS_NOTA(teams.length, complementIds)));
+                                cp.post(new SubstringRegular(paddedPossession, paddedInterval, Automaton.NOTA_APLUS_NOTA(teams.length, complementIds)));
                             } else {
                                 int[] paddedPossession = Automaton.pad(possession);
-                                cp.post(new RegularInterval(paddedPossession, paddedInterval, Automaton.NOTA_APLUS_NOTA(teams.length, Set.of(pl_id))));
+                                cp.post(new SubstringRegular(paddedPossession, paddedInterval, Automaton.NOTA_APLUS_NOTA(teams.length, Set.of(pl_id))));
                             }
                             cp.post(eq(start(thisPlayerInterval), start(paddedInterval)));
                             cp.post(eq(end(thisPlayerInterval), minus(end(paddedInterval), 3)));
