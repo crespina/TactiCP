@@ -73,7 +73,7 @@ public class Query {
                 Map<Integer, GameStateReconstructionInstance.FrameData> frameData = instance.positions;
 
                 for (Event event : steps) {
-                    if (event instanceof AndEvent andEvent) {
+                    if (event instanceof AndEvent andEvent) {//TODO: only one interval for the AND
                         intervals.add(makeIntervalVar(cp, false, 0, n + 1)); //the whole AndEvent
                         for (Event child : andEvent.children()) {
                             intervals.add(makeIntervalVar(cp, false, 0, n + 1));
@@ -180,7 +180,7 @@ public class Query {
         }
 
 
-        return r;
+        return order(r);
     }
 
 
@@ -1750,6 +1750,71 @@ public class Query {
             }
         }
     }
+
+    private List<Result> order(List<Result> results) {
+        Map<String, List<Result>> byInstance = new LinkedHashMap<>();
+
+        // preserve the original instance order
+        for (Result res : results) {
+            byInstance.computeIfAbsent(res.instance, k -> new ArrayList<>()).add(res);
+        }
+
+        List<Result> ordered = new ArrayList<>(results.size());
+
+        for (Map.Entry<String, List<Result>> entry : byInstance.entrySet()) {
+            List<Result> group = new ArrayList<>(entry.getValue());
+
+            group.sort(this::compareResultsLexicographicallyByTime);
+
+            // renumber after sorting so "solution #..." matches printed order
+            for (int i = 0; i < group.size(); i++) {
+                Result old = group.get(i);
+                ordered.add(new Result(i, old.events, old.instance));
+            }
+        }
+
+        return ordered;
+    }
+
+    private int compareResultsLexicographicallyByTime(Result a, Result b) {
+        int n = Math.min(a.events.size(), b.events.size());
+
+        for (int i = 0; i < n; i++) {
+            int c = compareEventsLexicographicallyByTime(a.events.get(i), b.events.get(i));
+            if (c != 0) return c;
+        }
+
+        // if one result has fewer top-level events, it comes first
+        int c = Integer.compare(a.events.size(), b.events.size());
+        if (c != 0) return c;
+
+        // stable fallback
+        return Integer.compare(a.solutionIndex, b.solutionIndex);
+    }
+
+    private int compareEventsLexicographicallyByTime(Result.ResultEvent e1, Result.ResultEvent e2) {
+        int c = Integer.compare(e1.interval.start, e2.interval.start);
+        if (c != 0) return c;
+
+        c = Integer.compare(e1.interval.end, e2.interval.end);
+        if (c != 0) return c;
+
+        // refine group events recursively
+        if (e1 instanceof Result.GroupEvent g1 && e2 instanceof Result.GroupEvent g2) {
+            int n = Math.min(g1.children.size(), g2.children.size());
+            for (int i = 0; i < n; i++) {
+                c = compareEventsLexicographicallyByTime(g1.children.get(i), g2.children.get(i));
+                if (c != 0) return c;
+            }
+
+            c = Integer.compare(g1.children.size(), g2.children.size());
+            if (c != 0) return c;
+        }
+
+        // deterministic fallback
+        return Integer.compare(e1.eventIdx, e2.eventIdx);
+    }
+
 
     public Result parseSolution(int solutionIndex, List<ExtendedCPVar> extVars, String instance) {
         AtomicInteger i = new AtomicInteger(0);
