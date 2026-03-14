@@ -234,20 +234,21 @@ def plot_large_queries500():
     ax.spines['bottom'].set_visible(False)
     ax.spines['left'].set_visible(False)
 
-    ax.set_xlabel("Number of Matches")
-    ax.set_ylabel("Time (s)")
+    ax.set_xlabel("Size of the instance (frames)", fontsize=20)
+    ax.set_ylabel("Time (s)", fontsize=20)
+    ax.tick_params(axis='both', labelsize=16)
     #ax.set_xscale('log')  # optional, makes big match numbers easier to read
     #ax.set_yscale('log')  # optional, helps with extreme values
     ax.grid(True, linestyle='--', alpha=0.5)
 
     # Legend to the right below the plot
-    ax.legend(loc='lower right')
+    ax.legend(loc='lower right', fontsize=16)
 
     plt.tight_layout()
     plt.savefig("trunc3.png")
     plt.show()
 
-#plot_large_queries500()
+plot_large_queries500()
 
 def barplot67():
     labels = ["Simple", "Intermediate", "Hard"]
@@ -258,13 +259,14 @@ def barplot67():
 
     ax.bar(labels, times, color=colors)
 
-    ax.set_ylabel("Time (s)")
+    ax.set_ylabel("Time (s)", fontsize=18)
+    ax.tick_params(axis='both', labelsize=14)
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
 
     for i, v in enumerate(times):
-        ax.text(i, v, f"{v:.2f}", ha='center', va='bottom')
+        ax.text(i, v, f"{v:.2f}", ha='center', va='bottom', fontsize=13)
 
     plt.yscale("log")
 
@@ -308,4 +310,4 @@ hard_times = [
 ]
 
 
-extrapolated_curve(matches, hard_times)
+#extrapolated_curve(matches, hard_times)
