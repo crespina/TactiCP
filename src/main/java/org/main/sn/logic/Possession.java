@@ -161,6 +161,7 @@ public class Possession implements ConstraintPattern {
                 // 3) Compute a score based on the trajectory of the ball
                 double wAcc = 1.0;
                 double wDir = 30.0;
+                int activityThreshold = 47;
                 double displacement_ball_score = wAcc * acc[frameID][ball_idx] + wDir * dthetas[frameID][ball_idx];
 
                 // 4) arbitrage between scores
@@ -188,7 +189,7 @@ public class Possession implements ConstraintPattern {
                 if (closest_player == -1) {
                     result[frameID] = 0;
                 }
-                if (displacement_ball_score > 47 && bestDist < threshold * 3) {
+                if (displacement_ball_score > activityThreshold && bestDist < threshold * 3) {
                     result[frameID] = closest_player;
                 } else {
 
