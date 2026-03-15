@@ -642,11 +642,11 @@
         <div class="examples-grid">
           <div class="example-card" onclick="loadExample(this)">
             <div class="example-label">🎯 Pass between two players</div>
-            <code>SELECT(PLAYER("pwc1").PASSTO(PLAYER("pwc2")).MINRANGE()).FROM("SNGS-060, SNGS-061").WHERE(RECTANGLE(-60, 20, 65, 40))</code>
+            <code>SELECT(PLAYER("pwc1").PASSTO(PLAYER("pwc2")).MINRANGE()).WHERE(RECTANGLE(-60, 20, 65, 40)).FROM("SNGS-060, SNGS-061")</code>
           </div>
           <div class="example-card" onclick="loadExample(this)">
             <div class="example-label">⚽ Ball movement</div>
-            <code>SELECT(BALL().MOVETO(4, 6).WHERE(RADIUS(-20, 10, 35)), BALL().MOVETO(14, 9).MINRANGE()).FROM("SNGS-061").WHERE(RECTANGLE(-100, 100, 810, 810))</code>
+            <code>SELECT(BALL().MOVETO(4, 6).WHERE(RADIUS(-20, 10, 35)), BALL().MOVETO(14, 9).MINRANGE()).FROM("SNGS-061")</code>
           </div>
           <div class="example-card" onclick="loadExample(this)">
             <div class="example-label">🏃 Player movement</div>
@@ -654,15 +654,15 @@
           </div>
           <div class="example-card" onclick="loadExample(this)">
             <div class="example-label">👥 Team movement</div>
-            <code>SELECT(TEAM("t1", PLAYER("pwc3"), PLAYER("pleft", "left"), PLAYER("p1", 1)).MOVETO(11, 10, 3)).FROM("SNGS-060").WHERE(RECTANGLE(-20,-20,40,20))</code>
+            <code>SELECT(TEAM("t1", PLAYER("pwc3"), PLAYER("pleft", "left"), PLAYER("p1", 1)).MOVETO(11, 10, 3)).WHERE(RECTANGLE(-20,-20,40,20)).FROM("SNGS-060")</code>
           </div>
           <div class="example-card" onclick="loadExample(this)">
             <div class="example-label">📍 Ball position</div>
-            <code>SELECT(POSITION(BALL(), 1, 4)).FROM("SNGS-060").WHERE(RADIUS(0, 0, 10))</code>
+            <code>SELECT(POSITION(BALL(), 1, 4)).WHERE(RADIUS(0, 0, 10)).FROM("SNGS-060")</code>
           </div>
           <div class="example-card" onclick="loadExample(this)">
             <div class="example-label">🔒 Player possession</div>
-            <code>SELECT(POSSESSION(PLAYER("pwc4"))).FROM("SNGS-061").WHERE(RECTANGLE(-20, 20, 20, 20), START(100), END(200), WITHIN(50), MIN_DURATION(20))</code>
+            <code>SELECT(POSSESSION(PLAYER("pwc4"))).WHERE(RECTANGLE(-20, 20, 20, 20), START(100), END(200), WITHIN(50), MIN_DURATION(20)).FROM("SNGS-061")</code>
           </div>
         </div>
       </div>
