@@ -92,13 +92,14 @@ def plot_three_queries():
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
 
-    ax.set_xlabel("Number of Games", fontsize=18)
-    ax.set_ylabel("Time (s)", fontsize=18)
-    ax.tick_params(axis='both', labelsize=14)
+    ax.set_xlabel("Number of Games", fontsize=20)
+    ax.set_ylabel("Time (s)", fontsize=20)
+    ax.tick_params(axis='both', labelsize=18)
     ax.grid(True, linestyle='--', alpha=0.5)
-    ax.legend(loc='lower right', fontsize=14)
-    plt.savefig("exectime3.png")
+    ax.legend(loc='lower right', fontsize=18)
+    
     plt.tight_layout()
+    plt.savefig("exec_time3.pdf")
     plt.show()
 
 plot_three_queries()

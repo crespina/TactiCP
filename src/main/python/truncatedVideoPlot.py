@@ -204,7 +204,7 @@ def plot_large_queries500():
         0.267,
         0.31,
         0.411, 0.488, 0.348, 0.552, 0.432, 0.411, 0.942, 0.589, 0.481, 0.56,
-        0.623, 0.652, 0.684, 0.779, 1.228, 0.761, 0.79, 0.843
+        0.623, 0.652, 0.684, 0.779, 0.986, 0.761, 0.79, 0.843
     ]
 
     intermediate_times = [
@@ -223,7 +223,8 @@ def plot_large_queries500():
         0.442, 0.487, 0.508, 0.578, 0.577, 0.624, 0.666, 0.704
     ]
 
-    fig, ax = plt.subplots(figsize=(8,6))
+    #fig, ax = plt.subplots(figsize=(8,6))
+    fig, ax = plt.subplots()
 
     ax.scatter(matches, simple_times, color='blue', label='Simple Query')
     ax.scatter(matches, intermediate_times, color='green', label='Intermediate Query')
@@ -236,45 +237,47 @@ def plot_large_queries500():
 
     ax.set_xlabel("Size of the instance (frames)", fontsize=20)
     ax.set_ylabel("Time (s)", fontsize=20)
-    ax.tick_params(axis='both', labelsize=16)
+    ax.tick_params(axis='both', labelsize=18)
     #ax.set_xscale('log')  # optional, makes big match numbers easier to read
     #ax.set_yscale('log')  # optional, helps with extreme values
     ax.grid(True, linestyle='--', alpha=0.5)
 
     # Legend to the right below the plot
-    ax.legend(loc='lower right', fontsize=16)
-
+    ax.legend(loc='lower right', fontsize=18, handletextpad=0.01, borderaxespad=0.01, labelspacing=0.25)
     plt.tight_layout()
-    plt.savefig("trunc3.png")
+    plt.savefig("trunc3.pdf")
     plt.show()
 
-plot_large_queries500()
+#plot_large_queries500()
 
 def barplot67():
     labels = ["Simple", "Intermediate", "Hard"]
     times = [6.202, 48.151, 1119.826]
     colors = ["blue", "green", "red"]
+    x_positions = [0.0, 0.7, 1.4]
 
     fig, ax = plt.subplots()
 
-    ax.bar(labels, times, color=colors)
+    ax.bar(x_positions, times, color=colors, width=0.5)
+    ax.set_xticks(x_positions)
+    ax.set_xticklabels(labels)
 
-    ax.set_ylabel("Time (s)", fontsize=18)
-    ax.tick_params(axis='both', labelsize=14)
+    ax.set_ylabel("Time (s)", fontsize=20)
+    ax.tick_params(axis='both', labelsize=20)
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
 
-    for i, v in enumerate(times):
-        ax.text(i, v, f"{v:.2f}", ha='center', va='bottom', fontsize=13)
+    for x, v in zip(x_positions, times):
+        ax.text(x, v, f"{v:.2f}", ha='center', va='bottom', fontsize=18)
 
     plt.yscale("log")
 
     plt.tight_layout()
-    plt.savefig("barplot67.png")
+    plt.savefig("barplot67.pdf")
     plt.show()
 
-#barplot67()
+barplot67()
 
 
 matches = [
