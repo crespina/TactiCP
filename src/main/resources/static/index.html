@@ -658,11 +658,11 @@
           </div>
           <div class="example-card" onclick="loadExample(this)">
             <div class="example-label">📍 Ball position</div>
-            <code>SELECT(POSITION(BALL(), 1, 4)).WHERE(RADIUS(0, 0, 10)).FROM("SNGS-060")</code>
+            <code>SELECT(POSITION(BALL(), 1, 4)).WHERE(RADIUS(-20, 0, 20)).FROM("SNGS-060")</code>
           </div>
           <div class="example-card" onclick="loadExample(this)">
             <div class="example-label">🔒 Player possession</div>
-            <code>SELECT(POSSESSION(PLAYER("pwc4"))).WHERE(RECTANGLE(-20, 20, 20, 20), START(100), END(200), WITHIN(50), MIN_DURATION(20)).FROM("SNGS-061")</code>
+            <code>SELECT(POSSESSION(PLAYER("pwc4"))).WHERE(RECTANGLE(-5, 5, 10, 10), STARTMAX(50), ENDMAX(200), MAXDURATION(50), MINDURATION(15)).FROM("SNGS-060")</code>
           </div>
         </div>
       </div>

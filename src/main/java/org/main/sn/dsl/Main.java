@@ -10,9 +10,8 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
 
-        SELECT((POSITION(PLAYER("p1"),1)), POSITION(PLAYER("p1"),6)).FROM("SNGS-061").searchAndPrint();
-
-        SelectExpr pass = SELECT(PLAYER("p1").PASSTO(PLAYER("p2")).MINRANGE()).FROM("SNGS-060,SNGS-061");
+        //
+        // SelectExpr pass = SELECT(PLAYER("p1").PASSTO(PLAYER("p2")).MINRANGE()).FROM("SNGS-060,SNGS-061");
         //pass.searchAndPrint();
 
 
