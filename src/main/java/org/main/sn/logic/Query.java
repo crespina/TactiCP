@@ -1050,7 +1050,7 @@ public class Query {
                     }
                 }
             } else {
-                for (int i = 0; i < positionZones.length; i++) {
+                for (int i = 0; i < teams.length; i++) {
                     if (teams[i] != 0 && teams[i] != 1) {
                         player_id.remove(i);
                     }
