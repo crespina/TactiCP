@@ -73,11 +73,8 @@ public class Query {
                 Map<Integer, GameStateReconstructionInstance.FrameData> frameData = instance.positions;
 
                 for (Event event : steps) {
-                    if (event instanceof AndEvent andEvent) {//TODO: only one interval for the AND
+                    if (event instanceof AndEvent andEvent) {
                         intervals.add(makeIntervalVar(cp, false, 0, n + 1)); //the whole AndEvent
-                        for (Event child : andEvent.children()) {
-                            intervals.add(makeIntervalVar(cp, false, 0, n + 1));
-                        }
                     } else if (event instanceof OrEvent orEvent) {
                         intervals.add(makeIntervalVar(cp, false,0, n + 1)); //the whole OrEvent
                         for (Event child : orEvent.children()) {
@@ -210,29 +207,17 @@ public class Query {
 
             counterEvent.incrementAndGet();
 
-            CPIntVar[] childrenStarts = new CPIntVar[andEvent.children().size()];
-            CPIntVar[] childrenEnds = new CPIntVar[andEvent.children().size()];
-
             int childIdx = 0;
 
             for (Event children : andEvent.children()) {
-                CPIntervalVar childInterval = intervals.get(counterEvent.get());
-                childrenStarts[childIdx] = start(childInterval);
-                childrenStarts[childIdx].removeAbove(n + 1);
-                childrenEnds[childIdx] = end(childInterval);
-                childrenEnds[childIdx].removeAbove(n + 1);
 
-                executeStep(children, cp, counterEvent, childInterval, childrenStarts[childIdx], childrenEnds[childIdx], ball_idx, n,
+                executeStep(children, cp, counterEvent, event_interval, event_start, event_end, ball_idx, n,
                         positionZones, positionBox_x, positionBox_y, total_circle, extVars, intervals, total_rectangle,
                         counterVars, teams, IDENTIFIERS, total_xcenter, possession, total_ycenter,
                         total_radius, total_xtop, total_ytop, total_w, total_h, true, childIdx, andEvent.children().size(), nbZones);
 
                 childIdx++;
             }
-
-            //define the interval of the AND event
-            cp.post(eq(event_start, max(childrenStarts)));
-            cp.post(eq(event_end, minimum(childrenEnds)));
 
         } else if (event instanceof OrEvent orEvent) { // or should return the union of intervals
 
