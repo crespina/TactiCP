@@ -35,5 +35,8 @@ build/
 ### Mac OS ###
 .DS_Store
 
+### Environment / secrets ###
+.env
+
 ### Data ###
 data/SoccerNet/*

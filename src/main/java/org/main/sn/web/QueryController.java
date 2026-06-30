@@ -1,5 +1,6 @@
 package org.main.sn.web;
 
+import org.main.sn.dsl.LlmQuery;
 import org.main.sn.dsl.SelectExpr;
 import org.main.sn.logic.Result;
 import org.springframework.http.*;
@@ -40,6 +41,26 @@ public class QueryController {
     }
 
     private static final List<String> SPLITS = List.of("train", "test", "valid");
+
+    /**
+     * Lazily-built natural-language → DSL translator. Built on first use so that a
+     * missing GROQ_API_KEY only breaks the /translate endpoint, not the whole app.
+     */
+    private volatile LlmQuery llmQuery;
+
+    private LlmQuery llm() {
+        LlmQuery local = llmQuery;
+        if (local == null) {
+            synchronized (this) {
+                local = llmQuery;
+                if (local == null) {
+                    local = new LlmQuery();   // throws IllegalStateException if no API key
+                    llmQuery = local;
+                }
+            }
+        }
+        return local;
+    }
 
     /** List all available instances that have a video file */
     @GetMapping("/instances")
@@ -175,6 +196,33 @@ public class QueryController {
         }
     }
 
+    /**
+     * Translate a natural-language description into a DSL query string using the
+     * LLM. The dataset is supplied by the caller (the web UI collects it up front),
+     * so the interactive "which dataset?" prompt used by the CLI is never reached.
+     */
+    @PostMapping("/translate")
+    public ResponseEntity<TranslateResponse> translateQuery(@RequestBody TranslateRequest request) {
+        String description = request.description() == null ? "" : request.description().trim();
+        if (description.isEmpty()) {
+            return ResponseEntity.ok(new TranslateResponse(false, null,
+                    "Please describe the query you want in plain English."));
+        }
+        String dataset = (request.dataset() == null || request.dataset().isBlank())
+                ? "all"
+                : request.dataset().trim();
+        try {
+            String dsl = llm().translate(description, dataset);
+            return ResponseEntity.ok(new TranslateResponse(true, dsl, null));
+        } catch (IllegalStateException e) {
+            // GROQ_API_KEY missing / not resolvable
+            return ResponseEntity.ok(new TranslateResponse(false, null, e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.ok(new TranslateResponse(false, null,
+                    "Translation failed: " + e.getMessage()));
+        }
+    }
+
     // ---------------------------------------------------------------
     // JSON serialisation helpers
     // ---------------------------------------------------------------
@@ -228,5 +276,7 @@ public class QueryController {
     // DTO records
     public record QueryRequest(String query) {}
     public record QueryResponse(boolean success, String error, List<Map<String, Object>> results, String fullText, Integer count) {}
+    public record TranslateRequest(String description, String dataset) {}
+    public record TranslateResponse(boolean success, String query, String error) {}
 }
 
