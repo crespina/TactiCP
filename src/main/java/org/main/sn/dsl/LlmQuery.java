@@ -8,15 +8,6 @@ import java.net.http.*;
 import java.nio.file.*;
 import java.util.*;
 
-/**
- * Translates a natural-language query into a DSL query string using Groq's
- * LLaMA 3.3-70B, then validates the result by calling QueryEvaluator.evaluate()
- * directly — no running server required.
- *
- * Usage:
- *   LlmQuery llm = new LlmQuery();                   // reads GROQ_API_KEY from .env
- *   String dsl = llm.translate("find all passes", "SNGS-060");
- */
 public class LlmQuery {
 
     private static final int    MAX_RETRIES = 3;
@@ -77,18 +68,17 @@ public class LlmQuery {
             ## Full query structure
             SELECT(event1, event2, ...).FROM("dataset").WHERE(constraint, ...).search_mode
 
-            ## Temporal semantics — SEQUENCE vs SIMULTANEOUS (read carefully)
-            How you combine events decides WHEN they happen relative to one another. This is a
-            meaning difference, not a stylistic one — choosing the wrong form changes the query.
+            ## Temporal semantics — SEQUENCE vs SIMULTANEOUS
+            How you combine events decides when they happen relative to one another.
 
             - SEQUENCE (events happen one after another, in chronological order):
               list the events as separate, comma-separated arguments of SELECT, written in the
-              order they occur in time — the first argument happens first, then the next, and so on.
-                  SELECT(eventA, eventB)         — eventA happens, and AFTERWARDS eventB happens
-              The intervals do NOT have to overlap; eventB is expected to occur after eventA.
+              order they occur in time. The first argument happens first, then the next, and so on.
+                  SELECT(eventA, eventB)         — eventA happens, and afterwards eventB happens
+              The intervals do NOT overlap: eventB is expected to occur after eventA.
 
             - SIMULTANEOUS (events happen at the same time):
-              wrap the events in AND(...). Their intervals must overlap / intersect — they hold
+              wrap the events in AND(...). Their intervals must overlap / intersect. They hold
               together at the same moment, with no implied order.
                   SELECT(AND(eventA, eventB))    — eventA and eventB hold at the SAME time
 
@@ -113,12 +103,12 @@ public class LlmQuery {
 
             1. On a single event, to constrain only that event:
                  event.WHERE(constraint, ...)
-               Example: PLAYER("p1").PASSTO(PLAYER("p2")).MINRANGE().WHERE(MAXDURATION(25))
+               Example: SELECT(eventA.WHERE(MAXDURATION(25)), eventB)
                This restricts only that event's interval, not the whole sequence.
 
             2. On the full SELECT expression, to constrain the whole matched sequence:
                  SELECT(...).FROM("...").WHERE(constraint, ...)
-               Example: SELECT(PLAYER("p1").MOVETO(3,7).MINRANGE()).FROM("all").WHERE(STARTMIN(100), ENDMAX(500))
+               Example: SELECT(eventA, eventB).WHERE(STARTMIN(100), ENDMAX(500))
                This restricts the overall start/end/duration/location of the entire match.
 
             ATLEAST and ATMOST are only valid on the full SELECT (not on individual events).
@@ -201,10 +191,9 @@ public class LlmQuery {
             2. The output MUST start with SELECT( and contain .FROM("...").
             3. Always append .MINRANGE() to PASSTO and MOVETO events.
             4. NEVER use NOT with PASSTO, MOVETO, AND, or OR.
-            5. For events that happen one after another (chronological order: "then", "and then", "after", "followed by", ...), list them as comma-separated arguments of SELECT in time order. Use AND(...) ONLY for events that happen at the same time ("while", "at the same time", "during", ...). Do not confuse the two.
             """;
 
-    private final String     apiKey;
+    private final String apiKey;
     private final HttpClient http;
 
     public static void main(String[] args) throws IOException {
@@ -318,7 +307,7 @@ public class LlmQuery {
     private static String buildJson(List<Map<String, String>> messages) {
         StringBuilder sb = new StringBuilder();
         sb.append("{\"model\":").append(jsonStr(MODEL))
-          .append(",\"temperature\":0.1,\"messages\":[");
+          .append(",\"temperature\":0,\"messages\":[");
         for (int i = 0; i < messages.size(); i++) {
             Map<String, String> m = messages.get(i);
             sb.append("{\"role\":").append(jsonStr(m.get("role")))

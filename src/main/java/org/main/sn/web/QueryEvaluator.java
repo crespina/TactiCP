@@ -10,9 +10,7 @@ import java.io.IOException;
  * Evaluates a query string written in the DSL (Java/Groovy syntax) and returns
  * the resulting SelectExpr.  The user writes exactly what they would write in
  * the static context of {@link Factory}, e.g.:
- * <pre>
  *   SELECT(PLAYER("p1").PASSTO(PLAYER("p2")).MINRANGE()).FROM("SNGS-060").SEARCH(0)
- * </pre>
  * All Factory static methods are imported into the Groovy binding so the user
  * doesn't have to prefix them.
  */
