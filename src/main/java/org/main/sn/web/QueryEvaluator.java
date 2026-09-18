@@ -46,13 +46,35 @@ public class QueryEvaluator {
      *                                  as the sentinel dataset loads nothing)
      */
     public static void checkSyntax(String dslQuery) throws IOException {
+        parseStructure(dslQuery);   // builds the SelectExpr; throws on malformed DSL — no data, no search
+    }
+
+    /**
+     * Builds the {@link SelectExpr} for a DSL query <em>without</em> loading any
+     * game data or running the solver, and returns it for structural inspection.
+     * <p>
+     * The query is rewritten first so neither expensive operation runs: the
+     * {@code .FROM("…")} dataset is swapped for a sentinel that matches no split or
+     * game (so no game-state JSON is read), and a trailing {@code .COUNT()} is
+     * dropped (so the result is always a {@link SelectExpr}, never an
+     * {@link Integer}). Everything else — SELECT structure, entities, events,
+     * WHERE constraints and SEARCH mode — is still constructed, so this is what an
+     * AST-level comparison should parse.
+     *
+     * @throws IllegalArgumentException if the query has no FROM clause or does not
+     *                                  build into a valid {@link SelectExpr}
+     */
+    public static SelectExpr parseStructure(String dslQuery) throws IOException {
         if (dslQuery == null || !dslQuery.contains(".FROM(")) {
             throw new IllegalArgumentException("Query must contain a .FROM(\"…\") clause.");
         }
         String probe = dslQuery
                 .replaceAll("\\.FROM\\s*\\(\\s*\"[^\"]*\"\\s*\\)", ".FROM(\"" + SYNTAX_CHECK_DATASET + "\")")
                 .replaceAll("\\.COUNT\\s*\\(\\s*\\)\\s*$", "");
-        evaluate(probe);   // builds the SelectExpr; throws on malformed DSL — no data, no search
+        Object result = evaluate(probe);
+        if (result instanceof SelectExpr se) return se;
+        throw new IllegalArgumentException("Query did not build into a SelectExpr. Got: "
+                + (result == null ? "null" : result.getClass().getName()));
     }
 
     /**
