@@ -13,10 +13,13 @@
 #   ./run_eval.sh --input my_pairs.json --eval-dataset SNGS-060      # faster than "all"
 #   ./run_eval.sh --input data/eval/query_pairs_sample.json --identity      # self-test, no API calls
 #   ./run_eval.sh --input my_pairs.json --judge-model openai/gpt-oss-120b  # + a 0/1 opinion
+#   ./run_eval.sh --input my_pairs.json --local --model Qwen/Qwen3-4B-Instruct-2507
+#                                                           # a self-hosted model (vLLM on :8000)
 #   ./run_eval.sh --input my_pairs.json --resume            # continue an interrupted run
 #   ./run_eval.sh --input my_pairs.json --resume --redo TRANSLATION_FAILED,TIMEOUT
 #
-# Requires GROQ_API_KEY in the environment or in a .env file (unless --identity).
+# Requires GROQ_API_KEY in the environment or in a .env file, unless --identity
+# or a self-hosted endpoint (--local / --endpoint / $LLM_ENDPOINT) is used.
 set -euo pipefail
 cd "$(dirname "$0")"
 
