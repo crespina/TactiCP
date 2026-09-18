@@ -176,6 +176,8 @@ public final class EvaluationPipeline {
         String model = LlmQuery.DEFAULT_MODEL;
         double temperature = LlmQuery.DEFAULT_TEMPERATURE;
         int maxRetries = LlmQuery.DEFAULT_MAX_RETRIES;
+        /** null = leave LlmQuery's default (Groq, or $LLM_ENDPOINT if set). */
+        String endpoint = null;
         String evalDataset = "all";
         int timeoutSeconds = 120;
         int limit = -1;
@@ -208,7 +210,9 @@ public final class EvaluationPipeline {
             llm = new LlmQuery()
                     .model(cfg.model)
                     .temperature(cfg.temperature)
-                    .maxRetries(cfg.maxRetries);
+                    .maxRetries(cfg.maxRetries)
+                    .endpoint(cfg.endpoint);
+            System.out.printf("endpoint=%s%n%n", llm.endpoint());
         }
 
         // A second, independent instance. It holds no conversation with the one
@@ -218,7 +222,8 @@ public final class EvaluationPipeline {
         if (cfg.judge) {
             judge = new LlmQuery()
                     .model(cfg.judgeModel != null ? cfg.judgeModel : cfg.model)
-                    .temperature(0.0);
+                    .temperature(0.0)
+                    .endpoint(cfg.endpoint);
             System.out.printf("judge=%s%n%n", judge.model());
         }
 
@@ -1094,6 +1099,8 @@ public final class EvaluationPipeline {
                 case "--input"           -> c.input = Paths.get(next(args, ++i, a));
                 case "--output"          -> c.output = Paths.get(next(args, ++i, a));
                 case "--model"           -> c.model = next(args, ++i, a);
+                case "--endpoint"        -> c.endpoint = next(args, ++i, a);
+                case "--local"           -> c.endpoint = LlmQuery.LOCAL_ENDPOINT;
                 case "--temperature"     -> c.temperature = Double.parseDouble(next(args, ++i, a));
                 case "--max-retries"     -> c.maxRetries = Integer.parseInt(next(args, ++i, a));
                 case "--eval-dataset"    -> c.evalDataset = next(args, ++i, a);
@@ -1134,7 +1141,12 @@ public final class EvaluationPipeline {
 
                   --input <path>            (required) JSON array of {"nl": ..., "dsl": ...} objects
                   --output <path>           CSV output file            (default: eval_results.csv)
-                  --model <groq-model-id>   translation model          (default: llama-3.3-70b-versatile)
+                  --model <model-id>        translation model          (default: openai/gpt-oss-120b)
+                  --endpoint <url>          OpenAI-compatible chat-completions URL
+                                            (default: Groq, or $LLM_ENDPOINT if set)
+                  --local                   shorthand for --endpoint
+                                            http://localhost:8000/v1/chat/completions
+                                            (a self-hosted model; needs no API key)
                   --temperature <double>    model temperature          (default: 0.0)
                   --max-retries <int>       translate attempts         (default: 3)
                   --eval-dataset <string>   dataset BOTH queries run on (default: "all")

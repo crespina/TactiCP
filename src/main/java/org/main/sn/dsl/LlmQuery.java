@@ -14,7 +14,12 @@ public class LlmQuery {
     public static final String DEFAULT_MODEL       = "openai/gpt-oss-120b";
     public static final double DEFAULT_TEMPERATURE = 0.0;
 
-    private static final String GROQ_URL    = "https://api.groq.com/openai/v1/chat/completions";
+    /** Groq's OpenAI-compatible chat endpoint — the default; unchanged behaviour. */
+    public static final String GROQ_ENDPOINT    = "https://api.groq.com/openai/v1/chat/completions";
+    /** A locally served model (vLLM, llama.cpp, …) speaking the same protocol. */
+    public static final String LOCAL_ENDPOINT   = "http://localhost:8000/v1/chat/completions";
+
+    public static final String DEFAULT_ENDPOINT = GROQ_ENDPOINT;
 
     private static final String SYSTEM_PROMPT = """
             You are an expert at translating natural language queries into a custom DSL for a \
@@ -284,6 +289,7 @@ public class LlmQuery {
     private String model       = DEFAULT_MODEL;
     private double temperature = DEFAULT_TEMPERATURE;
     private int    maxRetries  = DEFAULT_MAX_RETRIES;
+    private String endpoint    = resolveEndpoint();
 
     public static void main(String[] args) throws IOException {
         LlmQuery llm = new LlmQuery();
@@ -298,9 +304,16 @@ public class LlmQuery {
 
     }
 
-    /** Reads GROQ_API_KEY from the environment or from the nearest .env file. */
+    /**
+     * Reads GROQ_API_KEY from the environment or from the nearest .env file.
+     * <p>
+     * A missing key is only an error for endpoints that need one (Groq), and is
+     * reported on the first call rather than here — a locally served model needs
+     * no key, so requiring one at construction would make {@link #endpoint(String)}
+     * unreachable for users who have no Groq key at all.
+     */
     public LlmQuery() {
-        this.apiKey = resolveApiKey();
+        this.apiKey = resolveSetting("GROQ_API_KEY");
         this.http   = HttpClient.newHttpClient();
     }
 
@@ -333,9 +346,22 @@ public class LlmQuery {
         return this;
     }
 
+    /**
+     * OpenAI-compatible chat-completions URL to call. Defaults to Groq, or to
+     * {@code LLM_ENDPOINT} when that is set in the environment or the .env file.
+     * Pass the full path, e.g. {@code http://localhost:8000/v1/chat/completions}
+     * for a locally served model. A {@code null} or blank value is ignored, so
+     * {@code .endpoint(cfg.endpoint)} is safe when nothing was configured.
+     */
+    public LlmQuery endpoint(String endpoint) {
+        if (endpoint != null && !endpoint.isBlank()) this.endpoint = endpoint.strip();
+        return this;
+    }
+
     public String model()       { return model; }
     public double temperature() { return temperature; }
     public int    maxRetries()  { return maxRetries; }
+    public String endpoint()    { return endpoint; }
 
     // -------------------------------------------------------------------------
     // Public API
@@ -442,21 +468,43 @@ public class LlmQuery {
     // -------------------------------------------------------------------------
 
     private String callGroq(List<Map<String, String>> messages) throws IOException {
+        boolean needsKey = requiresApiKey(endpoint);
+        if (needsKey && (apiKey == null || apiKey.isBlank()))
+            throw new IllegalStateException(
+                    "GROQ_API_KEY not found. Add it to your .env file: GROQ_API_KEY=your_key_here");
+
         String body = buildJson(messages);
-        HttpRequest req = HttpRequest.newBuilder()
-                .uri(URI.create(GROQ_URL))
+        HttpRequest.Builder b = HttpRequest.newBuilder()
+                .uri(URI.create(endpoint))
                 .header("Content-Type", "application/json")
-                .header("Authorization", "Bearer " + apiKey)
-                .POST(HttpRequest.BodyPublishers.ofString(body))
-                .build();
+                .POST(HttpRequest.BodyPublishers.ofString(body));
+        // A self-hosted server usually wants no key; send one only if we have it
+        // (vLLM's --api-key and friends accept the same header).
+        if (apiKey != null && !apiKey.isBlank()) b.header("Authorization", "Bearer " + apiKey);
+
         try {
-            HttpResponse<String> resp = http.send(req, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> resp = http.send(b.build(), HttpResponse.BodyHandlers.ofString());
             if (resp.statusCode() != 200)
-                throw new RuntimeException("Groq API error " + resp.statusCode() + ": " + resp.body());
+                throw new RuntimeException(
+                        "LLM API error " + resp.statusCode() + " from " + endpoint + ": " + resp.body());
             return parseContent(resp.body());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new IOException("Interrupted while calling Groq API", e);
+            throw new IOException("Interrupted while calling " + endpoint, e);
+        } catch (java.net.ConnectException e) {
+            throw new IOException(
+                    "Cannot reach the LLM endpoint " + endpoint +
+                    (needsKey ? "" : " — is the local model server running?"), e);
+        }
+    }
+
+    /** Only the hosted provider needs a key; anything self-served is assumed open. */
+    private static boolean requiresApiKey(String endpoint) {
+        try {
+            String host = URI.create(endpoint).getHost();
+            return host != null && host.endsWith("groq.com");
+        } catch (IllegalArgumentException e) {
+            return false;
         }
     }
 
@@ -542,18 +590,23 @@ public class LlmQuery {
     // .env / API key resolution
     // -------------------------------------------------------------------------
 
-    private static String resolveApiKey() {
-        String fromEnv = System.getenv("GROQ_API_KEY");
+    /** Environment first, then the nearest .env file; {@code null} if set in neither. */
+    private static String resolveSetting(String name) {
+        String fromEnv = System.getenv(name);
         if (fromEnv != null && !fromEnv.isBlank()) return fromEnv;
 
         Path envFile = findEnvFile();
         if (envFile != null) {
-            String key = parseEnvFile(envFile).get("GROQ_API_KEY");
-            if (key != null && !key.isBlank()) return key;
+            String val = parseEnvFile(envFile).get(name);
+            if (val != null && !val.isBlank()) return val;
         }
+        return null;
+    }
 
-        throw new IllegalStateException(
-                "GROQ_API_KEY not found. Add it to your .env file: GROQ_API_KEY=your_key_here");
+    /** LLM_ENDPOINT overrides the default Groq endpoint without touching code. */
+    private static String resolveEndpoint() {
+        String configured = resolveSetting("LLM_ENDPOINT");
+        return configured != null ? configured.strip() : DEFAULT_ENDPOINT;
     }
 
     private static Path findEnvFile() {
