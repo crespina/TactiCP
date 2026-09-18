@@ -136,10 +136,10 @@ public class Query {
                     cp.post(le(start(firstVar), total_start_max));
                 }
                 if (total_end_min != -1) {
-                    cp.post(ge(end(lastVar), total_end_min));
+                    cp.post(gt(end(lastVar), total_end_min)); //end is exclusive so > k means "last frame >= k"
                 }
                 if (total_end_max != -1) {
-                    cp.post(le(end(lastVar), total_end_max));
+                    cp.post(le(end(lastVar), total_end_max + 1));
                 }
             } catch (InconsistencyException e) {
                 //System.out.println("No solution found for instance " + instance.name);
@@ -334,13 +334,13 @@ public class Query {
             cp.post(ge(event_start, event_timeStartMin));
         }
         if (event_timeStartMax != -1) {
-            cp.post(le(event_end, event_timeStartMax));
+            cp.post(le(event_start, event_timeStartMax));
         }
         if (event_timeEndMin != -1) {
-            cp.post(ge(event_start, event_timeEndMin));
+            cp.post(gt(event_end, event_timeEndMin)); //end is exclusive so > k means "last frame >= k"
         }
         if (event_timeEndMax != -1) {
-            cp.post(le(event_end, event_timeEndMax));
+            cp.post(le(event_end, event_timeEndMax + 1));
         }
         if (event_durationMax != -1) {
             cp.post(le(length(eventInterval), event_durationMax));
@@ -422,6 +422,9 @@ public class Query {
 
         int zone_start = ((int[]) payload)[0];
         int zone_end = ((int[]) payload)[1];
+        if (zone_start == zone_end) {
+            throw new IllegalArgumentException("Cannot move from one zone to the same zone.");
+        }
 
         if (isNegated) {
             throw new IllegalArgumentException("Negation of BALL_MOVE_TO is not supported.");
@@ -433,7 +436,7 @@ public class Query {
                 int[] paddedArray = Automaton.pad(positionZones[ball_idx]);
                 cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADSTAR_BPLUS_PAD(teams.length, zone_start, zone_end)));
                 cp.post(eq(startOr(eventInterval, n), start(paddedInterval)));
-                cp.post(eq(endOr(eventInterval, 0), minus(end(paddedInterval), 3)));
+                cp.post(eq(endOr(eventInterval, 0), minus(end(paddedInterval), 2)));
             }
         }
 
@@ -457,7 +460,7 @@ public class Query {
                     }
                     cp.post(new SubstringRegular(ball_inside_circle, eventInterval, Automaton.APLUS(1, Set.of(1))));
                 }
-            } else {
+            } if (event_rectangle || total_rectangle) {
                 List<double[]> rectangles = new ArrayList<>();
                 if (event_rectangle)
                     rectangles.add(new double[]{event_xtop, event_ytop, event_w, event_h});
@@ -507,16 +510,15 @@ public class Query {
         }
 
         if (IDENTIFIERS.get(player_to.name()) == null) {
-            if (!isNegated) receiver_id = element(possession, endOr(eventInterval, 0));
+            if (!isNegated) receiver_id = element(possession, minus(endOr(eventInterval, 0), 1));
             for (CPIntVar v : IDENTIFIERS.values()) {
                 cp.post(neq(receiver_id, v));
             }
             IDENTIFIERS.put(player_to.name, receiver_id);
         } else {
             receiver_id = IDENTIFIERS.get(player_to.name);
-            if (!isNegated) cp.post(eq(receiver_id, element(possession, endOr(eventInterval, 0))));
+            if (!isNegated) cp.post(eq(receiver_id, element(possession, minus(endOr(eventInterval, 0), 1))));
         }
-
 
         ExtendedCPVar passer_id_ext = new ExtendedCPVar(
                 passer_id,
@@ -618,9 +620,9 @@ public class Query {
                 CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n + 1);
                 int[] paddedArray = Automaton.pad(possession);
                 //cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADSTAR_BPLUS_PAD(teams.length, passersIds, receiversIds)));
-                cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADPLUS_BPLUS_PAD(teams.length, passersIds, receiversIds)));
+                cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_0PLUS_BPLUS_PAD(teams.length, passersIds, receiversIds)));
                 cp.post(eq(start(eventInterval), start(paddedInterval)));
-                cp.post(eq(end(eventInterval), minus(end(paddedInterval), 3)));
+                cp.post(eq(end(eventInterval), minus(end(paddedInterval), 2)));
             }
         }
 
@@ -643,7 +645,7 @@ public class Query {
                     }
                     cp.post(new SubstringRegular(ball_inside_circle, eventInterval, Automaton.APLUS(teams.length, Set.of(1))));
                 }
-            } else {
+            } if (event_rectangle || total_rectangle) {
                 List<double[]> rectangles = new ArrayList<>();
                 if (event_rectangle)
                     rectangles.add(new double[]{event_xtop, event_ytop, event_w, event_h});
@@ -676,6 +678,9 @@ public class Query {
         int zone_start = ((int[]) payload)[0];
         int zone_end = ((int[]) payload)[1];
 
+        if (zone_start == zone_end) {
+            throw new IllegalArgumentException("Cannot move from one zone to the same zone.");
+        }
 
         Player player = (Player) subject;
 
@@ -737,7 +742,7 @@ public class Query {
                         int[] paddedArray = Automaton.pad(positionZones[pl_id]);
                         cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADSTAR_BPLUS_PAD(teams.length, zone_start, zone_end)));
                         cp.post(eq(start(thisPlayerTrueInterval), start(paddedInterval)));
-                        cp.post(eq(end(thisPlayerTrueInterval), minus(end(paddedInterval), 3)));
+                        cp.post(eq(end(thisPlayerTrueInterval), minus(end(paddedInterval), 2)));
                     }
                     //isThisPlayerVars[pl_id] = isEq(sum(isEq(player_id, pl_id), isEq(start(thisPlayerTrueInterval), start(eventInterval)), isEq(end(thisPlayerTrueInterval), end(eventInterval))), 3);
                     isThisPlayerVars[pl_id] = isEq(player_id, pl_id);
@@ -788,7 +793,7 @@ public class Query {
                     }
                     cp.post(new TrueInterval(pl_inside_circle, eventInterval));
                 }
-            } else {
+            } if (event_rectangle || total_rectangle) {
                 List<int[]> rectangles = new ArrayList<>();
                 if (event_rectangle)
                     rectangles.add(new int[]{event_xtop, event_ytop, event_w, event_h});
@@ -826,6 +831,10 @@ public class Query {
         int zone_start = zonesAndK[0];
         int zone_end = zonesAndK[1];
         int k = zonesAndK[2];
+
+        if (zone_start == zone_end) {
+            throw new IllegalArgumentException("Cannot move from one zone to the same zone.");
+        }
 
         Set<Integer> leftTeamIds = new HashSet<>();
         Set<Integer> rightTeamIds = new HashSet<>();
@@ -915,7 +924,7 @@ public class Query {
                             int[] paddedArray = Automaton.pad(positionZones[pl_id]);
                             cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADSTAR_BPLUS_PAD(teams.length, zone_start, zone_end)));
                             cp.post(eq(start(thisPlayerInterval), start(paddedInterval)));
-                            cp.post(eq(end(thisPlayerInterval), minus(end(paddedInterval), 3)));
+                            cp.post(eq(end(thisPlayerInterval), minus(end(paddedInterval), 2)));
                         }
                         isThisPlayerVars[pl_id] = isEq(sum(isEq(player_id, pl_id), isEq(startOr(chosenIntervals[teamPlayer], 0), start(thisPlayerInterval)), isEq(endOr(chosenIntervals[teamPlayer], n), end(thisPlayerInterval))), 3);
 
@@ -983,7 +992,7 @@ public class Query {
                         cp.post(new TrueInterval(pl_inside_circle, eventInterval));
                     }
                 }
-            } else {
+            } if (event_rectangle || total_rectangle) {
                 List<int[]> rectangles = new ArrayList<>();
                 if (event_rectangle)
                     rectangles.add(new int[]{event_xtop, event_ytop, event_w, event_h});
@@ -1079,7 +1088,7 @@ public class Query {
                         cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.NOTA_APLUS_NOTA(nbZones, Arrays.stream(zones).boxed().collect(Collectors.toSet()))));
                     }
                     cp.post(eq(start(thisPlayerTrueInterval), start(paddedInterval)));
-                    cp.post(eq(end(thisPlayerTrueInterval), minus(end(paddedInterval), 3)));
+                    cp.post(eq(end(thisPlayerTrueInterval), minus(end(paddedInterval), 2)));
 
                     isThisPlayerVars[pl_id] = isEq(player_id, pl_id);
                     cp.post(implies(isThisPlayerVars[pl_id], isEq(start(thisPlayerTrueInterval), start(eventInterval))));
@@ -1129,7 +1138,7 @@ public class Query {
                         }
                         cp.post(new TrueInterval(pl_inside_circle, eventInterval));
                     }
-                } else {
+                } if (event_rectangle || total_rectangle) {
                     List<int[]> rectangles = new ArrayList<>();
                     if (event_rectangle)
                         rectangles.add(new int[]{event_xtop, event_ytop, Math.abs(event_w), Math.abs(event_h)});
@@ -1250,7 +1259,7 @@ public class Query {
                             cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.NOTA_APLUS_NOTA(nbZones, Arrays.stream(zones).boxed().collect(Collectors.toSet()))));
                         }
                         cp.post(eq(start(thisPlayerInterval), start(paddedInterval)));
-                        cp.post(eq(end(thisPlayerInterval), minus(end(paddedInterval), 3)));
+                        cp.post(eq(end(thisPlayerInterval), minus(end(paddedInterval), 2)));
 
                         isThisPlayerVars[pl_id] = isEq(sum(isEq(player_id, pl_id), isEq(startOr(chosenIntervals[teamPlayer], 0), start(thisPlayerInterval)), isEq(endOr(chosenIntervals[teamPlayer], n), end(thisPlayerInterval))), 3);
 
@@ -1317,7 +1326,7 @@ public class Query {
                             cp.post(new TrueInterval(pl_inside_circle, eventInterval));
                         }
                     }
-                } else {
+                } if (event_rectangle || total_rectangle) {
                     List<int[]> rectangles = new ArrayList<>();
                     if (event_rectangle)
                         rectangles.add(new int[]{event_xtop, event_ytop, event_w, event_h});
@@ -1356,7 +1365,7 @@ public class Query {
                 cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.NOTA_APLUS_NOTA(nbZones, Arrays.stream(zones).boxed().collect(Collectors.toSet()))));
             }
             cp.post(eq(event_start, start(paddedInterval)));
-            cp.post(eq(event_end, minus(end(paddedInterval), 3)));
+            cp.post(eq(event_end, minus(end(paddedInterval), 2)));
 
             if (event_circle || event_rectangle || total_circle || total_rectangle) {
                 if (event_circle || total_circle) {
@@ -1376,7 +1385,7 @@ public class Query {
                         }
                         cp.post(new SubstringRegular(ball_inside_circle, eventInterval, Automaton.APLUS(1, Set.of(1))));
                     }
-                } else {
+                } if (event_rectangle || total_rectangle) {
                     List<double[]> rectangles = new ArrayList<>();
                     if (event_rectangle)
                         rectangles.add(new double[]{event_xtop, event_ytop, event_w, event_h});
@@ -1487,7 +1496,7 @@ public class Query {
 
             }
             cp.post(eq(event_start, start(paddedInterval)));
-            cp.post(eq(event_end, minus(end(paddedInterval), 3)));
+            cp.post(eq(event_end, minus(end(paddedInterval), 2)));
 
             // spatial constraints
             if (event_circle || event_rectangle || total_circle || total_rectangle) {
@@ -1507,7 +1516,7 @@ public class Query {
                         }
                         cp.post(new SubstringRegular(ball_inside_circle, eventInterval, Automaton.APLUS(teams.length, Set.of(1))));
                     }
-                } else {
+                } if (event_rectangle || total_rectangle) {
                     List<double[]> rectangles = new ArrayList<>();
                     if (event_rectangle)
                         rectangles.add(new double[]{event_xtop, event_ytop, event_w, event_h});
@@ -1571,13 +1580,13 @@ public class Query {
                             .collect(Collectors.toSet());
                     cp.post(new SubstringRegular(paddedPossession, paddedInterval, Automaton.NOTA_APLUS_NOTA(teams.length, complementIds)));
                     cp.post(eq(start(eventInterval), start(paddedInterval)));
-                    cp.post(eq(end(eventInterval), minus(end(paddedInterval), 3)));
+                    cp.post(eq(end(eventInterval), minus(end(paddedInterval), 2)));
                 } else {
                     CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n + 2);
                     int[] paddedPossession = Automaton.pad(possession);
                     cp.post(new SubstringRegular(paddedPossession, paddedInterval, Automaton.NOTA_APLUS_NOTA(teams.length, teamIds)));
                     cp.post(eq(start(eventInterval), start(paddedInterval)));
-                    cp.post(eq(end(eventInterval), minus(end(paddedInterval), 3)));
+                    cp.post(eq(end(eventInterval), minus(end(paddedInterval), 2)));
 
                 }
 
@@ -1650,7 +1659,7 @@ public class Query {
                                 cp.post(new SubstringRegular(paddedPossession, paddedInterval, Automaton.NOTA_APLUS_NOTA(teams.length, Set.of(pl_id))));
                             }
                             cp.post(eq(start(thisPlayerInterval), start(paddedInterval)));
-                            cp.post(eq(end(thisPlayerInterval), minus(end(paddedInterval), 3)));
+                            cp.post(eq(end(thisPlayerInterval), minus(end(paddedInterval), 2)));
 
                             isThisPlayerVars[pl_id] = isEq(sum(isEq(player_id, pl_id), isEq(startOr(chosenIntervals[teamPlayer], 0), start(thisPlayerInterval)), isEq(endOr(chosenIntervals[teamPlayer], n), end(thisPlayerInterval))), 3);
 
@@ -1727,7 +1736,7 @@ public class Query {
                             cp.post(new TrueInterval(pl_inside_circle, eventInterval));
                         }
                     }
-                } else {
+                } if (event_rectangle || total_rectangle) {
                     List<int[]> rectangles = new ArrayList<>();
                     if (event_rectangle)
                         rectangles.add(new int[]{event_xtop, event_ytop, event_w, event_h});

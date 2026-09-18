@@ -373,6 +373,67 @@ public class Automaton {
         return new Automaton(start, List.of(accept), res);
     }
 
+    //extended pass, one single passer and one single receiver
+    public static Automaton PAD_APLUS_0PLUS_BPLUS_PAD(int nPlayers, Set<Integer> As, Set<Integer> Bs) {
+        for (int x : As) {
+            if (x < 1 || x > nPlayers) throw new IllegalArgumentException("As contains out-of-range value: " + x);
+        }
+        for (int x : Bs) {
+            if (x < 1 || x > nPlayers) throw new IllegalArgumentException("Bs contains out-of-range value: " + x);
+        }
+
+        int inputs = nPlayers + 1;
+        // States:
+        //   0                          → start (the leading pad)
+        //   1                          → afterLead, waiting for the passer
+        //   2+a                        → A+ : passer 'a' holds the ball
+        //   2+nPlayers+a               → 0+ : ball in flight, passer was 'a'
+        //   2+2*nPlayers+b             → B+ : receiver 'b' holds the ball
+        //   3*nPlayers+3               → accept (the trailing pad)
+        // Unlike PAD_APLUS_PADPLUS_BPLUS_PAD the states remember *which* player, so
+        // the A+ and B+ blocks cannot absorb a run of several different players, and
+        // the middle block is strictly ball-free instead of "any symbol outside As ∪ Bs".
+        int states = 3 * nPlayers + 4;
+        int start = 0, afterLead = 1, accept = states - 1;
+
+        int[][] res = new int[states][inputs];
+        for (int i = 0; i < states; i++) Arrays.fill(res[i], -1);
+
+        // from start: any not in As (including 0) -> afterLead
+        for (int x = 0; x <= nPlayers; x++) {
+            if (!As.contains(x)) res[start][x] = afterLead;
+        }
+
+        // afterLead: the passer takes the ball
+        for (int a : As) {
+            res[afterLead][a] = 2 + a;
+        }
+
+        // A+ : only the same passer keeps the ball; 0 opens the flight
+        // (any other player stays -1: the ball changed hands, this is not that pass)
+        for (int a : As) {
+            res[2 + a][a] = 2 + a;
+            res[2 + a][0] = 2 + nPlayers + a;
+        }
+
+        // 0+ : ball-free frames loop; a receiver != a ends the flight
+        for (int a : As) {
+            res[2 + nPlayers + a][0] = 2 + nPlayers + a;
+            for (int b : Bs) {
+                if (b != a) res[2 + nPlayers + a][b] = 2 + 2 * nPlayers + b;
+            }
+        }
+
+        // B+ : only the same receiver keeps the ball; anything else is the trailing pad
+        for (int b : Bs) {
+            for (int x = 0; x <= nPlayers; x++) {
+                res[2 + 2 * nPlayers + b][x] = (x == b) ? 2 + 2 * nPlayers + b : accept;
+            }
+        }
+
+        return new Automaton(start, List.of(accept), res);
+    }
+
     //minimal pass excluding direct change of possession
     public static Automaton A_0PLUS_B(int nPlayers) {
         //n is the number of possible inputs excluding 0 (i.e. the number of players)

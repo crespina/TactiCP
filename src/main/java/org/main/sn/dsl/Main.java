@@ -22,24 +22,29 @@ public class Main {
 //
 //        SelectExpr movetoreel = SELECT(PLAYER("p1",2).MOVETO(4,10).MINRANGE()).FROM("SNGS-060");
 //        movetoreel.search();
-//061
+//
 //        SelectExpr s = SELECT(PLAYER("p2").PASSTO(PLAYER("p3")).MINRANGE()).FROM("SNGS-060");
 //
 //        Team t = TEAM("t1");
 //        SelectExpr ambig = SELECT(POSITION(t, 3, 7, 8)).FROM("SNGS-060");
-        SELECT(BALL().MOVETO(4, 1).MINRANGE()).FROM("all").WHERE(ATLEAST(2)).searchAndPrint();
+        //SELECT(BALL().MOVETO(4, 1).MINRANGE()).FROM("all").WHERE(ATLEAST(2)).searchAndPrint();
+        //SELECT(PLAYER("p1").PASSTO(PLAYER("p2")).WHERE(MAXDURATION(25)).MINRANGE()).FROM("SNGS-060").searchAndPrint();
+        //SELECT(PLAYER("p1","left").PASSTO(PLAYER("p2", "right")).MINRANGE()).FROM("all").searchAndPrint();
+        SELECT(PLAYER("p1","left").PASSTO(PLAYER("p2", "right"))).FROM("all").searchAndPrint();
+
+
 
         // Test passTo
         // -----------
-        SelectExpr x = SELECT(PLAYER("p1").PASSTO(PLAYER("p2")).MINRANGE()).FROM("SNGS-060"); //toutes les passes
-        System.out.println(x.COUNT());
-
-        long start = System.currentTimeMillis();
-        SelectExpr s1 = SELECT(PLAYER("p1").PASSTO(PLAYER("p2")).MINRANGE()).FROM("SNGS-060"); //toutes les passes
-        System.out.println(s1.COUNT());
-        long finish = System.currentTimeMillis();
-        long timeElapsed = finish - start;
-        System.out.println(timeElapsed);
+//        SelectExpr x = SELECT(PLAYER("p1").PASSTO(PLAYER("p2")).MINRANGE()).FROM("SNGS-060"); //toutes les passes
+//        System.out.println(x.COUNT());
+//
+//        long start = System.currentTimeMillis();
+//        SelectExpr s1 = SELECT(PLAYER("p1").PASSTO(PLAYER("p2")).MINRANGE()).FROM("SNGS-060"); //toutes les passes
+//        System.out.println(s1.COUNT());
+//        long finish = System.currentTimeMillis();
+//        long timeElapsed = finish - start;
+//        System.out.println(timeElapsed);
 //
 //
 //        System.out.println("-------------------");
