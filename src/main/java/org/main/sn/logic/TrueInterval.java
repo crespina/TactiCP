@@ -20,8 +20,6 @@ public class TrueInterval extends AbstractCPConstraint {
     private final StateInt up;
 
     private final CPIntervalVar interval;
-    private CPIntVar end;
-    private CPIntVar start;
 
 
     /**
@@ -44,43 +42,36 @@ public class TrueInterval extends AbstractCPConstraint {
 
     @Override
     public void post() {
+        // An absent interval covers no position, so there is nothing to enforce.
+        if (interval.isAbsent()) {
+            setActive(false);
+            return;
+        }
 
-        CPSolver cp = interval.getSolver();
         interval.setEndMax(t.length);
+        // the interval is non-empty (it used to be stated as start < end); this also keeps
+        // startMax below t.length, which the scans below index into
+        interval.setLengthMin(Math.max(1, interval.lengthMin()));
 
-        this.start = start(interval);
-        this.end = end(interval);
-        cp.post(lt(start, end));
-        // remove fixed false values in the domain of start & end
-
+        // trim the positions already known to be false off both ends of the window
         int sMin = interval.startMin();
-        int sMax = interval.startMax();
-
-        while (sMin <= sMax) {
-            if (t[sMin].isFalse()) {
-                start.remove(sMin);
-            } else {
-                break;
-            }
+        int sMax = Math.min(interval.startMax(), t.length - 1);
+        while (sMin <= sMax && t[sMin].isFalse()) {
             sMin++;
         }
         low.setValue(sMin);
 
-        int eMin = interval.endMin();
+        int eMin = Math.max(interval.endMin(), 1);
         int eMax = interval.endMax();
-
-        while (eMax >= eMin) {
-            if (t[eMax-1].isFalse()) {
-                end.remove(eMax);
-            } else {
-                break;
-            }
+        while (eMax >= eMin && t[eMax - 1].isFalse()) {
             eMax--;
         }
         up.setValue(eMax);
 
-        start.propagateOnDomainChange(this);
-        end.propagateOnDomainChange(this);
+        interval.setStartMin(sMin);
+        interval.setEndMax(eMax);
+
+        interval.propagateOnChange(this);
 
         for (CPBoolVar var : t) {
             if (!var.isFixed())
@@ -93,27 +84,36 @@ public class TrueInterval extends AbstractCPConstraint {
     @Override
     public void propagate() {
 
+        if (interval.isAbsent()) {
+            setActive(false);
+            return;
+        }
+
         // remove value at the edge of the domain
         int l = low.value();
         int u = up.value();
 
         while (l < u && t[l].isFalse()) {
-            start.removeBelow(l+1);
             l++;
         }
 
         while (l < u && t[u-1].isFalse()) {
-            end.removeAbove(u-1);
             u--;
         }
 
         low.setValue(l);
         up.setValue(u);
 
+        // Filtering the interval directly (rather than reified start/end variables, which
+        // CPFactory refuses to build for an optional interval) lets the engine turn an
+        // over-constrained optional interval into an absent one instead of failing.
+        interval.setStartMin(l);
+        interval.setEndMax(u);
+
         // if start and end are fixed, enforce truth in between
-        if (start.isFixed() && end.isFixed()) {
-            int s = start.min();
-            int e = end.min();
+        if (interval.startMin() == interval.startMax() && interval.endMin() == interval.endMax()) {
+            int s = interval.startMin();
+            int e = interval.endMin();
             for (int i = s; i < e; i++) {
                 t[i].fix(true);
             }

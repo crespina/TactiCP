@@ -22,6 +22,13 @@ import static org.maxicp.cp.CPFactory.*;
 
 public class Query {
 
+    private static final int ABSENT = 1;
+
+    private final Map<CPIntervalVar, CPIntVar> startVars = new IdentityHashMap<>();
+    private final Map<CPIntervalVar, CPIntVar> endVars = new IdentityHashMap<>();
+
+    private final Set<CPIntervalVar> mayBeAbsent = Collections.newSetFromMap(new IdentityHashMap<>());
+
     public List<Result> apply(SelectExpr seq) {
 
         CPSolver cp = makeSolver();
@@ -54,8 +61,15 @@ public class Query {
 
             ArrayList<ExtendedCPVar> extVars = new ArrayList<>();
             ArrayList<CPIntervalVar> intervals = new ArrayList<>();
+            ArrayList<CPIntervalVar> topIntervals = new ArrayList<>();
             AtomicInteger counterVars = new AtomicInteger(-1);
             AtomicInteger counterEvent = new AtomicInteger(0);
+
+            startVars.clear();
+            endVars.clear();
+            identityOwner.clear();
+            mayBeAbsent.clear();
+            alwaysPresentIdentities.clear();
 
             try {
                 int[] teams = instance.teams;
@@ -73,18 +87,21 @@ public class Query {
                 Map<Integer, GameStateReconstructionInstance.FrameData> frameData = instance.positions;
 
                 for (Event event : steps) {
-                    if (event instanceof AndEvent andEvent) {//TODO: only one interval for the AND
+                    if (event instanceof AndEvent andEvent) {
                         intervals.add(makeIntervalVar(cp, false, 0, n + 1)); //the whole AndEvent
+                        topIntervals.add(intervals.getLast());
                         for (Event child : andEvent.children()) {
                             intervals.add(makeIntervalVar(cp, false, 0, n + 1));
                         }
                     } else if (event instanceof OrEvent orEvent) {
                         intervals.add(makeIntervalVar(cp, false,0, n + 1)); //the whole OrEvent
+                        topIntervals.add(intervals.getLast());
                         for (Event child : orEvent.children()) {
-                            intervals.add(makeIntervalVar(cp, 0, n + 1));
+                            intervals.add(makeOptionalInterval(cp, 0, n + 1));
                         }
                     } else {
                         intervals.add(makeIntervalVar(cp, false, 0, n + 1));
+                        topIntervals.add(intervals.getLast());
                     }
                 }
 
@@ -104,42 +121,69 @@ public class Query {
 
                 }
 
+                CPIntervalVar prevTopInterval = null;
                 for (Event event : steps) {
                     CPIntervalVar event_interval = intervals.get(counterEvent.get());
-                    CPIntVar event_start = start(event_interval);
-                    CPIntVar event_end = end(event_interval);
+                    CPIntVar event_start = startOf(event_interval);
+                    CPIntVar event_end = endOf(event_interval);
                     cp.post(gt(minus(event_end, 1), event_start)); //because end non inclusive
 
-                    modelEvent(event, cp, counterEvent, event_interval, event_start, event_end, ball_idx, n, positionZones, positionBox_x,
+                    modelEvent(event, cp, counterEvent, event_interval, event_start, event_end, prevTopInterval, ball_idx, n, positionZones, positionBox_x,
                             positionBox_y, total_circle, extVars, intervals, total_rectangle, counterVars, teams,
                             IDENTIFIERS, total_xcenter, possession, total_ycenter, total_radius, total_xtop, total_ytop,
                             total_w, total_h, nbZones);
+                    prevTopInterval = event_interval;
                 }
 
                 //AllDifferent on playersID
-                if (!IDENTIFIERS.isEmpty()) cp.post(allDifferent(IDENTIFIERS.values().toArray(CPIntVar[]::new)));
+                List<CPIntVar> alwaysPresent = new ArrayList<>();
+                List<String> branchLocal = new ArrayList<>();
+                for (Map.Entry<String, CPIntVar> identity : IDENTIFIERS.entrySet()) {
+                    CPIntervalVar owner = identityOwner.get(identity.getKey());
+                    if (owner != null && mayBeAbsent.contains(owner) && !alwaysPresentIdentities.contains(identity.getKey())) branchLocal.add(identity.getKey());
+                    else alwaysPresent.add(identity.getValue());
+                }
+
+                if (!alwaysPresent.isEmpty()) cp.post(allDifferent(alwaysPresent.toArray(CPIntVar[]::new)));
+
+                for (int a = 0; a < branchLocal.size(); a++) {
+                    CPIntVar va = IDENTIFIERS.get(branchLocal.get(a));
+                    CPIntervalVar oa = identityOwner.get(branchLocal.get(a));
+                    for (CPIntVar vb : alwaysPresent) {
+                        postDistinctWhenBothPresent(cp, oa, null, va, vb);
+                    }
+                    for (int b = a + 1; b < branchLocal.size(); b++) {
+                        postDistinctWhenBothPresent(cp, oa, identityOwner.get(branchLocal.get(b)),
+                                va, IDENTIFIERS.get(branchLocal.get(b)));
+                    }
+                }
+
+                for (String name : branchLocal) {
+                    CPIntVar identity = IDENTIFIERS.get(name);
+                    cp.post(implies(not(identityOwner.get(name).status()), isEq(identity, identity.min())));
+                }
 
                 //total duration
-                CPIntervalVar lastVar = intervals.getLast();
-                CPIntervalVar firstVar = intervals.getFirst();
+                CPIntervalVar lastVar = topIntervals.getLast();
+                CPIntervalVar firstVar = topIntervals.getFirst();
 
                 if (total_max_duration != -1) {
-                    cp.post(le(sum(end(lastVar), minus(start(firstVar))), total_max_duration));
+                    cp.post(le(sum(endOf(lastVar), minus(startOf(firstVar))), total_max_duration));
                 }
                 if (total_min_duration != -1) {
-                    cp.post(ge(sum(end(lastVar), minus(start(firstVar))), total_min_duration));
+                    cp.post(ge(sum(endOf(lastVar), minus(startOf(firstVar))), total_min_duration));
                 }
                 if (total_start_min != -1) {
-                    cp.post(ge(start(firstVar), total_start_min));
+                    cp.post(ge(startOf(firstVar), total_start_min));
                 }
                 if (total_start_max != -1) {
-                    cp.post(le(start(firstVar), total_start_max));
+                    cp.post(le(startOf(firstVar), total_start_max));
                 }
                 if (total_end_min != -1) {
-                    cp.post(gt(end(lastVar), total_end_min)); //end is exclusive so > k means "last frame >= k"
+                    cp.post(gt(endOf(lastVar), total_end_min)); //end is exclusive so > k means "last frame >= k"
                 }
                 if (total_end_max != -1) {
-                    cp.post(le(end(lastVar), total_end_max + 1));
+                    cp.post(le(endOf(lastVar), total_end_max + 1));
                 }
             } catch (InconsistencyException e) {
                 //System.out.println("No solution found for instance " + instance.name);
@@ -150,11 +194,12 @@ public class Query {
             // SEARCH
             // ******
 
-
             DFSearch search = makeDfs(cp, Searches.firstFailBinary(
                     Stream.concat(
                             IDENTIFIERS.values().stream(),
-                            intervals.stream().flatMap(itv -> Stream.of(start(itv), end(itv)))
+                            intervals.stream().flatMap(itv -> mayBeAbsent.contains(itv)
+                                    ? Stream.<CPIntVar>of(itv.status(), startOf(itv), endOf(itv))
+                                    : Stream.<CPIntVar>of(startOf(itv), endOf(itv)))
                     ).toArray(CPIntVar[]::new)));
             AtomicInteger solutionCounter = new AtomicInteger(0);
 
@@ -190,6 +235,7 @@ public class Query {
 
 
     private void modelEvent(Event event, CPSolver cp, AtomicInteger counterEvent, CPIntervalVar event_interval, CPIntVar event_start, CPIntVar event_end,
+                            CPIntervalVar prevTopInterval,
                             int ball_idx, int n, int[][] positionZones, int[][] positionBox_x,
                             int[][] positionBox_y, boolean total_circle, ArrayList<ExtendedCPVar> extVars, ArrayList<CPIntervalVar> intervals,
                             boolean total_rectangle, AtomicInteger counterVars, int[] teams,
@@ -217,12 +263,12 @@ public class Query {
 
             for (Event children : andEvent.children()) {
                 CPIntervalVar childInterval = intervals.get(counterEvent.get());
-                childrenStarts[childIdx] = start(childInterval);
+                childrenStarts[childIdx] = startOf(childInterval);
                 childrenStarts[childIdx].removeAbove(n + 1);
-                childrenEnds[childIdx] = end(childInterval);
+                childrenEnds[childIdx] = endOf(childInterval);
                 childrenEnds[childIdx].removeAbove(n + 1);
 
-                executeStep(children, cp, counterEvent, childInterval, childrenStarts[childIdx], childrenEnds[childIdx], ball_idx, n,
+                executeStep(children, cp, counterEvent, childInterval, childrenStarts[childIdx], childrenEnds[childIdx], null, ball_idx, n,
                         positionZones, positionBox_x, positionBox_y, total_circle, extVars, intervals, total_rectangle,
                         counterVars, teams, IDENTIFIERS, total_xcenter, possession, total_ycenter,
                         total_radius, total_xtop, total_ytop, total_w, total_h, true, childIdx, andEvent.children().size(), nbZones);
@@ -254,32 +300,34 @@ public class Query {
             CPBoolVar[] statuses = new CPBoolVar[orEvent.children().size()];
             for (Event children : orEvent.children()) {
                 CPIntervalVar childInterval = intervals.get(counterEvent.get());
-                childrenStarts[childIdx] = startOr(childInterval, n);
+                childrenStarts[childIdx] = startOr(childInterval, n+1);
                 childrenStarts[childIdx].removeAbove(n + 1);
                 childrenEnds[childIdx] = endOr(childInterval, 0);
                 childrenEnds[childIdx].removeAbove(n + 1);
                 statuses[childIdx] = childInterval.status();
 
-                executeStep(children, cp, counterEvent, childInterval, childrenStarts[childIdx], childrenEnds[childIdx], ball_idx, n,
-                        positionZones, positionBox_x, positionBox_y, total_circle, extVars, intervals, total_rectangle,
-                        counterVars, teams, IDENTIFIERS, total_xcenter, possession, total_ycenter,
-                        total_radius, total_xtop, total_ytop, total_w, total_h, true, childIdx, orEvent.children().size(), nbZones);
+                // a branch that cannot hold in this game is switched off, not fatal.
+                int childEventIdx = counterEvent.get();
+                try {
+                    executeStep(children, cp, counterEvent, childInterval, startOf(childInterval), endOf(childInterval), null, ball_idx, n,
+                            positionZones, positionBox_x, positionBox_y, total_circle, extVars, intervals, total_rectangle,
+                            counterVars, teams, IDENTIFIERS, total_xcenter, possession, total_ycenter,
+                            total_radius, total_xtop, total_ytop, total_w, total_h, true, childIdx, orEvent.children().size(), nbZones);
+                } catch (InconsistencyException e) {
+                    childInterval.setAbsent();
+                    counterEvent.set(childEventIdx + 1); //executeStep did not reach its own increment
+                }
 
                 childIdx++;
             }
 
-            cp.post(ge(sum(statuses), 1));
+            cp.post(eq(sum(statuses), 1));
 
-            //define the interval of the OR event
-//            if (orEvent.isNegated) {
-//                cp.post(eq(event_start, max(childrenStarts)));
-//                cp.post(eq(event_end, minimum(childrenEnds)));
-//            } else {
             cp.post(eq(event_start, minimum(childrenStarts)));
             cp.post(eq(event_end, max(childrenEnds)));
-//            }
+
         } else {
-            executeStep(event, cp, counterEvent, event_interval, event_start, event_end, ball_idx, n,
+            executeStep(event, cp, counterEvent, event_interval, event_start, event_end, prevTopInterval, ball_idx, n,
                     positionZones, positionBox_x, positionBox_y, total_circle, extVars, intervals, total_rectangle,
                     counterVars, teams, IDENTIFIERS, total_xcenter, possession, total_ycenter,
                     total_radius, total_xtop, total_ytop, total_w, total_h, false, 0, 0, nbZones);
@@ -288,6 +336,7 @@ public class Query {
 
 
     private void executeStep(Event event, CPSolver cp, AtomicInteger counterEvent, CPIntervalVar eventInterval, CPIntVar event_start, CPIntVar event_end,
+                             CPIntervalVar prevTopInterval,
                              int ball_idx, int n, int[][] positionZones, int[][] positionBox_x,
                              int[][] positionBox_y, boolean total_circle, ArrayList<ExtendedCPVar> extVars, ArrayList<CPIntervalVar> intervals,
                              boolean total_rectangle, AtomicInteger counterVars,
@@ -326,27 +375,27 @@ public class Query {
 
         extVars.add(event_interval_ext);
 
-        if (counterEvent.get() != 0 && !isAndEvent) {
-            cp.post(endBeforeStart(intervals.get(counterEvent.get() - 1), eventInterval, 1));
+        if (prevTopInterval != null && !isAndEvent) {
+            cp.post(endBeforeStart(prevTopInterval, eventInterval, 1));
         }
 
         if (event_timeStartMin != -1) {
-            cp.post(ge(event_start, event_timeStartMin));
+            eventInterval.setStartMin(event_timeStartMin);
         }
         if (event_timeStartMax != -1) {
-            cp.post(le(event_start, event_timeStartMax));
+            eventInterval.setStartMax(event_timeStartMax);
         }
         if (event_timeEndMin != -1) {
-            cp.post(gt(event_end, event_timeEndMin)); //end is exclusive so > k means "last frame >= k"
+            eventInterval.setEndMin(event_timeEndMin + 1); //end is exclusive so > k means "last frame >= k"
         }
         if (event_timeEndMax != -1) {
-            cp.post(le(event_end, event_timeEndMax + 1));
+            eventInterval.setEndMax(event_timeEndMax + 1);
         }
         if (event_durationMax != -1) {
-            cp.post(le(length(eventInterval), event_durationMax));
+            eventInterval.setLengthMax(event_durationMax);
         }
         if (event_durationMin != -1) {
-            cp.post(ge(length(eventInterval), event_durationMin));
+            eventInterval.setLengthMin(event_durationMin);
         }
 
         switch (action.name) {
@@ -432,11 +481,10 @@ public class Query {
             if (minrange) {
                 cp.post(new SubstringRegular(positionZones[ball_idx], eventInterval, Automaton.A_NOTBSTAR_B(teams.length, zone_start, zone_end)));
             } else {
-                CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n + 1);
+                CPIntervalVar paddedInterval = paddedFor(cp, eventInterval, n + 1);
                 int[] paddedArray = Automaton.pad(positionZones[ball_idx]);
                 cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADSTAR_BPLUS_PAD(teams.length, zone_start, zone_end)));
-                cp.post(eq(startOr(eventInterval, n), start(paddedInterval)));
-                cp.post(eq(endOr(eventInterval, 0), minus(end(paddedInterval), 2)));
+                linkPadded(cp, eventInterval, paddedInterval);
             }
         }
 
@@ -497,27 +545,28 @@ public class Query {
         CPIntVar passer_id = makeIntVar(cp, teams.length);
         CPIntVar receiver_id = makeIntVar(cp, teams.length);
 
+        // possession at the first and last frame of the event; ABSENT keeps these in range when the
+        // interval is an OR branch that is switched off, and every use of them is guarded below
+        CPIntVar possessionAtStart = element(possession, startOf(eventInterval));
+        CPIntVar possessionAtEnd = element(possession, minus(endOf(eventInterval), 1));
+
         if (IDENTIFIERS.get(player_from.name()) == null) {
-            if (!isNegated) passer_id = element(possession, startOr(eventInterval, n));
-            for (CPIntVar v : IDENTIFIERS.values()) {
-                cp.post(neq(passer_id, v));
-            }
-            IDENTIFIERS.put(player_from.name, passer_id);
+            if (!isNegated) passer_id = boundWhenPresent(cp, eventInterval, possessionAtStart, teams.length);
+            rememberIdentity(IDENTIFIERS, player_from.name, passer_id, eventInterval);
         } else {
             passer_id = IDENTIFIERS.get(player_from.name);
-            if (!isNegated) cp.post(eq(passer_id, element(possession, startOr(eventInterval, n))));
+            noteIdentityUse(player_from.name, eventInterval);
+            if (!isNegated) postWhenPresent(cp, eventInterval, isEq(passer_id, possessionAtStart));
 
         }
 
         if (IDENTIFIERS.get(player_to.name()) == null) {
-            if (!isNegated) receiver_id = element(possession, minus(endOr(eventInterval, 0), 1));
-            for (CPIntVar v : IDENTIFIERS.values()) {
-                cp.post(neq(receiver_id, v));
-            }
-            IDENTIFIERS.put(player_to.name, receiver_id);
+            if (!isNegated) receiver_id = boundWhenPresent(cp, eventInterval, possessionAtEnd, teams.length);
+            rememberIdentity(IDENTIFIERS, player_to.name, receiver_id, eventInterval);
         } else {
             receiver_id = IDENTIFIERS.get(player_to.name);
-            if (!isNegated) cp.post(eq(receiver_id, element(possession, minus(endOr(eventInterval, 0), 1))));
+            noteIdentityUse(player_to.name, eventInterval);
+            if (!isNegated) postWhenPresent(cp, eventInterval, isEq(receiver_id, possessionAtEnd));
         }
 
         ExtendedCPVar passer_id_ext = new ExtendedCPVar(
@@ -550,7 +599,7 @@ public class Query {
 
         if (player_from.id() != null) {
             passersIds.add(player_from.id());
-            cp.post(eq(passer_id, player_from.id()));
+            postWhenPresent(cp, eventInterval, isEq(passer_id, player_from.id()));
         } else if (player_from.team() != null) {
             int team = player_from.team().equals("left") ? 0 : 1;
             for (int i = 0; i < teams.length; i++) {
@@ -568,7 +617,7 @@ public class Query {
 
         if (player_to.id() != null) {
             receiversIds.add(player_to.id());
-            cp.post(eq(receiver_id, player_to.id()));
+            postWhenPresent(cp, eventInterval, isEq(receiver_id, player_to.id()));
         } else if (player_to.team() != null) {
             int team = player_to.team().equals("left") ? 0 : 1;
             for (int i = 0; i < teams.length; i++) {
@@ -606,8 +655,8 @@ public class Query {
         CPBoolVar passerIsRight = isEq(sum(isPasserRight), 1);
         CPBoolVar receiverIsRight = isEq(sum(isReceiverRight), 1);
 
-        cp.post(eq(passerIsRight, receiverIsRight));
-        cp.post(eq(passerIsLeft, receiverIsLeft));
+        postWhenPresent(cp, eventInterval, isEq(passerIsRight, receiverIsRight));
+        postWhenPresent(cp, eventInterval, isEq(passerIsLeft, receiverIsLeft));
 
 
         if (isNegated) {
@@ -617,12 +666,11 @@ public class Query {
                 //cp.post(new SubstringRegular(possession, eventInterval, Automaton.A_0STAR_B(teams.length, passersIds, receiversIds)));
                 cp.post(new SubstringRegular(possession, eventInterval, Automaton.A_0PLUS_B(teams.length, passersIds, receiversIds)));
             } else {
-                CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n + 1);
+                CPIntervalVar paddedInterval = paddedFor(cp, eventInterval, n + 1);
                 int[] paddedArray = Automaton.pad(possession);
                 //cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADSTAR_BPLUS_PAD(teams.length, passersIds, receiversIds)));
                 cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_0PLUS_BPLUS_PAD(teams.length, passersIds, receiversIds)));
-                cp.post(eq(start(eventInterval), start(paddedInterval)));
-                cp.post(eq(end(eventInterval), minus(end(paddedInterval), 2)));
+                linkPadded(cp, eventInterval, paddedInterval);
             }
         }
 
@@ -687,12 +735,10 @@ public class Query {
         CPIntVar player_id = makeIntVar(cp, teams.length);
 
         if (IDENTIFIERS.get(player.name()) == null) {
-            for (CPIntVar v : IDENTIFIERS.values()) {
-                cp.post(neq(player_id, v));
-            }
-            IDENTIFIERS.put(player.name, player_id);
+            rememberIdentity(IDENTIFIERS, player.name, player_id, eventInterval);
         } else {
             player_id = IDENTIFIERS.get(player.name);
+            noteIdentityUse(player.name, eventInterval);
         }
 
 
@@ -746,15 +792,18 @@ public class Query {
                     }
                     //isThisPlayerVars[pl_id] = isEq(sum(isEq(player_id, pl_id), isEq(start(thisPlayerTrueInterval), start(eventInterval)), isEq(end(thisPlayerTrueInterval), end(eventInterval))), 3);
                     isThisPlayerVars[pl_id] = isEq(player_id, pl_id);
-                    cp.post(implies(isThisPlayerVars[pl_id], isEq(start(thisPlayerTrueInterval), start(eventInterval))));
-                    cp.post(implies(isThisPlayerVars[pl_id], isEq(end(thisPlayerTrueInterval), end(eventInterval))));
+                    impliesWhenPresent(cp, eventInterval, isThisPlayerVars[pl_id],
+                            isEq(start(thisPlayerTrueInterval), startOf(eventInterval)));
+                    impliesWhenPresent(cp, eventInterval, isThisPlayerVars[pl_id],
+                            isEq(end(thisPlayerTrueInterval), endOf(eventInterval)));
 
                 } catch (InconsistencyException e) {
                     isThisPlayerVars[pl_id] = makeBoolVar(cp);
                     isThisPlayerVars[pl_id].fix(false);
                 }
             }
-            cp.post(eq(sum(Arrays.stream(isThisPlayerVars)
+            // exactly one candidate player realises the event -- but only if the event happens at all
+            postWhenPresent(cp, eventInterval, isEq(sum(Arrays.stream(isThisPlayerVars)
                     .filter(Objects::nonNull)
                     .toArray(CPBoolVar[]::new)), 1));
         }
@@ -866,16 +915,14 @@ public class Query {
             for (Player player : team.players()) {
 
                 CPIntVar player_id;
-                chosenIntervals[teamPlayer] = makeIntervalVar(cp, 0, n + 1);
+                chosenIntervals[teamPlayer] = makeOptionalInterval(cp, 0, n + 1);
 
                 if (IDENTIFIERS.get(player.name()) == null) {
                     player_id = makeIntVar(cp, teams.length);
-                    for (CPIntVar v : IDENTIFIERS.values()) {
-                        cp.post(neq(player_id, v));
-                    }
-                    IDENTIFIERS.put(player.name, player_id);
+                    rememberIdentity(IDENTIFIERS, player.name, player_id, eventInterval);
                 } else {
                     player_id = IDENTIFIERS.get(player.name);
+                    noteIdentityUse(player.name, eventInterval);
                 }
                 playerIds[teamPlayer] = player_id;
                 ExtendedCPVar player_id_ext = new ExtendedCPVar(
@@ -934,18 +981,18 @@ public class Query {
                     }
                 }
 
-                cp.post(eq(sum(Arrays.stream(isThisPlayerVars)
+                postWhenPresent(cp, eventInterval, isEq(sum(Arrays.stream(isThisPlayerVars)
                         .filter(Objects::nonNull)
                         .toArray(CPBoolVar[]::new)), 1));
                 teamPlayer++;
             }
 
-            cp.post(ge(sum(Arrays.stream(chosenIntervals).map(CPIntervalVar::status).toArray(CPIntVar[]::new)), k));
+            postWhenPresent(cp, eventInterval, isGe(sum(Arrays.stream(chosenIntervals).map(CPIntervalVar::status).toArray(CPIntVar[]::new)), k));
 
             CPIntVar[] starts = Arrays.stream(chosenIntervals).map(itv -> startOr(itv, 0)).toArray(CPIntVar[]::new);
-            cp.post(eq(event_start, max(starts)));
+            postWhenPresent(cp, eventInterval, isEq(event_start, max(starts)));
             CPIntVar[] ends = Arrays.stream(chosenIntervals).map(itv -> endOr(itv, n)).toArray(CPIntVar[]::new);
-            cp.post(eq(event_end, minimum(ends)));
+            postWhenPresent(cp, eventInterval, isEq(event_end, minimum(ends)));
 
         }
 
@@ -1032,12 +1079,10 @@ public class Query {
             CPIntVar player_id = makeIntVar(cp, teams.length);
 
             if (IDENTIFIERS.get(player.name()) == null) {
-                for (CPIntVar v : IDENTIFIERS.values()) {
-                    cp.post(neq(player_id, v));
-                }
-                IDENTIFIERS.put(player.name, player_id);
+                rememberIdentity(IDENTIFIERS, player.name, player_id, eventInterval);
             } else {
                 player_id = IDENTIFIERS.get(player.name);
+                noteIdentityUse(player.name, eventInterval);
             }
 
             ExtendedCPVar player_id_ext = new ExtendedCPVar(
@@ -1091,15 +1136,17 @@ public class Query {
                     cp.post(eq(end(thisPlayerTrueInterval), minus(end(paddedInterval), 2)));
 
                     isThisPlayerVars[pl_id] = isEq(player_id, pl_id);
-                    cp.post(implies(isThisPlayerVars[pl_id], isEq(start(thisPlayerTrueInterval), start(eventInterval))));
-                    cp.post(implies(isThisPlayerVars[pl_id], isEq(end(thisPlayerTrueInterval), end(eventInterval))));
+                    impliesWhenPresent(cp, eventInterval, isThisPlayerVars[pl_id],
+                            isEq(start(thisPlayerTrueInterval), startOf(eventInterval)));
+                    impliesWhenPresent(cp, eventInterval, isThisPlayerVars[pl_id],
+                            isEq(end(thisPlayerTrueInterval), endOf(eventInterval)));
 
                 } catch (InconsistencyException e) {
                     isThisPlayerVars[pl_id] = makeBoolVar(cp);
                     isThisPlayerVars[pl_id].fix(false);
                 }
             }
-            cp.post(eq(sum(Arrays.stream(isThisPlayerVars)
+            postWhenPresent(cp, eventInterval, isEq(sum(Arrays.stream(isThisPlayerVars)
                     .filter(Objects::nonNull)
                     .toArray(CPBoolVar[]::new)), 1));
 
@@ -1194,16 +1241,14 @@ public class Query {
             for (Player player : team.players()) {
 
                 CPIntVar player_id;
-                chosenIntervals[teamPlayer] = makeIntervalVar(cp, 0, n + 1);
+                chosenIntervals[teamPlayer] = makeOptionalInterval(cp, 0, n + 1);
 
                 if (IDENTIFIERS.get(player.name()) == null) {
                     player_id = makeIntVar(cp, teams.length);
-                    for (CPIntVar v : IDENTIFIERS.values()) {
-                        cp.post(neq(player_id, v));
-                    }
-                    IDENTIFIERS.put(player.name, player_id);
+                    rememberIdentity(IDENTIFIERS, player.name, player_id, eventInterval);
                 } else {
                     player_id = IDENTIFIERS.get(player.name);
+                    noteIdentityUse(player.name, eventInterval);
                 }
                 playerIds[teamPlayer] = player_id;
                 ExtendedCPVar player_id_ext = new ExtendedCPVar(
@@ -1269,18 +1314,18 @@ public class Query {
                     }
                 }
 
-                cp.post(eq(sum(Arrays.stream(isThisPlayerVars)
+                postWhenPresent(cp, eventInterval, isEq(sum(Arrays.stream(isThisPlayerVars)
                         .filter(Objects::nonNull)
                         .toArray(CPBoolVar[]::new)), 1));
                 teamPlayer++;
             }
 
-            cp.post(ge(sum(Arrays.stream(chosenIntervals).map(CPIntervalVar::status).toArray(CPIntVar[]::new)), k));
+            postWhenPresent(cp, eventInterval, isGe(sum(Arrays.stream(chosenIntervals).map(CPIntervalVar::status).toArray(CPIntVar[]::new)), k));
 
             CPIntVar[] starts = Arrays.stream(chosenIntervals).map(itv -> startOr(itv, 0)).toArray(CPIntVar[]::new);
-            cp.post(eq(event_start, max(starts)));
+            postWhenPresent(cp, eventInterval, isEq(event_start, max(starts)));
             CPIntVar[] ends = Arrays.stream(chosenIntervals).map(itv -> endOr(itv, n)).toArray(CPIntVar[]::new);
-            cp.post(eq(event_end, minimum(ends)));
+            postWhenPresent(cp, eventInterval, isEq(event_end, minimum(ends)));
 
 
             // spatial constraints
@@ -1353,7 +1398,7 @@ public class Query {
             if (zones.length == 0) {
                 throw new IllegalArgumentException("At least one zone must be specified for POSITION of the ball");
             }
-            CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n + 2);
+            CPIntervalVar paddedInterval = paddedFor(cp, eventInterval, n + 2);
             if (isNegated) {
                 int[] paddedArray = Automaton.pad(positionZones[ball_idx], zones[0]);
                 int[] otherZones = java.util.stream.IntStream.rangeClosed(0, nbZones)
@@ -1364,8 +1409,7 @@ public class Query {
                 int[] paddedArray = Automaton.pad(positionZones[ball_idx]);
                 cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.NOTA_APLUS_NOTA(nbZones, Arrays.stream(zones).boxed().collect(Collectors.toSet()))));
             }
-            cp.post(eq(event_start, start(paddedInterval)));
-            cp.post(eq(event_end, minus(end(paddedInterval), 2)));
+            linkPadded(cp, eventInterval, paddedInterval);
 
             if (event_circle || event_rectangle || total_circle || total_rectangle) {
                 if (event_circle || total_circle) {
@@ -1431,15 +1475,15 @@ public class Query {
 
             CPIntVar player_id = makeIntVar(cp, teams.length);
 
+            CPIntVar possessionAtStart = element(possession, startOf(eventInterval));
+
             if (IDENTIFIERS.get(player.name()) == null) {
-                if (!isNegated) player_id = element(possession, start(eventInterval));
-                for (CPIntVar v : IDENTIFIERS.values()) {
-                    cp.post(neq(player_id, v));
-                }
-                IDENTIFIERS.put(player.name, player_id);
+                if (!isNegated) player_id = boundWhenPresent(cp, eventInterval, possessionAtStart, teams.length);
+                rememberIdentity(IDENTIFIERS, player.name, player_id, eventInterval);
             } else {
                 player_id = IDENTIFIERS.get(player.name);
-                if (!isNegated) cp.post(eq(player_id, element(possession, start(eventInterval))));
+                noteIdentityUse(player.name, eventInterval);
+                if (!isNegated) postWhenPresent(cp, eventInterval, isEq(player_id, possessionAtStart));
             }
 
             ExtendedCPVar player_id_ext = new ExtendedCPVar(
@@ -1457,7 +1501,7 @@ public class Query {
 
             if (player.id() != null) {
                 validIds.add(player.id());
-                cp.post(eq(player_id, player.id()));
+                postWhenPresent(cp, eventInterval, isEq(player_id, player.id()));
             } else if (player.team() != null) {
                 if (player.team().equals("left")) {
                     for (int i : leftTeamIds) {
@@ -1482,7 +1526,7 @@ public class Query {
                 }
             }
 
-            CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n + 2);
+            CPIntervalVar paddedInterval = paddedFor(cp, eventInterval, n + 2);
             if (isNegated) {
                 int[] paddedPossession = Automaton.pad(possession, validIds.iterator().next());
                 Set<Integer> allPossessionValues = Arrays.stream(possession).boxed().collect(Collectors.toSet());
@@ -1495,8 +1539,7 @@ public class Query {
                 cp.post(new SubstringRegular(paddedPossession, paddedInterval, Automaton.NOTA_APLUS_NOTA(teams.length, validIds)));
 
             }
-            cp.post(eq(event_start, start(paddedInterval)));
-            cp.post(eq(event_end, minus(end(paddedInterval), 2)));
+            linkPadded(cp, eventInterval, paddedInterval);
 
             // spatial constraints
             if (event_circle || event_rectangle || total_circle || total_rectangle) {
@@ -1572,21 +1615,19 @@ public class Query {
                 Set<Integer> teamIds = team.players.stream().map(Player::id).collect(Collectors.toSet());
 
                 if (isNegated) {
-                    CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n + 2);
+                    CPIntervalVar paddedInterval = paddedFor(cp, eventInterval, n + 2);
                     int[] paddedPossession = Automaton.pad(possession, teamIds.iterator().next());
                     Set<Integer> allPossessionValues = Arrays.stream(possession).boxed().collect(Collectors.toSet());
                     Set<Integer> complementIds = allPossessionValues.stream()
                             .filter(v -> !teamIds.contains(v))
                             .collect(Collectors.toSet());
                     cp.post(new SubstringRegular(paddedPossession, paddedInterval, Automaton.NOTA_APLUS_NOTA(teams.length, complementIds)));
-                    cp.post(eq(start(eventInterval), start(paddedInterval)));
-                    cp.post(eq(end(eventInterval), minus(end(paddedInterval), 2)));
+                    linkPadded(cp, eventInterval, paddedInterval);
                 } else {
-                    CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n + 2);
+                    CPIntervalVar paddedInterval = paddedFor(cp, eventInterval, n + 2);
                     int[] paddedPossession = Automaton.pad(possession);
                     cp.post(new SubstringRegular(paddedPossession, paddedInterval, Automaton.NOTA_APLUS_NOTA(teams.length, teamIds)));
-                    cp.post(eq(start(eventInterval), start(paddedInterval)));
-                    cp.post(eq(end(eventInterval), minus(end(paddedInterval), 2)));
+                    linkPadded(cp, eventInterval, paddedInterval);
 
                 }
 
@@ -1595,16 +1636,14 @@ public class Query {
                 for (Player player : team.players()) {
 
                     CPIntVar player_id;
-                    chosenIntervals[teamPlayer] = makeIntervalVar(cp, 0, n + 1);
+                    chosenIntervals[teamPlayer] = makeOptionalInterval(cp, 0, n + 1);
 
                     if (IDENTIFIERS.get(player.name()) == null) {
                         player_id = makeIntVar(cp, teams.length);
-                        for (CPIntVar v : IDENTIFIERS.values()) {
-                            cp.post(neq(player_id, v));
-                        }
-                        IDENTIFIERS.put(player.name, player_id);
+                        rememberIdentity(IDENTIFIERS, player.name, player_id, eventInterval);
                     } else {
                         player_id = IDENTIFIERS.get(player.name);
+                        noteIdentityUse(player.name, eventInterval);
                     }
                     playerIds[teamPlayer] = player_id;
                     ExtendedCPVar player_id_ext = new ExtendedCPVar(
@@ -1689,7 +1728,7 @@ public class Query {
                                     isEq(event_end, endOr(chosenIntervals[i], -1))
                             ), 3);
                 }
-                cp.post(eq(sum(isChosen), 1));
+                postWhenPresent(cp, eventInterval, isEq(sum(isChosen), 1));
             }
 
 
@@ -1757,6 +1796,108 @@ public class Query {
                     }
                 }
             }
+        }
+    }
+
+    /** Creates an interval that may end up absent, and remembers it as such. */
+    private CPIntervalVar makeOptionalInterval(CPSolver cp, int lengthMin, int lengthMax) {
+        CPIntervalVar itv = makeIntervalVar(cp, lengthMin, lengthMax);
+        mayBeAbsent.add(itv);
+        return itv;
+    }
+
+    /** The event interval each player identity was introduced by. */
+    private final Map<String, CPIntervalVar> identityOwner = new HashMap<>();
+
+    /** Names of identities used by at least one event that always happens. */
+    private final Set<String> alwaysPresentIdentities = new HashSet<>();
+
+    /** Records {@code name -> var} as an identity introduced by {@code owner}. */
+    private void rememberIdentity(Map<String, CPIntVar> identifiers, String name, CPIntVar var, CPIntervalVar owner) {
+        identifiers.put(name, var);
+        identityOwner.putIfAbsent(name, owner);
+        noteIdentityUse(name, owner);
+    }
+
+    /** Records that {@code owner} refers to the identity {@code name}. */
+    private void noteIdentityUse(String name, CPIntervalVar owner) {
+        if (!mayBeAbsent.contains(owner)) alwaysPresentIdentities.add(name);
+    }
+
+    /** Posts {@code a != b}, but only while both owning events happen. */
+    private void postDistinctWhenBothPresent(CPSolver cp, CPIntervalVar ownerA, CPIntervalVar ownerB,
+                                             CPIntVar a, CPIntVar b) {
+        List<CPBoolVar> guards = new ArrayList<>(2);
+        if (ownerA != null && mayBeAbsent.contains(ownerA)) guards.add(ownerA.status());
+        if (ownerB != null && mayBeAbsent.contains(ownerB)) guards.add(ownerB.status());
+        if (guards.isEmpty()) {
+            cp.post(neq(a, b));
+        } else {
+            CPBoolVar bothHappen = isEq(sum(guards.toArray(CPBoolVar[]::new)), guards.size());
+            cp.post(implies(bothHappen, not(isEq(a, b))));
+        }
+    }
+
+    /** Start of {@code itv}, safe to call on an optional interval. */
+    private CPIntVar startOf(CPIntervalVar itv) {
+        return startVars.computeIfAbsent(itv, i -> mayBeAbsent.contains(i) ? startOr(i, ABSENT) : start(i));
+    }
+
+    /** End of {@code itv}, safe to call on an optional interval. */
+    private CPIntVar endOf(CPIntervalVar itv) {
+        return endVars.computeIfAbsent(itv, i -> mayBeAbsent.contains(i) ? endOr(i, ABSENT) : end(i));
+    }
+
+    /** Posts {@code b} unless {@code eventInterval} is an unselected branch */
+    private void postWhenPresent(CPSolver cp, CPIntervalVar eventInterval, CPBoolVar b) {
+        if (mayBeAbsent.contains(eventInterval)) cp.post(implies(eventInterval.status(), b));
+        else cp.post(eq(b, 1));
+    }
+
+    /**
+     * Posts {@code condition => consequence}, itself gated on {@code eventInterval} being present,
+     * so an unselected branch imposes nothing even when the condition happens to hold.
+     */
+    private void impliesWhenPresent(CPSolver cp, CPIntervalVar eventInterval, CPBoolVar condition, CPBoolVar consequence) {
+        if (mayBeAbsent.contains(eventInterval)) {
+            cp.post(implies(isEq(sum(eventInterval.status(), condition), 2), consequence));
+        } else {
+            cp.post(implies(condition, consequence));
+        }
+    }
+
+    /** A variable equal to {@code expr} while {@code eventInterval} is present, and free otherwise. */
+    private CPIntVar boundWhenPresent(CPSolver cp, CPIntervalVar eventInterval, CPIntVar expr, int nbValues) {
+        if (!mayBeAbsent.contains(eventInterval)) return expr;
+        CPIntVar v = makeIntVar(cp, nbValues);
+        postWhenPresent(cp, eventInterval, isEq(v, expr));
+        return v;
+    }
+
+    /** Creates the padded helper interval that carries an automaton match for {@code eventInterval}. */
+    private CPIntervalVar paddedFor(CPSolver cp, CPIntervalVar eventInterval, int lengthMax) {
+        boolean optional = mayBeAbsent.contains(eventInterval);
+        CPIntervalVar padded = optional ? makeOptionalInterval(cp, 0, lengthMax) : makeIntervalVar(cp, false, 0, lengthMax);
+        if (optional) cp.post(eq(padded.status(), eventInterval.status()));
+        return padded;
+    }
+
+    /**
+     * Ties an event interval to its padded match: same start, end shifted back by the two pad
+     * symbols. Conditioned on presence, so an unselected branch constrains nothing.
+     */
+    private void linkPadded(CPSolver cp, CPIntervalVar eventInterval, CPIntervalVar padded) {
+        CPIntVar s = startOf(eventInterval);
+        CPIntVar e = endOf(eventInterval);
+        CPIntVar paddedStart = startOf(padded);
+        CPIntVar paddedEnd = minus(endOf(padded), 2);
+        if (mayBeAbsent.contains(eventInterval)) {
+            CPBoolVar present = eventInterval.status();
+            cp.post(implies(present, isEq(s, paddedStart)));
+            cp.post(implies(present, isEq(e, paddedEnd)));
+        } else {
+            cp.post(eq(s, paddedStart));
+            cp.post(eq(e, paddedEnd));
         }
     }
 
@@ -1835,8 +1976,10 @@ public class Query {
                 Result.GroupEvent ge = new Result.GroupEvent(ev.event_idx, ev.type.equals("AND_interval") ? "AND" : "OR", ev.subSz, new Result.ResultInterval(interval));
                 i.incrementAndGet();
                 for (int k = 0; k < ge.subSize && i.get() < extVars.size(); k++) {
+                    // every child is parsed so the cursor stays aligned, but an OR branch that was
+                    // not taken is absent: it belongs to the model, not to the match
                     Result.ResultEvent child = parseSingleEvent(extVars, i);
-                    if (child != null) ge.children.add(child);
+                    if (child != null && child.interval.present) ge.children.add(child);
                 }
                 events.add(ge);
             } else {
