@@ -283,7 +283,10 @@ public class LlmQuery {
             """;
 
     private final String apiKey;
+    /** HTTP/2-capable; used for TLS endpoints, where h2 is negotiated by ALPN. */
     private final HttpClient http;
+    /** Created on demand for cleartext endpoints — see {@link #clientFor(String)}. */
+    private HttpClient httpPlain;
 
     // Per-instance configuration (defaults reproduce the original webapp behaviour).
     private String model       = DEFAULT_MODEL;
@@ -483,7 +486,8 @@ public class LlmQuery {
         if (apiKey != null && !apiKey.isBlank()) b.header("Authorization", "Bearer " + apiKey);
 
         try {
-            HttpResponse<String> resp = http.send(b.build(), HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> resp =
+                    clientFor(endpoint).send(b.build(), HttpResponse.BodyHandlers.ofString());
             if (resp.statusCode() != 200)
                 throw new RuntimeException(
                         "LLM API error " + resp.statusCode() + " from " + endpoint + ": " + resp.body());
@@ -496,6 +500,21 @@ public class LlmQuery {
                     "Cannot reach the LLM endpoint " + endpoint +
                     (needsKey ? "" : " — is the local model server running?"), e);
         }
+    }
+
+    /**
+     * Over cleartext the JDK client tries to upgrade to HTTP/2, sending
+     * {@code Upgrade: h2c} plus {@code Connection: Upgrade}. uvicorn's h11 reads that
+     * as a protocol switch and never passes the request body to the ASGI app, so a
+     * self-hosted server (vLLM) rejects the call with "body: Field required". Pinning
+     * cleartext connections to HTTP/1.1 drops those headers. TLS endpoints are left
+     * alone: there h2 comes from ALPN, not this upgrade, so Groq keeps using HTTP/2.
+     */
+    private HttpClient clientFor(String endpoint) {
+        if (!endpoint.regionMatches(true, 0, "http://", 0, 7)) return http;
+        if (httpPlain == null)
+            httpPlain = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
+        return httpPlain;
     }
 
     /** Only the hosted provider needs a key; anything self-served is assumed open. */
