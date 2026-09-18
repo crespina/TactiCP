@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.main.sn.dsl.Factory.*;
 
 public class QueryTest {
@@ -491,6 +492,67 @@ public class QueryTest {
         List<Result> results = orQuery.search();
         assertEquals(2, results.size());
 
+    }
+
+    @Test
+    public void TestORTeamPossession() throws IOException {
+        // "find when anybody has the ball" -- used to abort with
+        // IllegalArgumentException: interval var must be present
+        SelectExpr q = SELECT(
+                OR(POSSESSION(TEAM("left")), POSSESSION(TEAM("right")))
+        ).FROM("SNGS-060");
+
+        assertEquals(16, q.search().size());
+    }
+
+    @Test
+    public void TestORPlayerPossession() throws IOException {
+        // the OR example from the NL->DSL system prompt; same crash
+        SelectExpr q = SELECT(
+                OR(POSSESSION(PLAYER("p7", 7)), POSSESSION(PLAYER("p13", 13)))
+        ).FROM("SNGS-060");
+
+        assertEquals(1, q.search().size());
+    }
+
+    @Test
+    public void TestORWithUnsatisfiableBranch() throws IOException {
+        // a branch nothing can satisfy must switch itself off, not take the disjunction down
+        // with it -- otherwise OR silently behaves like AND
+        List<Result> alone = SELECT(POSSESSION(PLAYER("p7", 7))).FROM("SNGS-060").search();
+        assertEquals(1, alone.size());
+
+        List<Result> impossible = SELECT(POSSESSION(PLAYER("p99", 99))).FROM("SNGS-060").search();
+        assertEquals(0, impossible.size());
+
+        SelectExpr q = SELECT(
+                OR(POSSESSION(PLAYER("p7", 7)), POSSESSION(PLAYER("p99", 99)))
+        ).FROM("SNGS-060");
+
+        List<Result> results = q.search();
+        assertEquals(alone.size(), results.size());
+        Result.GroupEvent group = (Result.GroupEvent) results.get(0).events.get(0);
+        assertEquals(1, group.children.size()); // the unselected branch is not reported
+        assertEquals(alone.get(0).events.get(0).interval.start, group.children.get(0).interval.start);
+        assertEquals(alone.get(0).events.get(0).interval.end, group.children.get(0).interval.end);
+    }
+
+    @Test
+    public void TestORThenNextStep() throws IOException {
+        // the step after an OR is sequenced against the group, not against whichever child
+        // happens to sit last in the interval list
+        SelectExpr q = SELECT(
+                OR(POSSESSION(PLAYER("p7", 7)), POSSESSION(PLAYER("p13", 13))),
+                POSSESSION(TEAM("right"))
+        ).FROM("SNGS-060");
+
+        List<Result> results = q.search();
+        assertEquals(7, results.size());
+        for (Result r : results) {
+            Result.GroupEvent group = (Result.GroupEvent) r.events.get(0);
+            Result.ResultEvent next = r.events.get(1);
+            assertTrue(next.interval.start >= group.interval.end);
+        }
     }
 
     // total/event max duration, min duration, start, end,

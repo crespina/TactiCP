@@ -69,9 +69,13 @@ public class SubstringRegular extends AbstractCPConstraint {
 
     @Override
     public void propagate() {
-        // The interval must be present to satisfy the constraint
+        // An absent interval carries no match obligation: the constraint is vacuously true.
+        // Only "absent" means that -- an optional interval whose status is still undecided is
+        // filtered as if present, which is sound because its bounds only ever matter in a
+        // solution where it turns out to be present.
         if (interval.isAbsent()) {
-            throw new InconsistencyException();
+            setActive(false);
+            return;
         }
 
         int startMin = interval.startMin();
@@ -259,7 +263,15 @@ public class SubstringRegular extends AbstractCPConstraint {
         }
 
         if (maxValidStart == -1 || maxValidEnd == -1 || maxValidLength == -1) {
-            throw new InconsistencyException();
+            // No window of the sequence is accepted by the automaton. For a present interval
+            // that is a dead end; for an optional one it only means this branch cannot be
+            // taken, so mark it absent and let the surrounding disjunction carry on.
+            if (interval.isPresent()) {
+                throw new InconsistencyException();
+            }
+            interval.setAbsent();
+            setActive(false);
+            return;
         }
 
         // Update interval bounds
