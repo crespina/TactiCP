@@ -128,7 +128,7 @@ public final class EvaluationPipeline {
               AFTER ANOTHER, in the order given ("then", "after", "followed by").
               AND(...) is for events that COINCIDE ("while", "as", "at the same time").
 
-            Zones are integers 1..14. Frames run 0..750 (a clip is 30 s at 25 fps).
+            Zones are integers 1..14.
 
             WHERE, on a single event or on the whole SELECT:
               STARTMIN/STARTMAX/ENDMIN/ENDMAX(frame), MINDURATION/MAXDURATION(frames),

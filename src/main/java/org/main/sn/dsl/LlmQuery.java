@@ -90,8 +90,6 @@ public class LlmQuery {
             - event.MINRANGE()
               With MINRANGE: minimal contiguous interval where the predicate holds (e.g. ball-in-flight for a pass).
               Without MINRANGE: largest possession-based interval.
-              MINRANGE is required on PASSTO and MOVETO. It is also allowed on POSSESSION and
-              POSITION, and on an AND/OR, when the request asks for the minimal such interval.
 
             ## Combinators
             - AND(event1, event2, ...)   — all events hold SIMULTANEOUSLY, i.e. their intervals overlap at the same time. AND says nothing about order: it is ONLY for co-occurring events, NEVER for events that happen one after another (see "Temporal semantics" below).
@@ -145,8 +143,6 @@ public class LlmQuery {
 
             ### FROM (required)
             "all" | "train" | "test" | "valid" | "SNGS-XXX" | "SNGS-060,SNGS-061"
-            Every clip is exactly 750 frames long (30 seconds at 25 frames per second), so frame
-            numbers belong to 0..750 and durations to 1..750.
 
             ### WHERE (optional)
             WHERE can be applied in two places:
@@ -167,7 +163,7 @@ public class LlmQuery {
 
             ATLEAST and ATMOST are only valid on the full SELECT (not on individual events).
 
-            Temporal constraints (time in frames, 1 frame = 1/25 s, a clip is 750 frames):
+            Temporal constraints (time in frames, 1 frame = 1/25 s):
               STARTMIN(n)    — the match must start at or after frame n
               STARTMAX(n)    — the match must start at or before frame n
               ENDMIN(n)      — the match must end at or after frame n
@@ -184,8 +180,6 @@ public class LlmQuery {
                 and a small box around the centre is RECTANGLE(-5, 5, 10, 10).
               RADIUS(cx, cy, r) — the match must stay within radius r of (cx, cy) for its whole
                 duration.
-              Use RECTANGLE or RADIUS, never both in the same query: when a RADIUS is present
-              anywhere, every RECTANGLE is ignored.
 
             Aggregation constraints (only on full SELECT):
               ATLEAST(n) — raise an error if fewer than n occurrences are found in a clip
@@ -272,14 +266,13 @@ public class LlmQuery {
             ## Output rules
             1. Output ONLY the DSL query on a single line — no markdown, no code fences, no explanation.
             2. The output MUST start with SELECT( and contain .FROM("...").
-            3. Always append .MINRANGE() to PASSTO and MOVETO events.
-            4. NEVER use NOT with PASSTO, MOVETO, AND, or OR.
-            5. NEVER put an AND or an OR inside another AND or OR — flatten it, or make each group a
+            3. NEVER use NOT with PASSTO, MOVETO, AND, or OR.
+            4. NEVER put an AND or an OR inside another AND or OR — flatten it, or make each group a
                separate argument of SELECT.
-            6. A whole side is TEAM("left") or TEAM("right"), always lowercase.
-            7. Zones are integers 1..14; frame numbers are 0..750.
-            8. Give a player its jersey number whenever the request mentions one.
-            9. If .COUNT() is used, it comes last.
+            5. A whole side is TEAM("left") or TEAM("right"), always lowercase.
+            6. Zones are integers 1..14.
+            7. Give a player its jersey number whenever the request mentions one.
+            8. If .COUNT() is used, it comes last.
             """;
 
     private final String apiKey;
