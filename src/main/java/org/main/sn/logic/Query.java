@@ -835,10 +835,13 @@ public class Query {
                 for (int[] circle : circles) {
                     CPBoolVar[] pl_inside_circle = new CPBoolVar[n]; //true = 1, false = 0
                     for (int f = 0; f < n; f++) {
-                        CPIntVar distx = mul(minus(element(positionBox_x_T[f], player_id), circle[1]), minus(element(positionBox_x_T[f], player_id), circle[1]));
-                        CPIntVar disty = mul(minus(element(positionBox_y_T[f], player_id), circle[2]), minus(element(positionBox_y_T[f], player_id), circle[2]));
-                        pl_inside_circle[f] = isLe(sum(distx, disty), circle[0]); //inside the circle
-
+                        int[] insideCircle = new int[teams.length];
+                        for (int pid = 0; pid < teams.length; pid++) {
+                            int dx = positionBox_x_T[f][pid] - circle[1];
+                            int dy = positionBox_y_T[f][pid] - circle[2];
+                            insideCircle[pid] = (dx * dx + dy * dy <= circle[0]) ? 1 : 0;
+                        }
+                        pl_inside_circle[f] = isEq(element(insideCircle, player_id), 1);
                     }
                     cp.post(new TrueInterval(pl_inside_circle, eventInterval));
                 }
@@ -1178,10 +1181,13 @@ public class Query {
                     for (int[] circle : circles) {
                         CPBoolVar[] pl_inside_circle = new CPBoolVar[n]; //true = 1, false = 0
                         for (int f = 0; f < n; f++) {
-                            CPIntVar distx = mul(minus(element(positionBox_x_T[f], player_id), circle[1]), minus(element(positionBox_x_T[f], player_id), circle[1]));
-                            CPIntVar disty = mul(minus(element(positionBox_y_T[f], player_id), circle[2]), minus(element(positionBox_y_T[f], player_id), circle[2]));
-                            pl_inside_circle[f] = isLe(sum(distx, disty), circle[0]); //inside the circle
-
+                            int[] insideCircle = new int[teams.length];
+                            for (int pid = 0; pid < teams.length; pid++) {
+                                int dx = positionBox_x_T[f][pid] - circle[1];
+                                int dy = positionBox_y_T[f][pid] - circle[2];
+                                insideCircle[pid] = (dx * dx + dy * dy <= circle[0]) ? 1 : 0;
+                            }
+                            pl_inside_circle[f] = isEq(element(insideCircle, player_id), 1);
                         }
                         cp.post(new TrueInterval(pl_inside_circle, eventInterval));
                     }
