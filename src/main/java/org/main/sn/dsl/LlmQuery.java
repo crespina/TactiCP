@@ -73,6 +73,8 @@ public class LlmQuery {
               * POSSESSION takes a PLAYER or a TEAM only — never POSSESSION(BALL()).
               * POSITION always needs at least one zone.
               * K(k) is used only in POSITION(TEAM(...), K(k), ...) — never for a player or the ball.
+              * POSITION(TEAM("t"), K(k), a, b) means k players ARE IN zone a or b at one moment; it
+                never expresses movement — "k players move from a to b" is TEAM("t").MOVETO(a, b, k).
 
             ## Zones
             Zones are integers 1..14. There is no zone 0 and nothing above 14. Seen from above, with
@@ -137,6 +139,9 @@ public class LlmQuery {
               Signalled by words like: "at the same time", "while", "as", "during",
               "simultaneously", "when ... is also ...", "together with".
 
+            An "or" between events is ALWAYS a single OR(...) argument of SELECT — never a
+            comma-separated list, which would mean the events happen one after another.
+
             Rule of thumb: AND = same time. A comma-separated list in SELECT = one after another.
             Never use AND to express ordering, and never rely on the comma sequence for events that
             must coincide.
@@ -170,6 +175,9 @@ public class LlmQuery {
               ENDMAX(n)      — the match must end at or before frame n
               MINDURATION(n) — the match must last at least n frames
               MAXDURATION(n) — the match must last at most n frames
+            Use the number exactly as the request writes it and never add or subtract 1 for
+            "more than" / "less than": "longer than 30 frames" is MINDURATION(30), "less than 300
+            frames" is MAXDURATION(300), "more than 2 occurrences" is ATLEAST(2).
 
             Spatial constraints (whole numbers of metres, in the same frame as the zones: the pitch
             is centred on (0,0), x from -62 to +62, y from -39 to +39):
@@ -424,7 +432,7 @@ public class LlmQuery {
             }
 
             String raw = callGroq(messages);
-            String dsl = extractDsl(raw);
+            String dsl = ensureFrom(extractDsl(raw), dataset);
             messages.add(msg("assistant", raw));
 
             try {
@@ -568,14 +576,76 @@ public class LlmQuery {
         return sb.toString();
     }
 
-    /** Strips markdown fences and returns the first line containing SELECT(. */
+    /**
+     * Strips markdown fences and returns the DSL query, starting at the first
+     * {@code SELECT(} and spanning as many lines as the query needs.
+     * <p>
+     * A model that pretty-prints a long query over several lines would otherwise
+     * lose everything after the first one — including the trailing
+     * {@code .FROM("…")} — and fail the syntax check for the wrong reason. Lines
+     * are joined while the query is still open (unbalanced parentheses) or while
+     * the next one continues a chained call ({@code .FROM(…)}, {@code .WHERE(…)},
+     * {@code .COUNT()}, …).
+     */
     private static String extractDsl(String text) {
         text = text.replaceAll("```[a-zA-Z]*\\n?", "").trim();
-        for (String line : text.split("\\n")) {
-            int idx = line.indexOf("SELECT(");
-            if (idx >= 0) return line.substring(idx).trim();
+        String[] lines = text.split("\\n");
+        for (int i = 0; i < lines.length; i++) {
+            int idx = lines[i].indexOf("SELECT(");
+            if (idx < 0) continue;
+            String head = lines[i].substring(idx).trim();
+            StringBuilder dsl = new StringBuilder(head);
+            int depth = parenDepth(head, 0);
+            for (int j = i + 1; j < lines.length; j++) {
+                String next = lines[j].trim();
+                if (next.isEmpty()) {
+                    if (depth <= 0) break;   // blank line after a complete query: prose follows
+                    continue;
+                }
+                if (depth <= 0 && !next.startsWith(".")) break;
+                dsl.append(' ').append(next);
+                depth = parenDepth(next, depth);
+            }
+            return dsl.toString().trim();
         }
         return text.trim();
+    }
+
+    /** Parenthesis depth after {@code line}, ignoring parentheses inside string literals. */
+    private static int parenDepth(String line, int depth) {
+        boolean inString = false;
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (inString) {
+                if (c == '\\') i++;                 // skip the escaped character
+                else if (c == '"') inString = false;
+            } else if (c == '"') inString = true;
+            else if (c == '(') depth++;
+            else if (c == ')') depth--;
+        }
+        return depth;
+    }
+
+    /**
+     * Appends {@code .FROM("<dataset>")} when the model left it out, so a query
+     * that is otherwise valid is not rejected over a clause the caller already
+     * knows. The dataset is chosen by the caller (the web UI, or the evaluation
+     * pipeline's {@code --eval-dataset}) and is never part of what the model has
+     * to get right. The clause is inserted right after the closing parenthesis of
+     * {@code SELECT(…)}, ahead of any {@code .WHERE(…)} or search mode.
+     */
+    private static String ensureFrom(String dsl, String dataset) {
+        if (dsl == null || dsl.contains(".FROM(")) return dsl;
+        String from = ".FROM(\"" + dataset + "\")";
+        int start = dsl.indexOf("SELECT(");
+        if (start < 0) return dsl + from;
+        int depth = 0;
+        for (int i = start + "SELECT".length(); i < dsl.length(); i++) {
+            char c = dsl.charAt(i);
+            if (c == '(') depth++;
+            else if (c == ')' && --depth == 0) return dsl.substring(0, i + 1) + from + dsl.substring(i + 1);
+        }
+        return dsl + from;   // unbalanced query: let the syntax check report it
     }
 
     private static Map<String, String> msg(String role, String content) {

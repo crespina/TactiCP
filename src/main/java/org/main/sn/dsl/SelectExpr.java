@@ -49,6 +49,19 @@ public final class SelectExpr {
         return this;
     }
 
+    /**
+     * Shorthand for {@code .WHERE(ATLEAST(n))}. Writing the aggregation guard
+     * directly on the SELECT is a natural spelling and costs nothing to accept.
+     */
+    public SelectExpr ATLEAST(int n) {
+        return WHERE(Factory.ATLEAST(n));
+    }
+
+    /** Shorthand for {@code .WHERE(ATMOST(n))}. See {@link #ATLEAST(int)}. */
+    public SelectExpr ATMOST(int n) {
+        return WHERE(Factory.ATMOST(n));
+    }
+
     public SelectExpr SEARCH(int mode){
         this.searchMode = mode;
         return this;
