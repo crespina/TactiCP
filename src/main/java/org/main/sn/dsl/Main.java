@@ -30,7 +30,8 @@ public class Main {
         //SELECT(BALL().MOVETO(4, 1).MINRANGE()).FROM("all").WHERE(ATLEAST(2)).searchAndPrint();
         //SELECT(PLAYER("p1").PASSTO(PLAYER("p2")).WHERE(MAXDURATION(25)).MINRANGE()).FROM("SNGS-060").searchAndPrint();
         //SELECT(PLAYER("p1","left").PASSTO(PLAYER("p2", "right")).MINRANGE()).FROM("all").searchAndPrint();
-        SELECT(PLAYER("p1","left").PASSTO(PLAYER("p2", "right"))).FROM("all").searchAndPrint();
+        //SELECT(PLAYER("p1","left").PASSTO(PLAYER("p2", "right"))).FROM("all").searchAndPrint();
+        SELECT(PLAYER("p1").MOVETO(1,6).MINRANGE().WHERE(RADIUS(-20,20,20)),PLAYER("p1").MOVETO(6,7).MINRANGE().WHERE(MAXDURATION(40))).FROM("all").searchAndPrint();
 
 
 
