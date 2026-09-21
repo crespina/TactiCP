@@ -31,7 +31,7 @@ public class Query {
 
     public List<Result> apply(SelectExpr seq) {
 
-        CPSolver cp = makeSolver();
+
         List<Result> r = new ArrayList<>();
 
         final List<Event> steps = seq.steps;
@@ -56,6 +56,8 @@ public class Query {
         int atLeast = seq.atLeast;
 
         for (GameStateReconstructionInstance instance : matches) {
+
+            CPSolver cp = makeSolver();
 
             Map<String, CPIntVar> IDENTIFIERS = new HashMap<>(); //Entity's name -> CP variable
 
@@ -940,12 +942,9 @@ public class Query {
                 if (player.id() != null) {
                     cp.post(eq(player_id, player.id()));
                 } else if (player.team() != null) {
-                    if (player.team().equals("left")) {
-                        for (int i : rightTeamIds) {
-                            player_id.remove(i);
-                        }
-                    } else if (player.team().equals("right")) {
-                        for (int i : leftTeamIds) {
+                    int playerTeam = player.team().equals("left") ? 0 : 1;
+                    for (int i = 0; i < teams.length; i++) {
+                        if (teams[i] != playerTeam) {
                             player_id.remove(i);
                         }
                     }
@@ -1269,12 +1268,9 @@ public class Query {
                 if (player.id() != null) {
                     cp.post(eq(player_id, player.id()));
                 } else if (player.team() != null) {
-                    if (player.team().equals("left")) {
-                        for (int i : rightTeamIds) {
-                            player_id.remove(i);
-                        }
-                    } else if (player.team().equals("right")) {
-                        for (int i : leftTeamIds) {
+                    int playerTeam = player.team().equals("left") ? 0 : 1;
+                    for (int i = 0; i < teams.length; i++) {
+                        if (teams[i] != playerTeam) {
                             player_id.remove(i);
                         }
                     }
@@ -1509,18 +1505,11 @@ public class Query {
                 validIds.add(player.id());
                 postWhenPresent(cp, eventInterval, isEq(player_id, player.id()));
             } else if (player.team() != null) {
-                if (player.team().equals("left")) {
-                    for (int i : leftTeamIds) {
+                int team = player.team().equals("left") ? 0 : 1;
+                for (int i = 0; i < teams.length; i++) {
+                    if (teams[i] == team) {
                         validIds.add(i);
-                    }
-                    for (int i : rightTeamIds) {
-                        player_id.remove(i);
-                    }
-                } else if (player.team().equals("right")) {
-                    for (int i : rightTeamIds) {
-                        validIds.add(i);
-                    }
-                    for (int i : leftTeamIds) {
+                    } else {
                         player_id.remove(i);
                     }
                 }
@@ -1664,12 +1653,9 @@ public class Query {
                     if (player.id() != null) {
                         cp.post(eq(player_id, player.id()));
                     } else if (player.team() != null) {
-                        if (player.team().equals("left")) {
-                            for (int i : rightTeamIds) {
-                                player_id.remove(i);
-                            }
-                        } else if (player.team().equals("right")) {
-                            for (int i : leftTeamIds) {
+                        int playerTeam = player.team().equals("left") ? 0 : 1;
+                        for (int i = 0; i < teams.length; i++) {
+                            if (teams[i] != playerTeam) {
                                 player_id.remove(i);
                             }
                         }

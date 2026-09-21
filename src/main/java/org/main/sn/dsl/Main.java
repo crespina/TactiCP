@@ -31,8 +31,7 @@ public class Main {
         //SELECT(PLAYER("p1").PASSTO(PLAYER("p2")).WHERE(MAXDURATION(25)).MINRANGE()).FROM("SNGS-060").searchAndPrint();
         //SELECT(PLAYER("p1","left").PASSTO(PLAYER("p2", "right")).MINRANGE()).FROM("all").searchAndPrint();
         //SELECT(PLAYER("p1","left").PASSTO(PLAYER("p2", "right"))).FROM("all").searchAndPrint();
-        SELECT(PLAYER("p1").MOVETO(1,6).MINRANGE().WHERE(RADIUS(-20,20,20)),PLAYER("p1").MOVETO(6,7).MINRANGE().WHERE(MAXDURATION(40))).FROM("all").searchAndPrint();
-
+        SELECT(TEAM("t1",PLAYER("pwc3"),PLAYER("pleft","left"),PLAYER("p1",1)).MOVETO(11,10,3).MINRANGE().WHERE(RECTANGLE(-20,20,40,20))).FROM("SNGS-021").searchAndPrint();
 
 
         // Test passTo
