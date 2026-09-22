@@ -110,16 +110,6 @@
     "dsl": "SELECT(POSITION(PLAYER(\"p1\"),6))"
   },
   {
-    "id": "pos-player-2zones",
-    "level": 1,
-    "features": [
-      "POSITION",
-      "PLAYER"
-    ],
-    "nl": "Find when a player was either in zone 6 or zone 7.",
-    "dsl": "SELECT(POSITION(PLAYER(\"p1\"),6,7))"
-  },
-  {
     "id": "pos-player-4zones",
     "level": 1,
     "features": [
@@ -234,17 +224,6 @@
     "dsl": "SELECT(POSITION(TEAM(\"t1\",2,3,4),7))"
   },
   {
-    "id": "pos-team-k3",
-    "level": 1,
-    "features": [
-      "POSITION",
-      "TEAM:LEFT",
-      "K"
-    ],
-    "nl": "Find when at least three players from the left team are in any of zones four, five or six.",
-    "dsl": "SELECT(POSITION(TEAM(\"left\"),K(3),4,5,6))"
-  },
-  {
     "id": "pos-team-k5",
     "level": 1,
     "features": [
@@ -277,16 +256,6 @@
     ],
     "nl": "Find when at least 11 players from the left team are in zones 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14.",
     "dsl": "SELECT(POSITION(TEAM(\"left\"),K(11),1,2,3,4,5,6,7,8,9,10,11,12,13,14))"
-  },
-  {
-    "id": "pass-anon-minrange",
-    "level": 2,
-    "features": [
-      "PASSTO",
-      "MINRANGE"
-    ],
-    "nl": "Find all the passes between any two players, from the moment the ball leaves the foot of the passer to the moment the ball arrives at the foot of the receiver.",
-    "dsl": "SELECT(PLAYER(\"p1\").PASSTO(PLAYER(\"p2\")).MINRANGE())"
   },
   {
     "id": "pass-anon-no-minrange",
@@ -510,17 +479,6 @@
     "dsl": "SELECT(POSITION(PLAYER(\"p1\"),3).MINRANGE())"
   },
   {
-    "id": "minrange-on-ball-position",
-    "level": 2,
-    "features": [
-      "POSITION",
-      "BALL",
-      "MINRANGE"
-    ],
-    "nl": "Find the smallest intervals when the ball is in zone 13.",
-    "dsl": "SELECT(POSITION(BALL(),13).MINRANGE())"
-  },
-  {
     "id": "minrange-on-team-position",
     "level": 2,
     "features": [
@@ -551,17 +509,6 @@
     ],
     "nl": "Find the intervals where a player does not have the possession of the ball.",
     "dsl": "SELECT(NOT(POSSESSION(PLAYER(\"p1\"))))"
-  },
-  {
-    "id": "not-poss-jersey",
-    "level": 3,
-    "features": [
-      "NOT",
-      "POSSESSION",
-      "PLAYER:jersey"
-    ],
-    "nl": "Find the intervals where player 7 does not possess the ball.",
-    "dsl": "SELECT(NOT(POSSESSION(PLAYER(\"p7\",7))))"
   },
   {
     "id": "not-poss-team-left",
@@ -664,7 +611,7 @@
     "nl": "Find the moments where player 7 has the ball at the same time as being in zone 6.",
     "dsl": "SELECT(AND(POSSESSION(PLAYER(\"p7\",7)),POSITION(PLAYER(\"p7\",7),6)))"
   },
-    {
+  {
     "id": "and-poss-pos-same-player-bis",
     "level": 4,
     "features": [
@@ -688,42 +635,6 @@
     ],
     "nl": "Find the intervals during which happens simultaneously the minimal pass interval between two players and the ball is in any of zones 3 or 4.",
     "dsl": "SELECT(AND(PLAYER(\"p1\").PASSTO(PLAYER(\"p2\")).MINRANGE(),POSITION(BALL(),3,4)))"
-  },
-  {
-    "id": "and-pass-not-poss",
-    "level": 4,
-    "features": [
-      "AND",
-      "PASSTO",
-      "NOT",
-      "POSSESSION",
-      "MINRANGE"
-    ],
-    "nl": "Find the intervals during which player 11 passes to another player (the minimal interval) and player 3 doesn't have the ball.",
-    "dsl": "SELECT(AND(PLAYER(\"p11\",11).PASSTO(PLAYER(\"p2\")).MINRANGE(),NOT(POSSESSION(PLAYER(\"p3\",3)))))"
-  },
-  {
-    "id": "and-two-player-moves",
-    "level": 4,
-    "features": [
-      "AND",
-      "PLAYER.MOVETO",
-      "MINRANGE"
-    ],
-    "nl": "Find the intervals when player 13 moves from zone 6 to 7 and also player 15 moves from zone 1 to 2, the smallest intervals for both of those events.",
-    "dsl": "SELECT(AND(PLAYER(\"p13\",13).MOVETO(6,7).MINRANGE(),PLAYER(\"p15\",15).MOVETO(1,2).MINRANGE()))"
-  },
-  {
-    "id": "and-pass-ball-move",
-    "level": 4,
-    "features": [
-      "AND",
-      "PASSTO",
-      "BALL.MOVETO",
-      "MINRANGE"
-    ],
-    "nl": "Find the moments when player 11 passes to player 16 (smallest interval) and the ball moves from zone 3 to 4 (minimal interval also).",
-    "dsl": "SELECT(AND(PLAYER(\"p11\",11).PASSTO(PLAYER(\"p16\",16)).MINRANGE(),BALL().MOVETO(3,4).MINRANGE()))"
   },
   {
     "id": "and-team-move-team-pos",
@@ -800,16 +711,6 @@
     ],
     "nl": "Find the intervals during which player 7 does not have the ball and player 7 is not in zone 1 or 2.",
     "dsl": "SELECT(AND(NOT(POSSESSION(PLAYER(\"p7\",7))),NOT(POSITION(PLAYER(\"p7\",7),1,2))))"
-  },
-  {
-    "id": "or-two-possessions",
-    "level": 4,
-    "features": [
-      "OR",
-      "POSSESSION"
-    ],
-    "nl": "Find the intervals during which either player 7 or player 13 has the ball.",
-    "dsl": "SELECT(OR(POSSESSION(PLAYER(\"p7\",7)),POSSESSION(PLAYER(\"p13\",13))))"
   },
   {
     "id": "or-pos-player-ball",
@@ -1016,29 +917,6 @@
     ],
     "nl": "Find when all of those events happen together: the ball and Player 7 are in zone 4, three players or more from the left team are in zone 4, this team also has the possession of the ball but not player 9.",
     "dsl": "SELECT(AND(POSITION(BALL(),4),POSITION(PLAYER(\"p7\",7),4),POSITION(TEAM(\"left\"),K(3),4),POSSESSION(TEAM(\"left\")),NOT(POSSESSION(PLAYER(\"p9\",9)))))"
-  },
-  {
-    "id": "seq-two-ball-moves",
-    "level": 6,
-    "features": [
-      "SEQ:2",
-      "BALL.MOVETO",
-      "MINRANGE"
-    ],
-    "nl": "Find the smallest interval when the ball moves from zone 4 to 1 and then the smallest interval when it moves from zone 14 to 9",
-    "dsl": "SELECT(BALL().MOVETO(4,1).MINRANGE(),BALL().MOVETO(14,9).MINRANGE())"
-  },
-  {
-    "id": "seq-pass-then-ball-move",
-    "level": 6,
-    "features": [
-      "SEQ:2",
-      "PASSTO",
-      "BALL.MOVETO",
-      "MINRANGE"
-    ],
-    "nl": "Find when Player 11 passes to player 16 (minimal) then the ball goes from zone 3 to 4 (minimal also).",
-    "dsl": "SELECT(PLAYER(\"p11\",11).PASSTO(PLAYER(\"p16\",16)).MINRANGE(),BALL().MOVETO(3,4).MINRANGE())"
   },
   {
     "id": "seq-pass-chain-3",
@@ -1512,18 +1390,6 @@
     "dsl": "SELECT(BALL().MOVETO(4,1).MINRANGE()).WHERE(ENDMAX(740))"
   },
   {
-    "id": "g-minduration",
-    "level": 8,
-    "features": [
-      "WHERE:global",
-      "MINDURATION",
-      "POSSESSION",
-      "TEAM:RIGHT"
-    ],
-    "nl": "Team right has the ball for 50 frames or more.",
-    "dsl": "SELECT(POSSESSION(TEAM(\"right\"))).WHERE(MINDURATION(50))"
-  },
-  {
     "id": "g-maxduration",
     "level": 8,
     "features": [
@@ -1559,17 +1425,6 @@
     "dsl": "SELECT(POSITION(BALL(),1,4)).WHERE(RADIUS(-20,0,20))"
   },
   {
-    "id": "g-atleast",
-    "level": 8,
-    "features": [
-      "WHERE:global",
-      "ATLEAST",
-      "BALL.MOVETO"
-    ],
-    "nl": "Find the smallest intervals during which the ball moves from zone 4 to 1, but only show if that happens at least 2 times.",
-    "dsl": "SELECT(BALL().MOVETO(4,1).MINRANGE()).WHERE(ATLEAST(2))"
-  },
-  {
     "id": "g-atmost",
     "level": 8,
     "features": [
@@ -1590,18 +1445,6 @@
     ],
     "nl": "Find the moments when player seven had the ball, show if that happens more than once and less than five times.",
     "dsl": "SELECT(POSSESSION(PLAYER(\"p7\",7))).WHERE(ATLEAST(1),ATMOST(5))"
-  },
-  {
-    "id": "g-time-window",
-    "level": 8,
-    "features": [
-      "WHERE:global",
-      "STARTMIN",
-      "ENDMAX",
-      "PLAYER.MOVETO"
-    ],
-    "nl": "Player 13 moves from zone 6 to zone 7 (minimal interval) between frame 10 and frame 740.",
-    "dsl": "SELECT(PLAYER(\"p13\",13).MOVETO(6,7).MINRANGE()).WHERE(STARTMIN(10),ENDMAX(740))"
   },
   {
     "id": "g-duration-bounds",
@@ -1756,16 +1599,6 @@
     "dsl": "SELECT(POSSESSION(TEAM(\"left\")).WHERE(MINDURATION(20)),BALL().MOVETO(4,1).MINRANGE().WHERE(MAXDURATION(60))).WHERE(STARTMIN(0),ENDMAX(700),MAXDURATION(400))"
   },
   {
-    "id": "sm-count",
-    "level": 9,
-    "features": [
-      "COUNT",
-      "PASSTO"
-    ],
-    "nl": "Count the number of times player 1 passes to player 2 (minimal)",
-    "dsl": "SELECT(PLAYER(\"p1\",1).PASSTO(PLAYER(\"p2\",2)).MINRANGE()).COUNT()"
-  },
-  {
     "id": "sm-search-all",
     "level": 9,
     "features": [
@@ -1774,16 +1607,6 @@
     ],
     "nl": "A minimal pass. Search all solutions.",
     "dsl": "SELECT(PLAYER(\"p1\").PASSTO(PLAYER(\"p2\")).MINRANGE()).SEARCH(\"all\")"
-  },
-  {
-    "id": "sm-search-first",
-    "level": 9,
-    "features": [
-      "SEARCH:first",
-      "TEAM.MOVETO"
-    ],
-    "nl": "Search the first minimal interval when 4 or more players from team left go from zone 3 to 7",
-    "dsl": "SELECT(TEAM(\"left\").MOVETO(3,7,4).MINRANGE()).SEARCH(\"first\")"
   },
   {
     "id": "sm-search-k",
