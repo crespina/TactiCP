@@ -32,4 +32,11 @@ if [ ! -f "$CP_FILE" ] || [ pom.xml -nt "$CP_FILE" ]; then
   mvn -q dependency:build-classpath -Dmdep.outputFile="$CP_FILE"
 fi
 
-exec java -cp "target/classes:$(cat "$CP_FILE")" org.main.sn.eval.EvaluationPipeline "$@"
+# Prefer IPv6 when resolving. The JDK's HttpClient connects to the *first* address
+# InetAddress returns and does not fall back to the next family, unlike curl's happy
+# eyeballs. On an IPv6-only host Java therefore picks api.groq.com's A record and dies
+# with "ConnectException: Network is unreachable", which LlmQuery reports as
+# "Cannot reach the LLM endpoint". Reordering the resolver's answer fixes it, and is
+# harmless where IPv4 works: the v4 addresses stay in the list, just later.
+exec java -Djava.net.preferIPv6Addresses=true \
+     -cp "target/classes:$(cat "$CP_FILE")" org.main.sn.eval.EvaluationPipeline "$@"
