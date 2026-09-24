@@ -33,15 +33,29 @@ public class Query {
         return Integer.getInteger(MAX_SOLUTIONS_PROPERTY, DEFAULT_MAX_SOLUTIONS);
     }
 
+    /** Optional wall-clock budget per instance search, for benchmarking; 0 or less means none. */
+    public static final String TIME_LIMIT_PROPERTY = "sn.timeLimitMs";
+
     private final Map<CPIntervalVar, CPIntVar> startVars = new IdentityHashMap<>();
     private final Map<CPIntervalVar, CPIntVar> endVars = new IdentityHashMap<>();
 
     private final Set<CPIntervalVar> mayBeAbsent = Collections.newSetFromMap(new IdentityHashMap<>());
 
+    /** Solver effort of the last {@link #apply} call, summed over its instances. */
+    public record Effort(long nodes, long failures, long modelNanos, long searchNanos, int timeouts) {}
+
+    private Effort effort = new Effort(0, 0, 0, 0, 0);
+
+    public Effort effort() {
+        return effort;
+    }
+
     public List<Result> apply(SelectExpr seq) {
 
 
         List<Result> r = new ArrayList<>();
+        long nodes = 0, failures = 0, modelNanos = 0, searchNanos = 0;
+        int timeouts = 0;
 
         final List<Event> steps = seq.steps;
         final List<GameStateReconstructionInstance> matches = seq.matches;
@@ -66,6 +80,7 @@ public class Query {
 
         for (GameStateReconstructionInstance instance : matches) {
 
+            long modelStart = System.nanoTime();
             CPSolver cp = makeSolver();
 
             Map<String, CPIntVar> IDENTIFIERS = new HashMap<>(); //Entity's name -> CP variable
@@ -198,6 +213,7 @@ public class Query {
                 }
             } catch (InconsistencyException e) {
                 //System.out.println("No solution found for instance " + instance.name);
+                modelNanos += System.nanoTime() - modelStart;
                 continue;
             }
 
@@ -205,6 +221,8 @@ public class Query {
             // SEARCH
             // ******
 
+            long searchStart = System.nanoTime();
+            modelNanos += searchStart - modelStart;
             DFSearch search = makeDfs(cp, Searches.firstFailBinary(
                     Stream.concat(
                             IDENTIFIERS.values().stream(),
@@ -222,18 +240,31 @@ public class Query {
             // Stop predicate for the interval-count guard: solve(...) halts as soon as
             // this returns true. A cap of 0 or less means "no guard".
             final int solutionCap = maxSolutions();
-            Predicate<SearchStatistics> capReached = solutionCap > 0
+            Predicate<SearchStatistics> solutionGuard = solutionCap > 0
                     ? statistics -> statistics.numberOfSolutions() >= solutionCap
                     : statistics -> false;
+            // an instance that runs out of the time budget keeps the matches found so far
+            final long timeLimitMs = Long.getLong(TIME_LIMIT_PROPERTY, 0);
+            final long deadline = System.nanoTime() + timeLimitMs * 1_000_000;
+            Predicate<SearchStatistics> capReached = timeLimitMs > 0
+                    ? solutionGuard.or(statistics -> System.nanoTime() > deadline)
+                    : solutionGuard;
 
+            SearchStatistics stats = null;
             if (searchMode != -1 || atMost != -1) {
-                if (searchMode == 0) search.solve(capReached);
+                if (searchMode == 0) stats = search.solve(capReached);
                 else if (searchMode >= 1)
-                    search.solve(statistics -> statistics.numberOfSolutions() == searchMode || capReached.test(statistics));
+                    stats = search.solve(statistics -> statistics.numberOfSolutions() == searchMode || capReached.test(statistics));
                 else if (atMost >= 0)
-                    search.solve(statistics -> statistics.numberOfSolutions() <= atMost || capReached.test(statistics));
+                    stats = search.solve(statistics -> statistics.numberOfSolutions() <= atMost || capReached.test(statistics));
             } else {
-                search.solve(capReached);
+                stats = search.solve(capReached);
+            }
+            searchNanos += System.nanoTime() - searchStart;
+            if (timeLimitMs > 0 && System.nanoTime() > deadline) timeouts++;
+            if (stats != null) {
+                nodes += stats.numberOfNodes();
+                failures += stats.numberOfFailures();
             }
 
             if (solutionCap > 0 && solutionCounter.get() >= solutionCap) {
@@ -253,7 +284,7 @@ public class Query {
             }
         }
 
-
+        effort = new Effort(nodes, failures, modelNanos, searchNanos, timeouts);
         return order(r);
     }
 
@@ -800,6 +831,14 @@ public class Query {
         if (isNegated) {
             throw new IllegalArgumentException("Negation of PLAYER_MOVE_TO is not supported.");
         } else {
+            // spatial constraints: one fixed word per candidate, matched on that candidate's window
+            List<Shape> shapes = new ArrayList<>();
+            if (event_circle) shapes.add(circle((int) Math.pow(event_radius, 2), event_xcenter, event_ycenter));
+            if (total_circle) shapes.add(circle((int) Math.pow(total_radius, 2), total_xcenter, total_ycenter));
+            if (event_rectangle) shapes.add(box(event_xtop, event_ytop, event_w, event_h));
+            if (total_rectangle) shapes.add(box(total_xtop, total_ytop, total_w, total_h));
+            int[][] inside = insideAll(shapes, positionBox_x, positionBox_y, n);
+
             int[] possible_players = new int[teams.length];
             player_id.fillArray(possible_players);
             CPBoolVar[] isThisPlayerVars = new CPBoolVar[teams.length];
@@ -808,23 +847,24 @@ public class Query {
                 if (pl_id == 0) {
                     continue;
                 }
-                CPIntervalVar thisPlayerTrueInterval = makeIntervalVar(cp, false, 0, n + 1);
+                CPIntervalVar thisPlayerInterval = makeIntervalVar(cp, false, 0, n + 1);
                 try {
                     if (minrange) {
-                        cp.post(new SubstringRegular(positionZones[pl_id], thisPlayerTrueInterval, Automaton.A_NOTBSTAR_B(teams.length, zone_start, zone_end)));
+                        cp.post(new SubstringRegular(positionZones[pl_id], thisPlayerInterval, Automaton.A_NOTBSTAR_B(teams.length, zone_start, zone_end)));
                     } else {
                         CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n + 1);
                         int[] paddedArray = Automaton.pad(positionZones[pl_id]);
                         cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADSTAR_BPLUS_PAD(teams.length, zone_start, zone_end)));
-                        cp.post(eq(start(thisPlayerTrueInterval), start(paddedInterval)));
-                        cp.post(eq(end(thisPlayerTrueInterval), minus(end(paddedInterval), 2)));
+                        cp.post(eq(start(thisPlayerInterval), start(paddedInterval)));
+                        cp.post(eq(end(thisPlayerInterval), minus(end(paddedInterval), 2)));
                     }
-                    //isThisPlayerVars[pl_id] = isEq(sum(isEq(player_id, pl_id), isEq(start(thisPlayerTrueInterval), start(eventInterval)), isEq(end(thisPlayerTrueInterval), end(eventInterval))), 3);
+                    if (inside != null) postInsideThroughout(cp, inside[pl_id], thisPlayerInterval);
+                    //isThisPlayerVars[pl_id] = isEq(sum(isEq(player_id, pl_id), isEq(start(thisPlayerInterval), start(eventInterval)), isEq(end(thisPlayerInterval), end(eventInterval))), 3);
                     isThisPlayerVars[pl_id] = isEq(player_id, pl_id);
                     impliesWhenPresent(cp, eventInterval, isThisPlayerVars[pl_id],
-                            isEq(start(thisPlayerTrueInterval), startOf(eventInterval)));
+                            isEq(start(thisPlayerInterval), startOf(eventInterval)));
                     impliesWhenPresent(cp, eventInterval, isThisPlayerVars[pl_id],
-                            isEq(end(thisPlayerTrueInterval), endOf(eventInterval)));
+                            isEq(end(thisPlayerInterval), endOf(eventInterval)));
 
                 } catch (InconsistencyException e) {
                     isThisPlayerVars[pl_id] = makeBoolVar(cp);
@@ -835,66 +875,6 @@ public class Query {
             postWhenPresent(cp, eventInterval, isEq(sum(Arrays.stream(isThisPlayerVars)
                     .filter(Objects::nonNull)
                     .toArray(CPBoolVar[]::new)), 1));
-        }
-
-        // spatial constraints
-        if (event_circle || event_rectangle || total_circle || total_rectangle) {
-
-            //Transposed matrices
-            int[][] positionBox_x_T = new int[n][teams.length];
-            int[][] positionBox_y_T = new int[n][teams.length];
-            for (int playerId = 0; playerId < teams.length; playerId++) {
-                for (int frame = 0; frame < n; frame++) {
-                    positionBox_x_T[frame][playerId] = positionBox_x[playerId][frame];
-                }
-            }
-            for (int playerId = 0; playerId < teams.length; playerId++) {
-                for (int frame = 0; frame < n; frame++) {
-                    positionBox_y_T[frame][playerId] = positionBox_y[playerId][frame];
-                }
-            }
-
-            if (event_circle || total_circle) {
-                List<int[]> circles = new ArrayList<>();
-                if (event_circle)
-                    circles.add(new int[]{(int) Math.pow(event_radius, 2), event_xcenter, event_ycenter});
-                if (total_circle)
-                    circles.add(new int[]{(int) Math.pow(total_radius, 2), total_xcenter, total_ycenter});
-
-                for (int[] circle : circles) {
-                    CPBoolVar[] pl_inside_circle = new CPBoolVar[n]; //true = 1, false = 0
-                    for (int f = 0; f < n; f++) {
-                        int[] insideCircle = new int[teams.length];
-                        for (int pid = 0; pid < teams.length; pid++) {
-                            int dx = positionBox_x_T[f][pid] - circle[1];
-                            int dy = positionBox_y_T[f][pid] - circle[2];
-                            insideCircle[pid] = (dx * dx + dy * dy <= circle[0]) ? 1 : 0;
-                        }
-                        pl_inside_circle[f] = isEq(element(insideCircle, player_id), 1);
-                    }
-                    cp.post(new TrueInterval(pl_inside_circle, eventInterval));
-                }
-            } if (event_rectangle || total_rectangle) {
-                List<int[]> rectangles = new ArrayList<>();
-                if (event_rectangle)
-                    rectangles.add(new int[]{event_xtop, event_ytop, event_w, event_h});
-                if (total_rectangle)
-                    rectangles.add(new int[]{total_xtop, total_ytop, total_w, total_h});
-
-                for (int[] rect : rectangles) {
-                    CPBoolVar[] pl_inside_rect = makeBoolVarArray(cp, n);
-                    for (int f = 0; f < n; f++) {
-                        CPIntVar bx = element(positionBox_x_T[f], player_id);
-                        CPIntVar by = element(positionBox_y_T[f], player_id);
-                        CPBoolVar upper_bound_x = isLe(bx, rect[0] + rect[2]);
-                        CPBoolVar lower_bound_x = isGe(bx, rect[0]);
-                        CPBoolVar upper_bound_y = isLe(by, rect[1]);
-                        CPBoolVar lower_bound_y = isGe(by, rect[1] - rect[3]);
-                        pl_inside_rect[f] = isEq(sum(upper_bound_x, lower_bound_x, upper_bound_y, lower_bound_y), 4); //inside the rectangle
-                    }
-                    cp.post(new TrueInterval(pl_inside_rect, eventInterval));
-                }
-            }
         }
     }
 
@@ -1026,69 +1006,13 @@ public class Query {
         }
 
         // spatial constraints
-        if (event_circle || event_rectangle || total_circle || total_rectangle) {
-
-            //Transposed matrices
-            int[][] positionBox_x_T = new int[n][teams.length];
-            int[][] positionBox_y_T = new int[n][teams.length];
-            for (int playerId = 0; playerId < teams.length; playerId++) {
-                for (int frame = 0; frame < n; frame++) {
-                    positionBox_x_T[frame][playerId] = positionBox_x[playerId][frame];
-                }
-            }
-            for (int playerId = 0; playerId < teams.length; playerId++) {
-                for (int frame = 0; frame < n; frame++) {
-                    positionBox_y_T[frame][playerId] = positionBox_y[playerId][frame];
-                }
-            }
-
-            if (event_circle || total_circle) {
-                List<int[]> circles = new ArrayList<>();
-                if (event_circle)
-                    circles.add(new int[]{(int) Math.pow(event_radius, 2), event_xcenter, event_ycenter});
-                if (total_circle)
-                    circles.add(new int[]{(int) Math.pow(total_radius, 2), total_xcenter, total_ycenter});
-
-                for (int[] circle : circles) {
-                    for (int plIdx = 0; plIdx < playerIds.length; plIdx++) {
-                        CPIntVar pl = playerIds[plIdx];
-                        int[] possible_players = new int[teams.length];
-                        pl.fillArray(possible_players);
-
-                        CPBoolVar[] pl_inside_circle = new CPBoolVar[n];
-                        for (int f = 0; f < n; f++) {
-                            int[] insideCircle = new int[teams.length];
-                            for (int pid = 0; pid < teams.length; pid++) {
-                                int dx = positionBox_x_T[f][pid] - circle[1];
-                                int dy = positionBox_y_T[f][pid] - circle[2];
-                                insideCircle[pid] = (dx * dx + dy * dy <= circle[0]) ? 1 : 0;
-                            }
-                            pl_inside_circle[f] = isEq(element(insideCircle, pl), 1);
-                        }
-                        cp.post(new TrueInterval(pl_inside_circle, eventInterval));
-                    }
-                }
-            } if (event_rectangle || total_rectangle) {
-                List<int[]> rectangles = new ArrayList<>();
-                if (event_rectangle)
-                    rectangles.add(new int[]{event_xtop, event_ytop, event_w, event_h});
-                if (total_rectangle)
-                    rectangles.add(new int[]{total_xtop, total_ytop, total_w, total_h});
-
-                for (int[] rect : rectangles) {
-                    for (CPIntVar pl : playerIds) {
-                        CPBoolVar[] pl_inside_rect = makeBoolVarArray(cp, n);
-                        for (int f = 0; f < n; f++) {
-                            CPIntVar distx = minus(element(positionBox_x_T[f], pl), rect[0]);
-                            CPIntVar disty = minus(element(positionBox_y_T[f], pl), rect[1]);
-                            //inside the rectangle -> equivalent to and(isLe(distx, rect[2]), isLe(disty, rect[3]))
-                            pl_inside_rect[f] = not(isOr(isGe(distx, rect[2]), isGe(disty, rect[3])));
-                        }
-                        cp.post(new TrueInterval(pl_inside_rect, eventInterval));
-                    }
-                }
-            }
-        }
+        List<Shape> shapes = new ArrayList<>();
+        if (event_circle) shapes.add(circle((int) Math.pow(event_radius, 2), event_xcenter, event_ycenter));
+        if (total_circle) shapes.add(circle((int) Math.pow(total_radius, 2), total_xcenter, total_ycenter));
+        if (event_rectangle) shapes.add(teamBox(event_xtop, event_ytop, event_w, event_h));
+        if (total_rectangle) shapes.add(teamBox(total_xtop, total_ytop, total_w, total_h));
+        int[][] inside = insideAll(shapes, positionBox_x, positionBox_y, n);
+        if (inside != null) postTeamInside(cp, eventInterval, playerIds, inside, n);
     }
 
     public void model_POSITION(CPSolver cp, AtomicInteger counterEvent, boolean isNegated, CPIntervalVar eventInterval, CPIntVar event_start, CPIntVar event_end,
@@ -1140,6 +1064,14 @@ public class Query {
                 }
             }
 
+            // spatial constraints: one fixed word per candidate, matched on that candidate's window
+            List<Shape> shapes = new ArrayList<>();
+            if (event_circle) shapes.add(circle((int) Math.pow(event_radius, 2), event_xcenter, event_ycenter));
+            if (total_circle) shapes.add(circle((int) Math.pow(total_radius, 2), total_xcenter, total_ycenter));
+            if (event_rectangle) shapes.add(box(event_xtop, event_ytop, Math.abs(event_w), Math.abs(event_h)));
+            if (total_rectangle) shapes.add(box(total_xtop, total_ytop, Math.abs(total_w), Math.abs(total_h)));
+            int[][] inside = insideAll(shapes, positionBox_x, positionBox_y, n);
+
             int[] possible_players = new int[teams.length];
             player_id.fillArray(possible_players);
             CPBoolVar[] isThisPlayerVars = new CPBoolVar[teams.length];
@@ -1148,7 +1080,7 @@ public class Query {
                 if (pl_id == 0) {
                     continue;
                 }
-                CPIntervalVar thisPlayerTrueInterval = makeIntervalVar(cp, false, 0, n + 1);
+                CPIntervalVar thisPlayerInterval = makeIntervalVar(cp, false, 0, n + 1);
                 try {
                     CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n + 1);
                     if (isNegated) {
@@ -1161,14 +1093,15 @@ public class Query {
                         int[] paddedArray = Automaton.pad(positionZones[pl_id]);
                         cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.NOTA_APLUS_NOTA(nbZones, Arrays.stream(zones).boxed().collect(Collectors.toSet()))));
                     }
-                    cp.post(eq(start(thisPlayerTrueInterval), start(paddedInterval)));
-                    cp.post(eq(end(thisPlayerTrueInterval), minus(end(paddedInterval), 2)));
+                    cp.post(eq(start(thisPlayerInterval), start(paddedInterval)));
+                    cp.post(eq(end(thisPlayerInterval), minus(end(paddedInterval), 2)));
+                    if (inside != null) postInsideThroughout(cp, inside[pl_id], thisPlayerInterval);
 
                     isThisPlayerVars[pl_id] = isEq(player_id, pl_id);
                     impliesWhenPresent(cp, eventInterval, isThisPlayerVars[pl_id],
-                            isEq(start(thisPlayerTrueInterval), startOf(eventInterval)));
+                            isEq(start(thisPlayerInterval), startOf(eventInterval)));
                     impliesWhenPresent(cp, eventInterval, isThisPlayerVars[pl_id],
-                            isEq(end(thisPlayerTrueInterval), endOf(eventInterval)));
+                            isEq(end(thisPlayerInterval), endOf(eventInterval)));
 
                 } catch (InconsistencyException e) {
                     isThisPlayerVars[pl_id] = makeBoolVar(cp);
@@ -1178,67 +1111,6 @@ public class Query {
             postWhenPresent(cp, eventInterval, isEq(sum(Arrays.stream(isThisPlayerVars)
                     .filter(Objects::nonNull)
                     .toArray(CPBoolVar[]::new)), 1));
-
-
-            // spatial constraints
-            if (event_circle || event_rectangle || total_circle || total_rectangle) {
-
-                //Transposed matrices
-                int[][] positionBox_x_T = new int[n][teams.length];
-                int[][] positionBox_y_T = new int[n][teams.length];
-                for (int playerId = 0; playerId < teams.length; playerId++) {
-                    for (int frame = 0; frame < n; frame++) {
-                        positionBox_x_T[frame][playerId] = positionBox_x[playerId][frame];
-                    }
-                }
-                for (int playerId = 0; playerId < teams.length; playerId++) {
-                    for (int frame = 0; frame < n; frame++) {
-                        positionBox_y_T[frame][playerId] = positionBox_y[playerId][frame];
-                    }
-                }
-
-                if (event_circle || total_circle) {
-                    List<int[]> circles = new ArrayList<>();
-                    if (event_circle)
-                        circles.add(new int[]{(int) Math.pow(event_radius, 2), event_xcenter, event_ycenter});
-                    if (total_circle)
-                        circles.add(new int[]{(int) Math.pow(total_radius, 2), total_xcenter, total_ycenter});
-
-                    for (int[] circle : circles) {
-                        CPBoolVar[] pl_inside_circle = new CPBoolVar[n]; //true = 1, false = 0
-                        for (int f = 0; f < n; f++) {
-                            int[] insideCircle = new int[teams.length];
-                            for (int pid = 0; pid < teams.length; pid++) {
-                                int dx = positionBox_x_T[f][pid] - circle[1];
-                                int dy = positionBox_y_T[f][pid] - circle[2];
-                                insideCircle[pid] = (dx * dx + dy * dy <= circle[0]) ? 1 : 0;
-                            }
-                            pl_inside_circle[f] = isEq(element(insideCircle, player_id), 1);
-                        }
-                        cp.post(new TrueInterval(pl_inside_circle, eventInterval));
-                    }
-                } if (event_rectangle || total_rectangle) {
-                    List<int[]> rectangles = new ArrayList<>();
-                    if (event_rectangle)
-                        rectangles.add(new int[]{event_xtop, event_ytop, Math.abs(event_w), Math.abs(event_h)});
-                    if (total_rectangle)
-                        rectangles.add(new int[]{total_xtop, total_ytop, Math.abs(total_w), Math.abs(total_h)});
-
-                    for (int[] rect : rectangles) {
-                        CPBoolVar[] pl_inside_rect = makeBoolVarArray(cp, n);
-                        for (int f = 0; f < n; f++) {
-                            CPIntVar bx = element(positionBox_x_T[f], player_id);
-                            CPIntVar by = element(positionBox_y_T[f], player_id);
-                            CPBoolVar upper_bound_x = isLe(bx, rect[0] + rect[2]);
-                            CPBoolVar lower_bound_x = isGe(bx, rect[0]);
-                            CPBoolVar upper_bound_y = isLe(by, rect[1]);
-                            CPBoolVar lower_bound_y = isGe(by, rect[1] - rect[3]);
-                            pl_inside_rect[f] = isEq(sum(upper_bound_x, lower_bound_x, upper_bound_y, lower_bound_y), 4); //inside the rectangle
-                        }
-                        cp.post(new TrueInterval(pl_inside_rect, eventInterval));
-                    }
-                }
-            }
 
         } else if (subject instanceof Team team) {
 
@@ -1358,69 +1230,13 @@ public class Query {
 
 
             // spatial constraints
-            if (event_circle || event_rectangle || total_circle || total_rectangle) {
-
-                //Transposed matrices
-                int[][] positionBox_x_T = new int[n][teams.length];
-                int[][] positionBox_y_T = new int[n][teams.length];
-                for (int playerId = 0; playerId < teams.length; playerId++) {
-                    for (int frame = 0; frame < n; frame++) {
-                        positionBox_x_T[frame][playerId] = positionBox_x[playerId][frame];
-                    }
-                }
-                for (int playerId = 0; playerId < teams.length; playerId++) {
-                    for (int frame = 0; frame < n; frame++) {
-                        positionBox_y_T[frame][playerId] = positionBox_y[playerId][frame];
-                    }
-                }
-
-                if (event_circle || total_circle) {
-                    List<int[]> circles = new ArrayList<>();
-                    if (event_circle)
-                        circles.add(new int[]{(int) Math.pow(event_radius, 2), event_xcenter, event_ycenter});
-                    if (total_circle)
-                        circles.add(new int[]{(int) Math.pow(total_radius, 2), total_xcenter, total_ycenter});
-
-                    for (int[] circle : circles) {
-                        for (int plIdx = 0; plIdx < playerIds.length; plIdx++) {
-                            CPIntVar pl = playerIds[plIdx];
-                            int[] possible_players = new int[teams.length];
-                            pl.fillArray(possible_players);
-
-                            CPBoolVar[] pl_inside_circle = new CPBoolVar[n];
-                            for (int f = 0; f < n; f++) {
-                                int[] insideCircle = new int[teams.length];
-                                for (int pid = 0; pid < teams.length; pid++) {
-                                    int dx = positionBox_x_T[f][pid] - circle[1];
-                                    int dy = positionBox_y_T[f][pid] - circle[2];
-                                    insideCircle[pid] = (dx * dx + dy * dy <= circle[0]) ? 1 : 0;
-                                }
-                                pl_inside_circle[f] = isEq(element(insideCircle, pl), 1);
-                            }
-                            cp.post(new TrueInterval(pl_inside_circle, eventInterval));
-                        }
-                    }
-                } if (event_rectangle || total_rectangle) {
-                    List<int[]> rectangles = new ArrayList<>();
-                    if (event_rectangle)
-                        rectangles.add(new int[]{event_xtop, event_ytop, event_w, event_h});
-                    if (total_rectangle)
-                        rectangles.add(new int[]{total_xtop, total_ytop, total_w, total_h});
-
-                    for (int[] rect : rectangles) {
-                        for (CPIntVar pl : playerIds) {
-                            CPBoolVar[] pl_inside_rect = makeBoolVarArray(cp, n);
-                            for (int f = 0; f < n; f++) {
-                                CPIntVar distx = minus(element(positionBox_x_T[f], pl), rect[0]);
-                                CPIntVar disty = minus(element(positionBox_y_T[f], pl), rect[1]);
-                                //inside the rectangle -> equivalent to and(isLe(distx, rect[2]), isLe(disty, rect[3]))
-                                pl_inside_rect[f] = not(isOr(isGe(distx, rect[2]), isGe(disty, rect[3])));
-                            }
-                            cp.post(new TrueInterval(pl_inside_rect, eventInterval));
-                        }
-                    }
-                }
-            }
+            List<Shape> shapes = new ArrayList<>();
+            if (event_circle) shapes.add(circle((int) Math.pow(event_radius, 2), event_xcenter, event_ycenter));
+            if (total_circle) shapes.add(circle((int) Math.pow(total_radius, 2), total_xcenter, total_ycenter));
+            if (event_rectangle) shapes.add(teamBox(event_xtop, event_ytop, event_w, event_h));
+            if (total_rectangle) shapes.add(teamBox(total_xtop, total_ytop, total_w, total_h));
+            int[][] inside = insideAll(shapes, positionBox_x, positionBox_y, n);
+            if (inside != null) postTeamInside(cp, eventInterval, playerIds, inside, n);
 
         } else { //ball
             int[] zones = (int[]) payload;
@@ -1752,69 +1568,13 @@ public class Query {
 
 
             // spatial constraints
-            if (event_circle || event_rectangle || total_circle || total_rectangle) {
-
-                //Transposed matrices
-                int[][] positionBox_x_T = new int[n][teams.length];
-                int[][] positionBox_y_T = new int[n][teams.length];
-                for (int playerId = 0; playerId < teams.length; playerId++) {
-                    for (int frame = 0; frame < n; frame++) {
-                        positionBox_x_T[frame][playerId] = positionBox_x[playerId][frame];
-                    }
-                }
-                for (int playerId = 0; playerId < teams.length; playerId++) {
-                    for (int frame = 0; frame < n; frame++) {
-                        positionBox_y_T[frame][playerId] = positionBox_y[playerId][frame];
-                    }
-                }
-
-                if (event_circle || total_circle) {
-                    List<int[]> circles = new ArrayList<>();
-                    if (event_circle)
-                        circles.add(new int[]{(int) Math.pow(event_radius, 2), event_xcenter, event_ycenter});
-                    if (total_circle)
-                        circles.add(new int[]{(int) Math.pow(total_radius, 2), total_xcenter, total_ycenter});
-
-                    for (int[] circle : circles) {
-                        for (int plIdx = 0; plIdx < playerIds.length; plIdx++) {
-                            CPIntVar pl = playerIds[plIdx];
-                            int[] possible_players = new int[teams.length];
-                            pl.fillArray(possible_players);
-
-                            CPBoolVar[] pl_inside_circle = new CPBoolVar[n];
-                            for (int f = 0; f < n; f++) {
-                                int[] insideCircle = new int[teams.length];
-                                for (int pid = 0; pid < teams.length; pid++) {
-                                    int dx = positionBox_x_T[f][pid] - circle[1];
-                                    int dy = positionBox_y_T[f][pid] - circle[2];
-                                    insideCircle[pid] = (dx * dx + dy * dy <= circle[0]) ? 1 : 0;
-                                }
-                                pl_inside_circle[f] = isEq(element(insideCircle, pl), 1);
-                            }
-                            cp.post(new TrueInterval(pl_inside_circle, eventInterval));
-                        }
-                    }
-                } if (event_rectangle || total_rectangle) {
-                    List<int[]> rectangles = new ArrayList<>();
-                    if (event_rectangle)
-                        rectangles.add(new int[]{event_xtop, event_ytop, event_w, event_h});
-                    if (total_rectangle)
-                        rectangles.add(new int[]{total_xtop, total_ytop, total_w, total_h});
-
-                    for (int[] rect : rectangles) {
-                        for (CPIntVar pl : playerIds) {
-                            CPBoolVar[] pl_inside_rect = makeBoolVarArray(cp, n);
-                            for (int f = 0; f < n; f++) {
-                                CPIntVar distx = minus(element(positionBox_x_T[f], pl), rect[0]);
-                                CPIntVar disty = minus(element(positionBox_y_T[f], pl), rect[1]);
-                                //inside the rectangle -> equivalent to and(isLe(distx, rect[2]), isLe(disty, rect[3]))
-                                pl_inside_rect[f] = not(isOr(isGe(distx, rect[2]), isGe(disty, rect[3])));
-                            }
-                            cp.post(new TrueInterval(pl_inside_rect, eventInterval));
-                        }
-                    }
-                }
-            }
+            List<Shape> shapes = new ArrayList<>();
+            if (event_circle) shapes.add(circle((int) Math.pow(event_radius, 2), event_xcenter, event_ycenter));
+            if (total_circle) shapes.add(circle((int) Math.pow(total_radius, 2), total_xcenter, total_ycenter));
+            if (event_rectangle) shapes.add(teamBox(event_xtop, event_ytop, event_w, event_h));
+            if (total_rectangle) shapes.add(teamBox(total_xtop, total_ytop, total_w, total_h));
+            int[][] inside = insideAll(shapes, positionBox_x, positionBox_y, n);
+            if (inside != null) postTeamInside(cp, eventInterval, playerIds, inside, n);
         }
     }
 
@@ -1918,6 +1678,90 @@ public class Query {
             cp.post(eq(s, paddedStart));
             cp.post(eq(e, paddedEnd));
         }
+    }
+
+    // #######################################
+    // SPATIAL WHERE ON PLAYER AND TEAM EVENTS
+    // #######################################
+
+    /** One WHERE shape, tested on the fixed tracking data. */
+    private interface Shape {
+        boolean contains(int x, int y);
+    }
+
+    private static Shape circle(int squaredRadius, int xcenter, int ycenter) {
+        return (x, y) -> {
+            int dx = x - xcenter;
+            int dy = y - ycenter;
+            return dx * dx + dy * dy <= squaredRadius;
+        };
+    }
+
+    /** The rectangle of player events: x in [xtop, xtop + w] and y in [ytop - h, ytop]. */
+    private static Shape box(int xtop, int ytop, int w, int h) {
+        return (x, y) -> x <= xtop + w && x >= xtop && y <= ytop && y >= ytop - h;
+    }
+
+    /** The rectangle of team events, which only bounds x - xtop and y - ytop from above. */
+    private static Shape teamBox(int xtop, int ytop, int w, int h) {
+        return (x, y) -> x - xtop < w && y - ytop < h;
+    }
+
+    /**
+     * {@code inside[p][f] = 1} iff player {@code p} is inside every shape at frame {@code f}: the
+     * fixed word a spatial WHERE is matched against, one row per candidate identity.
+     * Null when the event has no shape.
+     */
+    private static int[][] insideAll(List<Shape> shapes, int[][] positionBox_x, int[][] positionBox_y, int n) {
+        if (shapes.isEmpty()) return null;
+        int[][] inside = new int[positionBox_x.length][n];
+        for (int p = 0; p < positionBox_x.length; p++) {
+            for (int f = 0; f < n; f++) {
+                boolean in = true;
+                for (Shape s : shapes) in &= s.contains(positionBox_x[p][f], positionBox_y[p][f]);
+                inside[p][f] = in ? 1 : 0;
+            }
+        }
+        return inside;
+    }
+
+    /** Posts that {@code window} only covers frames where {@code word} is 1. */
+    private static void postInsideThroughout(CPSolver cp, int[] word, CPIntervalVar window) {
+        cp.post(new SubstringRegular(word, window, Automaton.APLUS(1, Set.of(1))));
+    }
+
+    /**
+     * Spatial WHERE of a team event: while the event happens, every member is inside the shapes on
+     * every frame of {@code eventInterval}. Members whose identity is already fixed share one word
+     * on the event interval itself; each other member gets one window per candidate identity, tied
+     * to the event interval only while the member takes that identity.
+     */
+    private void postTeamInside(CPSolver cp, CPIntervalVar eventInterval, CPIntVar[] members, int[][] inside, int n) {
+        int[] fixedWord = null;
+        for (CPIntVar member : members) {
+            if (member.isFixed()) {
+                int[] word = inside[member.min()];
+                if (fixedWord == null) fixedWord = word.clone();
+                else for (int f = 0; f < n; f++) fixedWord[f] &= word[f];
+                continue;
+            }
+            int[] candidates = new int[member.size()];
+            member.fillArray(candidates);
+            for (int c : candidates) {
+                CPIntervalVar window = makeIntervalVar(cp, false, 0, n + 1);
+                try {
+                    postInsideThroughout(cp, inside[c], window);
+                } catch (InconsistencyException e) {
+                    // c is never inside the shapes, so it cannot be this member while the event happens
+                    postWhenPresent(cp, eventInterval, not(isEq(member, c)));
+                    continue;
+                }
+                CPBoolVar isC = isEq(member, c);
+                impliesWhenPresent(cp, eventInterval, isC, isEq(start(window), startOf(eventInterval)));
+                impliesWhenPresent(cp, eventInterval, isC, isEq(end(window), endOf(eventInterval)));
+            }
+        }
+        if (fixedWord != null) postInsideThroughout(cp, fixedWord, eventInterval);
     }
 
     private List<Result> order(List<Result> results) {
