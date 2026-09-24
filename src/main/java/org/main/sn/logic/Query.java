@@ -10,11 +10,13 @@ import org.maxicp.cp.engine.core.CPSolver;
 
 
 import org.maxicp.search.DFSearch;
+import org.maxicp.search.SearchStatistics;
 import org.maxicp.search.Searches;
 import org.maxicp.util.exception.InconsistencyException;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -23,6 +25,13 @@ import static org.maxicp.cp.CPFactory.*;
 public class Query {
 
     private static final int ABSENT = 1;
+
+    public static final String MAX_SOLUTIONS_PROPERTY = "sn.maxSolutions";
+    private static final int DEFAULT_MAX_SOLUTIONS = 5_000_000;
+
+    public static int maxSolutions() {
+        return Integer.getInteger(MAX_SOLUTIONS_PROPERTY, DEFAULT_MAX_SOLUTIONS);
+    }
 
     private final Map<CPIntervalVar, CPIntVar> startVars = new IdentityHashMap<>();
     private final Map<CPIntervalVar, CPIntVar> endVars = new IdentityHashMap<>();
@@ -210,12 +219,30 @@ public class Query {
                 r.add(parseSolution(solnb, extVars, instance.name));
             });
 
+            // Stop predicate for the interval-count guard: solve(...) halts as soon as
+            // this returns true. A cap of 0 or less means "no guard".
+            final int solutionCap = maxSolutions();
+            Predicate<SearchStatistics> capReached = solutionCap > 0
+                    ? statistics -> statistics.numberOfSolutions() >= solutionCap
+                    : statistics -> false;
+
             if (searchMode != -1 || atMost != -1) {
-                if (searchMode == 0) search.solve();
-                else if (searchMode >= 1) search.solve(statistics -> statistics.numberOfSolutions() == searchMode);
-                else if (atMost >= 0) search.solve(statistics -> statistics.numberOfSolutions() <= atMost);
+                if (searchMode == 0) search.solve(capReached);
+                else if (searchMode >= 1)
+                    search.solve(statistics -> statistics.numberOfSolutions() == searchMode || capReached.test(statistics));
+                else if (atMost >= 0)
+                    search.solve(statistics -> statistics.numberOfSolutions() <= atMost || capReached.test(statistics));
             } else {
-                search.solve();
+                search.solve(capReached);
+            }
+
+            if (solutionCap > 0 && solutionCounter.get() >= solutionCap) {
+                throw new IllegalStateException(
+                        "Query produced more than " + solutionCap + " matches on " + instance.name
+                                + " and was abandoned. Narrow it — add a WHERE(MAXDURATION(...)) or a "
+                                + "tighter zone/entity, or avoid an OR whose branches hold for most of the "
+                                + "clip — or raise the cap with -D" + MAX_SOLUTIONS_PROPERTY + "=<n> "
+                                + "(0 disables it).");
             }
 
             if (atLeast >= 0) {

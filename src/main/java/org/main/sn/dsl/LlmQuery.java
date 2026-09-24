@@ -47,10 +47,10 @@ public class LlmQuery {
             - TEAM("right")                             — all players of the right team in the match
             - TEAM("name", id1, id2, ...)               — team built from player jersey numbers
             - TEAM("name", PLAYER("p1"), PLAYER("p2"))  — team built from player entities
-              * "left" and "right" MUST be lowercase. TEAM("LEFT") is not recognised as a side: it
-                builds an EMPTY team, which silently matches nothing or fails.
-              * A custom team MUST always be given its members. TEAM("t1") on its own is an empty
-                team and the query fails — only "left" and "right" name a whole side by themselves.
+              * "left" and "right" MUST be lowercase. TEAM("LEFT") is not recognised as a side and
+                is rejected as a team with no members.
+              * A custom team MUST always be given its members. TEAM("t1") on its own is rejected —
+                only "left" and "right" name a whole side by themselves.
               * Unlike a player identifier, a team identifier is not remembered across events. If the
                 same custom team is used in two events, repeat its full member list each time.
 
@@ -76,6 +76,26 @@ public class LlmQuery {
               * POSITION(TEAM("t"), K(k), a, b) means k players ARE IN zone a or b at one moment; it
                 never expresses movement — "k players move from a to b" is TEAM("t").MOVETO(a, b, k).
 
+            ### A list of values is a SET, not an "or" — it changes where the interval ENDS
+            A multi-valued argument is matched as one group: the interval runs for as long as the
+            subject stays anywhere inside the group, and moving from one member to another does NOT
+            end it. A disjunction gives one interval per alternative instead. The two return
+            different results, so pick from the wording of the request.
+
+            - POSITION(BALL(), 13, 14) is ONE interval for as long as the ball stays in zone 13 or
+              zone 14; moving from 13 to 14 does NOT end it.
+              For a separate interval per zone, write
+              OR(POSITION(BALL(), 13), POSITION(BALL(), 14)).
+            - POSSESSION(TEAM("left")) is ONE interval for as long as ANY left player has the ball;
+              a pass between two left players does NOT end it.
+              For an interval per player, write POSSESSION(PLAYER("pl", "left")).
+            - The same holds for POSITION(TEAM("t"), zones) and POSITION(PLAYER("p"), zones).
+
+            Use the set form when the request treats the alternatives as one region or one group
+            ("anywhere in the left third", "the left team has the ball"). Use the OR form, or a
+            single-entity event, when it asks about the alternatives separately ("in zone 13 or in
+            zone 14, whichever", "a player of the left team has the ball").
+
             ## Zones
             Zones are integers 1..14. There is no zone 0 and nothing above 14. Seen from above, with
             x running from the left goal (-62) to the right goal (+62) and y from the bottom
@@ -90,19 +110,34 @@ public class LlmQuery {
 
             ## Event modifier
             - event.MINRANGE()
-              With MINRANGE: minimal contiguous interval where the predicate holds (e.g. ball-in-flight for a pass).
-              Without MINRANGE: largest possession-based interval.
+              With MINRANGE: the minimal contiguous interval where the predicate holds
+                (e.g. just the ball-in-flight portion of a pass).
+              Without MINRANGE: the largest possession-based interval.
+
+            MINRANGE is NOT the default. Add it only when the request asks for the short reading,
+            and leave it off otherwise — a MINRANGE that was not asked for changes the result.
+            - Add MINRANGE for: "minimal", "smallest", "shortest", "just the", "only the moment",
+              "the interval of the pass itself".
+            - Leave it OFF for: no mention of interval length at all, or wording that asks for the
+              wide reading — "from the moment they enter ... to the last moment they are in ...",
+              "include the larger interval", "until they leave".
+            When the request says nothing either way, leave MINRANGE off.
 
             ## Combinators
             - AND(event1, event2, ...)   — all events hold SIMULTANEOUSLY, i.e. their intervals overlap at the same time. AND says nothing about order: it is ONLY for co-occurring events, NEVER for events that happen one after another (see "Temporal semantics" below).
             - OR(event1, event2, ...)    — at least one event holds
             - NOT(event)                 — event does NOT hold (complement of intervals)
 
-            Rules for combinators — all four matter:
+            Rules for combinators — all five matter:
             - NOT is only valid for atomic events: POSSESSION and POSITION. NOT(PASSTO(...)) and
               NOT(MOVETO(...)) are rejected when the query runs, and NOT(AND(...)) / NOT(OR(...)) do
               not negate the group at all — they negate each member separately, which is never what
               was asked. To say "A holds and B does not", write AND(A, NOT(B)) with B atomic.
+            - NOT(POSITION(...)) is the correct way to say "not in zones ...". Never rewrite it as a
+              positive list of the remaining zones: that is not equivalent (a player who is not
+              tracked in a frame is in none of the zones, so the complement list misses them), and
+              it is far slower. "At least 3 left players are not in zones 1, 2" is
+              NOT(POSITION(TEAM("left"), K(3), 1, 2)) — keep the K and the original zones.
             - AND and OR must NOT contain another AND or OR. Their arguments may only be atomic
               events, labeled events, or NOT(atomic). A nested combinator makes the query fail.
               When the request needs several groups, give each group its own argument of SELECT:
@@ -110,7 +145,8 @@ public class LlmQuery {
             - Give an AND or an OR at least two arguments.
             - Keep the branches of an OR of the same kind and as specific as possible. An OR that
               mixes POSSESSION with another kind of event, or mixes a plain event with a NOT, can
-              take forever; an OR over two passes, two moves or two positions is fine.
+              take forever or be rejected for producing too many matches; an OR over two passes,
+              two moves or two positions is fine.
 
             ## Full query structure
             SELECT(event1, event2, ...).FROM("dataset").WHERE(constraint, ...).search_mode
@@ -166,6 +202,17 @@ public class LlmQuery {
                This restricts the overall start/end/duration/location of the entire match. It may be
                written more than once, and before or after the search mode.
 
+            Decide which one from the wording:
+            - A constraint describing the WHOLE pattern goes on the SELECT.
+              Signalled by: "the sequence should last ...", "this should happen between frames ...",
+              "the whole pattern within ...", or a constraint stated after all the events.
+            - A constraint attached to ONE event goes on that event, inside the SELECT.
+              Signalled by the constraint being written as part of that event's own description:
+              "a pass lasting at most 20 frames, while the ball is in zone 3".
+            When an AND or OR carries a constraint that applies to the group as a whole, put the
+            WHERE on the AND/OR itself — AND(a, b).WHERE(MINDURATION(30)) — not on the SELECT, and
+            not on one member.
+
             ATLEAST and ATMOST are only valid on the full SELECT (not on individual events).
 
             Temporal constraints (time in frames, 1 frame = 1/25 s):
@@ -177,7 +224,9 @@ public class LlmQuery {
               MAXDURATION(n) — the match must last at most n frames
             Use the number exactly as the request writes it and never add or subtract 1 for
             "more than" / "less than": "longer than 30 frames" is MINDURATION(30), "less than 300
-            frames" is MAXDURATION(300), "more than 2 occurrences" is ATLEAST(2).
+            frames" is MAXDURATION(300), "more than 2 occurrences" is ATLEAST(2), "less than 10
+            times" is ATMOST(10), "more than once" is ATLEAST(1). This applies to occurrence counts
+            exactly as it does to durations — never write ATMOST(9) for "less than 10 times".
 
             Spatial constraints (whole numbers of metres, in the same frame as the zones: the pitch
             is centred on (0,0), x from -62 to +62, y from -39 to +39):
