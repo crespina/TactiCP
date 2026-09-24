@@ -732,7 +732,7 @@
       "PLAYER.MOVETO",
       "identifier-reuse"
     ],
-    "nl": "Find the moments when a pass happens (minimal interval) or a player moves from zone 1 to 2 (minimal interval).",
+    "nl": "Find the moments when a pass happens (the pass itself only) between player A and B or a player A moves from zone 1 to 2 (minimal interval).",
     "dsl": "SELECT(OR(PLAYER(\"p1\").PASSTO(PLAYER(\"p2\")).MINRANGE(),PLAYER(\"p1\").MOVETO(1,2).MINRANGE()))"
   },
   {

@@ -83,8 +83,19 @@ public class Factory {
         return Ball.get();
     }
 
+    /**
+     * A whole side: {@code TEAM("left")} or {@code TEAM("right")}.
+     * <p>
+     * This exact-arity overload must exist even though both varargs forms below
+     * could match a single argument: without it, {@code TEAM("left")} is ambiguous
+     * between {@code TEAM(String, Player...)} and {@code TEAM(String, int...)} and
+     * fails to resolve in Groovy (and to compile in Java).
+     *
+     * @throws IllegalArgumentException for any other name — a custom team has no
+     *                                  members unless they are listed
+     */
     public static Team TEAM(String name) {
-        return new Team(name);
+        return new Team(name, new Player[0]);
     }
 
     public static Team TEAM(String name, Player... pls) {
@@ -98,10 +109,6 @@ public class Factory {
         }
         return new Team(name, pls);
     }
-
-//    public static Formation formation(int... lines) {
-//        return Formation.of(lines);
-//    }
 
     public static Event NOT(Event event) {
         return event.not();
@@ -135,19 +142,35 @@ public class Factory {
     }
 
     public static Event POSITION(Player p, int... zones) {
+        if (zones.length==0){
+            throw new IllegalArgumentException("POSITION requires at least one zone, e.g."
+                    + " POSITION(BALL(), 4). Zones are integers 1..14.");
+        }
         return new PlayerEvent(new Action("POSITION", zones), p);
     }
 
     public static Event POSITION(Team t, K k, int... zones) {
+        if (zones.length==0){
+            throw new IllegalArgumentException("POSITION requires at least one zone, e.g."
+                    + " POSITION(BALL(), 4). Zones are integers 1..14.");
+        }
         return new TeamEvent(new Action("POSITION", java.util.stream.IntStream.concat(java.util.Arrays.stream(zones), java.util.stream.IntStream.of(k.value)).toArray()), t);
     }
 
     public static Event POSITION(Team t, int... zones) {
+        if (zones.length==0){
+            throw new IllegalArgumentException("POSITION requires at least one zone, e.g."
+                    + " POSITION(BALL(), 4). Zones are integers 1..14.");
+        }
         return new TeamEvent(new Action("POSITION", java.util.stream.IntStream.concat(java.util.Arrays.stream(zones), java.util.stream.IntStream.of(1)).toArray()), t);
     }
 
     public static Event POSITION(Ball b, int... zones) {
-            return new BallEvent(new Action("POSITION", zones));
+        if (zones.length==0){
+            throw new IllegalArgumentException("POSITION requires at least one zone, e.g."
+                    + " POSITION(BALL(), 4). Zones are integers 1..14.");
+        }
+        return new BallEvent(new Action("POSITION", zones));
     }
 
     public static Where STARTMIN(int frame) {
@@ -198,8 +221,6 @@ public class Factory {
     public static K K(int k) {
         return new K(k);
     }
-
-    //TODO : START MIN START MAX
 
 }
 

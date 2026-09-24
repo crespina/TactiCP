@@ -32,7 +32,9 @@ public class Main {
         //SELECT(PLAYER("p1","left").PASSTO(PLAYER("p2", "right")).MINRANGE()).FROM("all").searchAndPrint();
         //SELECT(PLAYER("p1","left").PASSTO(PLAYER("p2", "right"))).FROM("all").searchAndPrint();
         SELECT(TEAM("t1",PLAYER("pwc3"),PLAYER("pleft","left"),PLAYER("p1",1)).MOVETO(11,10,3).MINRANGE().WHERE(RECTANGLE(-20,20,40,20))).FROM("SNGS-021").searchAndPrint();
-
+        // A2 check: TEAM("t") with no members is now ambiguous in Java (both varargs
+        // overloads match), so this does not compile. It still resolves in Groovy.
+        //SELECT(TEAM("t").MOVETO(1,2, 3)).searchAndPrint();
 
         // Test passTo
         // -----------
