@@ -541,9 +541,10 @@ public class Query {
             if (minrange) {
                 cp.post(new SubstringRegular(positionZones[ball_idx], eventInterval, Automaton.A_NOTBSTAR_B(teams.length, zone_start, zone_end)));
             } else {
-                CPIntervalVar paddedInterval = paddedFor(cp, eventInterval, n + 1);
+                // n + 2: a move may run from the first frame to the last one, plus its two delimiters
+                CPIntervalVar paddedInterval = paddedFor(cp, eventInterval, n + 2);
                 int[] paddedArray = Automaton.pad(positionZones[ball_idx]);
-                cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADSTAR_BPLUS_PAD(teams.length, zone_start, zone_end)));
+                cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_NOTABSTAR_BPLUS_PAD(teams.length, zone_start, zone_end)));
                 linkPadded(cp, eventInterval, paddedInterval);
             }
         }
@@ -726,7 +727,8 @@ public class Query {
                 //cp.post(new SubstringRegular(possession, eventInterval, Automaton.A_0STAR_B(teams.length, passersIds, receiversIds)));
                 cp.post(new SubstringRegular(possession, eventInterval, Automaton.A_0PLUS_B(teams.length, passersIds, receiversIds)));
             } else {
-                CPIntervalVar paddedInterval = paddedFor(cp, eventInterval, n + 1);
+                // n + 2: a pass may run from the first frame to the last one, plus its two delimiters
+                CPIntervalVar paddedInterval = paddedFor(cp, eventInterval, n + 2);
                 int[] paddedArray = Automaton.pad(possession);
                 //cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADSTAR_BPLUS_PAD(teams.length, passersIds, receiversIds)));
                 cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_0PLUS_BPLUS_PAD(teams.length, passersIds, receiversIds)));
@@ -852,9 +854,10 @@ public class Query {
                     if (minrange) {
                         cp.post(new SubstringRegular(positionZones[pl_id], thisPlayerInterval, Automaton.A_NOTBSTAR_B(teams.length, zone_start, zone_end)));
                     } else {
-                        CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n + 1);
+                        // n + 2: a move may run from the first frame to the last one, plus its two delimiters
+                        CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n + 2);
                         int[] paddedArray = Automaton.pad(positionZones[pl_id]);
-                        cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADSTAR_BPLUS_PAD(teams.length, zone_start, zone_end)));
+                        cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_NOTABSTAR_BPLUS_PAD(teams.length, zone_start, zone_end)));
                         cp.post(eq(start(thisPlayerInterval), start(paddedInterval)));
                         cp.post(eq(end(thisPlayerInterval), minus(end(paddedInterval), 2)));
                     }
@@ -867,6 +870,8 @@ public class Query {
                             isEq(end(thisPlayerInterval), endOf(eventInterval)));
 
                 } catch (InconsistencyException e) {
+                    // pl_id never makes this move: it cannot be the player while the event happens
+                    postWhenPresent(cp, eventInterval, not(isEq(player_id, pl_id)));
                     isThisPlayerVars[pl_id] = makeBoolVar(cp);
                     isThisPlayerVars[pl_id].fix(false);
                 }
@@ -978,7 +983,7 @@ public class Query {
                         } else {
                             CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n + 1);
                             int[] paddedArray = Automaton.pad(positionZones[pl_id]);
-                            cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADSTAR_BPLUS_PAD(teams.length, zone_start, zone_end)));
+                            cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_NOTABSTAR_BPLUS_PAD(teams.length, zone_start, zone_end)));
                             cp.post(eq(start(thisPlayerInterval), start(paddedInterval)));
                             cp.post(eq(end(thisPlayerInterval), minus(end(paddedInterval), 2)));
                         }
@@ -1082,9 +1087,10 @@ public class Query {
                 }
                 CPIntervalVar thisPlayerInterval = makeIntervalVar(cp, false, 0, n + 1);
                 try {
-                    CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n + 1);
+                    // n + 2: a stay can last the whole clip, plus its two delimiters
+                    CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n + 2);
                     if (isNegated) {
-                        int[] paddedArray = Automaton.pad(positionZones[pl_id], zones[0]);
+                        int[] paddedArray = padNegated(positionZones[pl_id], zones[0]);
                         int[] otherZones = java.util.stream.IntStream.rangeClosed(0, nbZones)
                                 .filter(z -> Arrays.stream(zones).noneMatch(v -> v == z))
                                 .toArray();
@@ -1104,6 +1110,8 @@ public class Query {
                             isEq(end(thisPlayerInterval), endOf(eventInterval)));
 
                 } catch (InconsistencyException e) {
+                    // pl_id has no fitting stay: it cannot be the player while the event happens
+                    postWhenPresent(cp, eventInterval, not(isEq(player_id, pl_id)));
                     isThisPlayerVars[pl_id] = makeBoolVar(cp);
                     isThisPlayerVars[pl_id].fix(false);
                 }
@@ -1194,7 +1202,7 @@ public class Query {
                         CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n + 1);
 
                         if (isNegated) {
-                            int[] paddedArray = Automaton.pad(positionZones[pl_id], zones[0]);
+                            int[] paddedArray = padNegated(positionZones[pl_id], zones[0]);
                             int[] otherZones = java.util.stream.IntStream.rangeClosed(0, nbZones)
                                     .filter(z -> Arrays.stream(zones).noneMatch(v -> v == z))
                                     .toArray();
@@ -1243,9 +1251,10 @@ public class Query {
             if (zones.length == 0) {
                 throw new IllegalArgumentException("At least one zone must be specified for POSITION of the ball");
             }
+            // n + 2: a stay can last the whole clip, plus its two delimiters
             CPIntervalVar paddedInterval = paddedFor(cp, eventInterval, n + 2);
             if (isNegated) {
-                int[] paddedArray = Automaton.pad(positionZones[ball_idx], zones[0]);
+                int[] paddedArray = padNegated(positionZones[ball_idx], zones[0]);
                 int[] otherZones = java.util.stream.IntStream.rangeClosed(0, nbZones)
                         .filter(z -> Arrays.stream(zones).noneMatch(v -> v == z))
                         .toArray();
@@ -1320,7 +1329,8 @@ public class Query {
 
             CPIntVar player_id = makeIntVar(cp, teams.length);
 
-            CPIntVar possessionAtStart = element(possession, startOf(eventInterval));
+            // a positive event reads p off the sequence: the holder of the ball on its first frame
+            CPIntVar possessionAtStart = isNegated ? null : element(possession, startOf(eventInterval));
 
             if (IDENTIFIERS.get(player.name()) == null) {
                 if (!isNegated) player_id = boundWhenPresent(cp, eventInterval, possessionAtStart, teams.length);
@@ -1360,24 +1370,56 @@ public class Query {
                 for (int i = 0; i < teams.length; i++) {
                     if (teams[i] == 0 || teams[i] == 1) {
                         validIds.add(i);
+                    } else {
+                        player_id.remove(i);
                     }
                 }
             }
+            final CPIntVar identity = player_id;
+            validIds.removeIf(id -> !identity.contains(id));
 
-            CPIntervalVar paddedInterval = paddedFor(cp, eventInterval, n + 2);
             if (isNegated) {
-                int[] paddedPossession = Automaton.pad(possession, validIds.iterator().next());
+                // p does not hold the ball: one window per candidate, as for Player POSITION. A single
+                // automaton cannot tell whose stay it reads: one that starts on the first frame only
+                // shows it at its trailing delimiter.
                 Set<Integer> allPossessionValues = Arrays.stream(possession).boxed().collect(Collectors.toSet());
-                Set<Integer> complementIds = allPossessionValues.stream()
-                        .filter(v -> !validIds.contains(v))
-                        .collect(Collectors.toSet());
-                cp.post(new SubstringRegular(paddedPossession, paddedInterval, Automaton.NOTA_APLUS_NOTA(teams.length, complementIds)));
+                List<CPBoolVar> isThisPlayerVars = new ArrayList<>();
+                for (int pl_id : validIds) {
+                    CPIntervalVar thisPlayerInterval = makeIntervalVar(cp, false, 0, n + 1);
+                    // n + 2: a player who never holds the ball has a single stay, the whole clip,
+                    // plus its two delimiters
+                    CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n + 2);
+                    try {
+                        int[] paddedPossession = padNegated(possession, pl_id);
+                        Set<Integer> complementIds = allPossessionValues.stream()
+                                .filter(v -> v != pl_id)
+                                .collect(Collectors.toSet());
+                        cp.post(new SubstringRegular(paddedPossession, paddedInterval, Automaton.NOTA_APLUS_NOTA(teams.length, complementIds)));
+                        cp.post(eq(start(thisPlayerInterval), start(paddedInterval)));
+                        cp.post(eq(end(thisPlayerInterval), minus(end(paddedInterval), 2)));
+                    } catch (InconsistencyException e) {
+                        // pl_id holds the ball on every frame: it cannot be p while the event happens
+                        postWhenPresent(cp, eventInterval, not(isEq(player_id, pl_id)));
+                        continue;
+                    }
+                    CPBoolVar isThisPlayer = isEq(player_id, pl_id);
+                    impliesWhenPresent(cp, eventInterval, isThisPlayer, isEq(start(thisPlayerInterval), startOf(eventInterval)));
+                    impliesWhenPresent(cp, eventInterval, isThisPlayer, isEq(end(thisPlayerInterval), endOf(eventInterval)));
+                    isThisPlayerVars.add(isThisPlayer);
+                }
+                if (isThisPlayerVars.isEmpty()) {
+                    CPBoolVar noCandidate = makeBoolVar(cp);
+                    noCandidate.fix(false);
+                    isThisPlayerVars.add(noCandidate);
+                }
+                postWhenPresent(cp, eventInterval, isEq(sum(isThisPlayerVars.toArray(CPBoolVar[]::new)), 1));
             } else {
+                // one maximal stay of a single candidate: a direct handover to another one ends it
+                CPIntervalVar paddedInterval = paddedFor(cp, eventInterval, n + 2);
                 int[] paddedPossession = Automaton.pad(possession);
-                cp.post(new SubstringRegular(paddedPossession, paddedInterval, Automaton.NOTA_APLUS_NOTA(teams.length, validIds)));
-
+                cp.post(new SubstringRegular(paddedPossession, paddedInterval, Automaton.NOTX_XPLUS_NOTX(teams.length, validIds)));
+                linkPadded(cp, eventInterval, paddedInterval);
             }
-            linkPadded(cp, eventInterval, paddedInterval);
 
             // spatial constraints
             if (event_circle || event_rectangle || total_circle || total_rectangle) {
@@ -1454,7 +1496,7 @@ public class Query {
 
                 if (isNegated) {
                     CPIntervalVar paddedInterval = paddedFor(cp, eventInterval, n + 2);
-                    int[] paddedPossession = Automaton.pad(possession, teamIds.iterator().next());
+                    int[] paddedPossession = padNegated(possession, teamIds.iterator().next());
                     Set<Integer> allPossessionValues = Arrays.stream(possession).boxed().collect(Collectors.toSet());
                     Set<Integer> complementIds = allPossessionValues.stream()
                             .filter(v -> !teamIds.contains(v))
@@ -1522,7 +1564,7 @@ public class Query {
                         try {
                             CPIntervalVar paddedInterval = makeIntervalVar(cp, false, 0, n + 1);
                             if (isNegated) {
-                                int[] paddedPossession = Automaton.pad(possession, pl_id);
+                                int[] paddedPossession = padNegated(possession, pl_id);
                                 Set<Integer> allPossessionValues = Arrays.stream(possession).boxed().collect(Collectors.toSet());
                                 Set<Integer> complementIds = allPossessionValues.stream()
                                         .filter(v -> v != pl_id)
@@ -1658,6 +1700,18 @@ public class Query {
         boolean optional = mayBeAbsent.contains(eventInterval);
         CPIntervalVar padded = optional ? makeOptionalInterval(cp, 0, lengthMax) : makeIntervalVar(cp, false, 0, lengthMax);
         if (optional) cp.post(eq(padded.status(), eventInterval.status()));
+        return padded;
+    }
+
+    /**
+     * Pads the sequence of a negated event with {@code sentinel}, which must lie outside the
+     * complement automaton's symbols. The dummy frame 0, where nothing is tracked (symbol 0), is
+     * overwritten too: 0 belongs to the complement, so it would otherwise extend a negated stay to
+     * a frame that does not exist.
+     */
+    private static int[] padNegated(int[] seq, int sentinel) {
+        int[] padded = Automaton.pad(seq, sentinel);
+        padded[1] = sentinel;
         return padded;
     }
 
