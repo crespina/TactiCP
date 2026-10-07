@@ -24,9 +24,11 @@ import static org.maxicp.cp.CPFactory.makeSolver;
  *   <li>TEAM.MOVETO(zs, ze, k): a group of k members makes the move when it is all in zs, then all
  *       in ze, read as a Player MOVE_TO on the group; the answer reports the k members.</li>
  * </ul>
- * A wildcard member gives one answer per identity, as an anonymous player does. Every expected
- * interval is at least two frames long, as for any top-level event, and starts on frame 1 at the
- * earliest: frame 0 is a dummy frame.
+ * A wildcard member named in another event too gives one answer per identity, as an anonymous
+ * player does. One named nowhere else is anonymous: only the set of players the team stands for
+ * matters, so each team, or each moving group, gives a single answer. Every expected interval is
+ * at least two frames long, as for any top-level event, and starts on frame 1 at the earliest:
+ * frame 0 is a dummy frame.
  */
 public class TeamEventsTest {
 
@@ -96,6 +98,14 @@ public class TeamEventsTest {
     private static Set<Answer> run(SelectExpr query) {
         Factory.reset();
         return answers(query);
+    }
+
+    /** The answers with their players sorted, checking that no team or group comes twice. */
+    private static Set<Answer> sortedIds(Set<Answer> answers) {
+        Set<Answer> sorted = new HashSet<>();
+        for (Answer a : answers) sorted.add(new Answer(a.ids.stream().sorted().toList(), a.start, a.end));
+        assertEquals(answers.size(), sorted.size(), "the same team twice");
+        return sorted;
     }
 
     private static Set<int[]> intervals(Set<Answer> answers) {
@@ -290,14 +300,15 @@ public class TeamEventsTest {
             if (negated) e = NOT(e);
             assertEquals(expected, run(SELECT(e).FROM(G)), negated ? "negated" : "positive");
         }
+        // two anonymous members: one answer per pair of players, whichever member stands for whom
         Set<Answer> expected = new HashSet<>();
         for (int a : left) {
             for (int b : left) {
-                if (a == b) continue;
+                if (a >= b) continue;
                 expected.addAll(answersOf(List.of(a, b), runs(g.n, f -> teamHasBall(P, Set.of(a, b), f, g.n))));
             }
         }
-        assertEquals(expected, run(SELECT(POSSESSION(TEAM("t", PLAYER("a", "left"), PLAYER("b", "left")))).FROM(G)));
+        assertEquals(expected, sortedIds(run(SELECT(POSSESSION(TEAM("t", PLAYER("a", "left"), PLAYER("b", "left")))).FROM(G))));
     }
 
     /** Where a player, or the ball, is on frame f; (0, 0) when it is not tracked there. */
@@ -427,6 +438,58 @@ public class TeamEventsTest {
             if (minrange) player = player.MINRANGE();
             assertFalse(teamMoves.isEmpty());
             assertEquals(run(SELECT(player).FROM(G)), teamMoves, minrange ? "MINRANGE" : "extended");
+        }
+    }
+
+    @Test
+    public void anonymousMembersGiveOneAnswerPerGroup() throws IOException {
+        // three anonymous members, two of which move: each pair of players moving together, once
+        String G = "SNGS-049";
+        GameStateReconstructionInstance g = game(G);
+        int[][] Z = zones(g);
+        List<Integer> everyone = new ArrayList<>(side(g, 0));
+        everyone.addAll(side(g, 1));
+        Collections.sort(everyone);
+        List<List<Integer>> pairs = new ArrayList<>();
+        groups(everyone, 2, 0, new ArrayDeque<>(), pairs);
+        Set<Answer> expected = new HashSet<>();
+        for (List<Integer> pair : pairs) expected.addAll(groupMoves(Z, pair, 1, 2, true, g.n));
+        assertFalse(expected.isEmpty());
+        assertEquals(expected, sortedIds(run(SELECT(TEAM("t", PLAYER("a"), PLAYER("b"), PLAYER("c")).MOVETO(1, 2, 2).MINRANGE()).FROM(G))));
+    }
+
+    @Test
+    public void aMemberNamedElsewhereKeepsItsRole() throws IOException {
+        // a is named by both events, so it is one of the two left players that move, and the one in zone 2
+        String G = "SNGS-049";
+        GameStateReconstructionInstance g = game(G);
+        int[][] Z = zones(g);
+        List<List<Integer>> pairs = new ArrayList<>();
+        groups(side(g, 0), 2, 0, new ArrayDeque<>(), pairs);
+        int expected = 0;
+        for (List<Integer> pair : pairs) {
+            for (Answer move : groupMoves(Z, pair, 1, 2, true, g.n)) {
+                for (int a : pair) {
+                    // the stays of a in zone 2, any length: a child of AND need not last two frames
+                    for (int s = 1, e; s <= g.n; s = e) {
+                        e = s + 1;
+                        boolean in = Z[a][s] == 2;
+                        while (e <= g.n && (Z[a][e] == 2) == in) e++;
+                        if (in && Math.min(move.end, e) - Math.max(move.start, s) >= 2) expected++;
+                    }
+                }
+            }
+        }
+        assertTrue(expected > 0);
+        Factory.reset();
+        List<Result> results = SELECT(AND(TEAM("t", PLAYER("a", "left"), PLAYER("b", "left")).MOVETO(1, 2, 2).MINRANGE(),
+                POSITION(PLAYER("a", "left"), 2))).FROM(G).search();
+        assertEquals(expected, results.size());
+        for (Result r : results) {
+            Result.GroupEvent and = (Result.GroupEvent) r.events.getFirst();
+            Result.TeamMoveEvent move = (Result.TeamMoveEvent) and.children.get(0);
+            Result.PositionEvent position = (Result.PositionEvent) and.children.get(1);
+            assertTrue(move.playerIds.contains(position.playerIds.getFirst()));
         }
     }
 

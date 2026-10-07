@@ -12,9 +12,10 @@ import static org.main.sn.dsl.Factory.*;
 import static org.maxicp.cp.CPFactory.makeSolver;
 
 /**
- * Player POSSESSION checked against a direct scan of the possession sequence. In SNGS-021 the
- * right players 5 and 6 hand the ball to each other seven times, and thirteen players never hold
- * it. Every expected interval is at least two frames long, as for any top-level event.
+ * Player POSSESSION checked against a direct scan of the possession sequence, where a player keeps
+ * the ball from one touch to the next as long as nobody else touches it. In SNGS-021 the right
+ * players 5 and 6 hand the ball to each other seven times, and thirteen players never hold it.
+ * Every expected interval is at least two frames long, as for any top-level event.
  */
 public class PlayerPossessionTest {
 
@@ -29,8 +30,20 @@ public class PlayerPossessionTest {
         return g;
     }
 
+    /**
+     * The possession sequence the events read: the ball-free frames between two touches by the same
+     * player belong to that player.
+     */
     private static int[] possession(GameStateReconstructionInstance g) {
-        return new Possession(makeSolver(), g, true).result;
+        int[] raw = new Possession(makeSolver(), g, true).result;
+        int[] bridged = raw.clone();
+        for (int s = 1, e; s < raw.length; s = e) {
+            e = s + 1;
+            if (raw[s] != 0) continue;
+            while (e < raw.length && raw[e] == 0) e++;
+            if (s > 1 && e < raw.length && raw[s - 1] == raw[e]) Arrays.fill(bridged, s, e, raw[e]);
+        }
+        return bridged;
     }
 
     private static Set<Integer> side(GameStateReconstructionInstance g, int team) {
@@ -88,6 +101,23 @@ public class PlayerPossessionTest {
         Set<Integer> everyone = new HashSet<>(right);
         everyone.addAll(side(g, 0));
         assertEquals(holding(possession, everyone), answers(SELECT(POSSESSION(PLAYER("anyone"))).FROM(GAME)));
+    }
+
+    @Test
+    public void stayGoesOnBetweenTouches() throws IOException {
+        // in SNGS-060 several players lose the ball for a few frames and touch it again before anyone else
+        String G = "SNGS-060";
+        Factory.reset();
+        GameStateReconstructionInstance g = SELECT(POSSESSION(PLAYER("loader"))).FROM(G).matches.getFirst();
+        int[] raw = new Possession(makeSolver(), g, true).result;
+        int[] bridged = possession(g);
+        Set<Integer> everyone = new HashSet<>(side(g, 0));
+        everyone.addAll(side(g, 1));
+        Set<Stay> expected = holding(bridged, everyone);
+        // a stay with a ball-free frame inside: the case being tested
+        assertTrue(expected.stream().anyMatch(st -> Arrays.stream(raw, st.start(), st.end()).anyMatch(v -> v == 0)));
+        Factory.reset();
+        assertEquals(expected, answers(SELECT(POSSESSION(PLAYER("anyone"))).FROM(G)));
     }
 
     @Test
