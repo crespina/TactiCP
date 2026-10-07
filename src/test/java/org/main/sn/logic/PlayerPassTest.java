@@ -15,7 +15,8 @@ import static org.maxicp.cp.CPFactory.makeSolver;
 /**
  * PASSTO checked against a direct scan of the possession sequence, where a pass is three
  * consecutive maximal runs: a player a, frames where nobody holds the ball, a player b != a of
- * the same team. In SNGS-021, player 5 gets the ball straight from player 6 and passes it back.
+ * the same team. A player keeps the ball from one touch to the next as long as nobody else touches
+ * it. In SNGS-021, player 5 gets the ball straight from player 6 and passes it back.
  */
 public class PlayerPassTest {
 
@@ -30,8 +31,20 @@ public class PlayerPassTest {
         return g;
     }
 
+    /**
+     * The possession sequence the events read: the ball-free frames between two touches by the same
+     * player belong to that player.
+     */
     private static int[] possession(GameStateReconstructionInstance g) {
-        return new Possession(makeSolver(), g, true).result;
+        int[] raw = new Possession(makeSolver(), g, true).result;
+        int[] bridged = raw.clone();
+        for (int s = 1, e; s < raw.length; s = e) {
+            e = s + 1;
+            if (raw[s] != 0) continue;
+            while (e < raw.length && raw[e] == 0) e++;
+            if (s > 1 && e < raw.length && raw[s - 1] == raw[e]) Arrays.fill(bridged, s, e, raw[e]);
+        }
+        return bridged;
     }
 
     /**
@@ -98,6 +111,28 @@ public class PlayerPassTest {
                     ? PLAYER("a").PASSTO(PLAYER("b", "right")).MINRANGE()
                     : PLAYER("a").PASSTO(PLAYER("b", "right"))).FROM(GAME)));
         }
+    }
+
+    @Test
+    public void passerKeepsTheBallBetweenTouches() throws IOException {
+        // in SNGS-060 some passers lose the ball for a few frames and touch it again before passing
+        String G = "SNGS-060";
+        Factory.reset();
+        GameStateReconstructionInstance g = SELECT(POSSESSION(PLAYER("loader"))).FROM(G).matches.getFirst();
+        int[] raw = new Possession(makeSolver(), g, true).result;
+        int[] bridged = possession(g);
+        Set<Pass> expected = passes(bridged, g.teams, p -> true, p -> true, false);
+        // a pass whose passer has the ball-free frames inside its stay: the case being tested
+        assertTrue(expected.stream().anyMatch(p -> {
+            int f = p.start();
+            while (bridged[f] == p.passer()) f++;
+            return Arrays.stream(raw, p.start(), f).anyMatch(v -> v == 0);
+        }));
+        Factory.reset();
+        assertEquals(expected, answers(SELECT(PLAYER("a").PASSTO(PLAYER("b"))).FROM(G)));
+        Factory.reset();
+        assertEquals(passes(bridged, g.teams, p -> true, p -> true, true),
+                answers(SELECT(PLAYER("a").PASSTO(PLAYER("b")).MINRANGE()).FROM(G)));
     }
 
     @Test
