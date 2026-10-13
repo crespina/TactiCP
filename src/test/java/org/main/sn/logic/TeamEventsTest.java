@@ -28,7 +28,7 @@ import static org.maxicp.cp.CPFactory.makeSolver;
  * A wildcard member named in another event too gives one answer per identity, as an anonymous
  * player does. One named nowhere else is anonymous: only the set of players the team stands for
  * matters, so each team, or each moving group, gives a single answer. Every expected interval is
- * at least two frames long, as for any top-level event, and starts on frame 1 at the earliest:
+ * at least one frame long, as for any top-level event, and starts on frame 1 at the earliest:
  * frame 0 is a dummy frame.
  */
 public class TeamEventsTest {
@@ -56,7 +56,7 @@ public class TeamEventsTest {
         return ids;
     }
 
-    /** Maximal runs [s, e) of frames 1..n where {@code in} holds, at least two frames long. */
+    /** Maximal runs [s, e) of frames 1..n where {@code in} holds. */
     private static List<int[]> runs(int n, IntPredicate in) {
         List<int[]> runs = new ArrayList<>();
         int s = -1;
@@ -64,7 +64,7 @@ public class TeamEventsTest {
             boolean b = f <= n && in.test(f);
             if (b && s < 0) s = f;
             if (!b && s >= 0) {
-                if (f - s >= 2) runs.add(new int[]{s, f});
+                runs.add(new int[]{s, f});
                 s = -1;
             }
         }
@@ -519,12 +519,12 @@ public class TeamEventsTest {
         for (List<Integer> pair : pairs) {
             for (Answer move : groupMoves(Z, pair, 1, 2, true, g.n)) {
                 for (int a : pair) {
-                    // the stays of a in zone 2, any length: a child of AND need not last two frames
+                    // the stays of a in zone 2 that overlap the move on at least one frame
                     for (int s = 1, e; s <= g.n; s = e) {
                         e = s + 1;
                         boolean in = Z[a][s] == 2;
                         while (e <= g.n && (Z[a][e] == 2) == in) e++;
-                        if (in && Math.min(move.end, e) - Math.max(move.start, s) >= 2) expected++;
+                        if (in && Math.min(move.end, e) - Math.max(move.start, s) >= 1) expected++;
                     }
                 }
             }

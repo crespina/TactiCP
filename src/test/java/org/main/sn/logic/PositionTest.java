@@ -16,7 +16,7 @@ import static org.maxicp.cp.CPFactory.makeSolver;
  * Ball and Player POSITION checked against a direct scan of the zone sequences. In SNGS-127 the
  * ball moves between zones 10 and 11 only, and eight players stay in zones 1 to 4 for the whole
  * clip. No stay covers the dummy frame 0, where nothing is tracked: a stay, negated or not, that
- * reaches the start of the clip starts on frame 1. Every expected interval is at least two frames
+ * reaches the start of the clip starts on frame 1. Every expected interval is at least one frame
  * long, as for any top-level event.
  */
 public class PositionTest {
@@ -42,7 +42,7 @@ public class PositionTest {
         for (int s = 1, e = 2; s < Z.length; s = e, e = s + 1) {
             boolean in = zones.contains(Z[s]) != negated;
             while (e < Z.length && (zones.contains(Z[e]) != negated) == in) e++;
-            if (in && e - s >= 2) stays.add(new Stay(who, s, e));
+            if (in) stays.add(new Stay(who, s, e));
         }
         return stays;
     }

@@ -115,13 +115,13 @@ public class SpatialWhereTest {
         return answers;
     }
 
-    /** Maximal runs of {@code Z} in (negated: out of) the zones, from frame 1, at least two frames long. */
+    /** Maximal runs of {@code Z} in (negated: out of) the zones, from frame 1. */
     private static Set<Answer> stays(int[] Z, int who, Set<Integer> zones, boolean negated) {
         Set<Answer> stays = new HashSet<>();
         for (int s = 1, e = 2; s < Z.length; s = e, e = s + 1) {
             boolean in = zones.contains(Z[s]) != negated;
             while (e < Z.length && (zones.contains(Z[e]) != negated) == in) e++;
-            if (in && e - s >= 2) stays.add(new Answer(who, s, e));
+            if (in) stays.add(new Answer(who, s, e));
         }
         return stays;
     }
@@ -242,7 +242,7 @@ public class SpatialWhereTest {
         Set<Answer> stays = new HashSet<>();
         for (int s = 1, e = 2; s < P.length; s = e, e = s + 1) {
             while (e < P.length && P[e] == P[s]) e++;
-            if (P[s] != 0 && (g.teams[P[s]] == 0 || g.teams[P[s]] == 1) && e - s >= 2) stays.add(new Answer(P[s], s, e));
+            if (P[s] != 0 && (g.teams[P[s]] == 0 || g.teams[P[s]] == 1)) stays.add(new Answer(P[s], s, e));
         }
         Answer one = stays.stream().filter(a -> untrackedDuring(g, g.ball_idx, a.start, a.end)).findFirst().orElseThrow();
         Circle circle = around(g, g.ball_idx, one.start, one.end);
