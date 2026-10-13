@@ -8,6 +8,7 @@ import org.main.sn.dsl.SelectExpr;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.IntPredicate;
+import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.main.sn.dsl.Factory.*;
@@ -192,27 +193,75 @@ public class TeamEventsTest {
         assertEquals(expected, run(SELECT(POSITION(TEAM("t", PLAYER("x", "right"), PLAYER("p", fixed)), K(1), 1, 2, 3)).FROM(G)));
     }
 
+    /** Whether {@code id} is seen outside the circle (x, y, r) on frame f: never when it is not tracked there. */
+    private static boolean seenOutside(GameStateReconstructionInstance g, int id, int f, int[] circle) {
+        GameStateReconstructionInstance.PlayerInfo p = g.positions.get(f).players.get(id);
+        if (p == null) return false;
+        int dx = (int) p.pos().x() - circle[0], dy = (int) p.pos().y() - circle[1];
+        return dx * dx + dy * dy > circle[2] * circle[2];
+    }
+
+    /** A circle around every position, seen during [run[0], run[1]), of the members counted there. */
+    private static int[] circleAround(GameStateReconstructionInstance g, int[][] Z, List<Integer> ids, Set<Integer> zones,
+                                      boolean negated, int[] run) {
+        int minX = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE, minY = Integer.MAX_VALUE, maxY = Integer.MIN_VALUE;
+        for (int f = run[0]; f < run[1]; f++) {
+            for (int id : ids) {
+                GameStateReconstructionInstance.PlayerInfo p = g.positions.get(f).players.get(id);
+                if (p == null || zones.contains(Z[id][f]) == negated) continue;
+                minX = Math.min(minX, (int) p.pos().x()); maxX = Math.max(maxX, (int) p.pos().x());
+                minY = Math.min(minY, (int) p.pos().y()); maxY = Math.max(maxY, (int) p.pos().y());
+            }
+        }
+        return new int[]{(minX + maxX) / 2, (minY + maxY) / 2, (int) Math.ceil(Math.hypot(maxX - minX, maxY - minY) / 2) + 1};
+    }
+
     @Test
-    public void spatialWhereCountsTrackedMembersInsideTheShape() throws IOException {
+    public void spatialWhereKeepsTheRunsWhereKMembersStayInsideTheShape() throws IOException {
+        // As for a player, a spatial WHERE filters the runs found without it: a run is kept when, on
+        // each of its frames, at least k members are in (negated: out of) the zones and not seen
+        // outside the shape; an untracked member is never seen outside. The circle is drawn around
+        // the members counted during one run, so that the WHERE keeps at least that run, and the run
+        // is chosen so that this filter differs from refining the zones with the shape, which would
+        // give the maximal runs of that frame condition instead.
         String G = "SNGS-022";
         GameStateReconstructionInstance g = game(G);
         int[][] Z = zones(g);
-        List<Integer> roster = side(g, 1);
-        int cx = 10, cy = 0, r = 30;
-        Set<Integer> set = Set.of(1, 2, 3, 4);
-        List<int[]> expected = runs(g.n, f -> {
-            int c = 0;
-            for (int id : roster) {
-                GameStateReconstructionInstance.PlayerInfo p = g.positions.get(f).players.get(id);
-                if (p == null || !set.contains(Z[id][f])) continue;
-                int dx = (int) p.pos().x() - cx, dy = (int) p.pos().y() - cy;
-                if (dx * dx + dy * dy <= r * r) c++;
+        record Setting(String side, int k, int[] zones, boolean negated) {}
+        for (Setting s : List.of(new Setting("right", 3, new int[]{1, 2, 3, 4}, false),
+                new Setting("left", 8, new int[]{1, 2}, true))) {
+            String label = s.side + " K(" + s.k + ") " + Arrays.toString(s.zones) + (s.negated ? " negated" : "");
+            List<Integer> roster = side(g, s.side.equals("left") ? 0 : 1);
+            Set<Integer> set = new HashSet<>();
+            for (int z : s.zones) set.add(z);
+            List<int[]> all = countRuns(Z, roster, set, s.k, s.negated, g.n);
+
+            int[] circle = null;
+            Set<Answer> expected = null;
+            for (int[] one : all) {
+                if (one[1] - one[0] >= 200) continue;
+                int[] c = circleAround(g, Z, roster, set, s.negated, one);
+                IntPredicate holds = f -> {
+                    int count = 0;
+                    for (int id : roster) if (set.contains(Z[id][f]) != s.negated && !seenOutside(g, id, f, c)) count++;
+                    return count >= s.k;
+                };
+                List<int[]> kept = all.stream().filter(r -> IntStream.range(r[0], r[1]).allMatch(holds)).toList();
+                Set<Answer> filtered = answersOf(roster, kept);
+                if (!filtered.equals(answersOf(roster, runs(g.n, holds)))) {
+                    assertTrue(filtered.contains(new Answer(roster, one[0], one[1])), label);
+                    assertTrue(kept.size() < all.size(), label);
+                    circle = c;
+                    expected = filtered;
+                    break;
+                }
             }
-            return c >= 3;
-        });
-        assertFalse(expected.isEmpty());
-        assertEquals(answersOf(roster, expected),
-                run(SELECT(POSITION(TEAM("right"), K(3), 1, 2, 3, 4)).FROM(G).WHERE(RADIUS(cx, cy, r))));
+            assertNotNull(circle, label);
+
+            Event e = POSITION(TEAM(s.side), K(s.k), s.zones);
+            if (s.negated) e = NOT(e);
+            assertEquals(expected, run(SELECT(e).FROM(G).WHERE(RADIUS(circle[0], circle[1], circle[2]))), label);
+        }
     }
 
     @Test

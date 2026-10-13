@@ -794,6 +794,34 @@
     "dsl": "SELECT(OR(NOT(POSITION(BALL(),13)),NOT(POSITION(BALL(),14))))"
   },
   {
+    "id": "demorgan-neither",
+    "level": 4,
+    "features": [
+      "NOT",
+      "OR",
+      "DEMORGAN",
+      "POSITION",
+      "BALL"
+    ],
+    "nl": "",
+    "dsl": "SELECT(NOT(OR(POSITION(BALL(),1,2),POSITION(BALL(),3,4))))"
+  },
+  {
+    "id": "demorgan-not-both",
+    "level": 4,
+    "features": [
+      "NOT",
+      "AND",
+      "DEMORGAN",
+      "POSSESSION",
+      "TEAM:LEFT",
+      "POSITION",
+      "BALL"
+    ],
+    "nl": "",
+    "dsl": "SELECT(NOT(AND(POSSESSION(TEAM(\"left\")),POSITION(BALL(),13))))"
+  },
+  {
     "id": "and-five-members",
     "level": 5,
     "features": [
@@ -917,6 +945,37 @@
     ],
     "nl": "Find when all of those events happen together: the ball and Player 7 are in zone 4, three players or more from the left team are in zone 4, this team also has the possession of the ball but not player 9.",
     "dsl": "SELECT(AND(POSITION(BALL(),4),POSITION(PLAYER(\"p7\",7),4),POSITION(TEAM(\"left\"),K(3),4),POSSESSION(TEAM(\"left\")),NOT(POSSESSION(PLAYER(\"p9\",9)))))"
+  },
+  {
+    "id": "nest-and-of-or",
+    "level": 5,
+    "features": [
+      "AND",
+      "OR",
+      "NESTED",
+      "POSSESSION",
+      "PLAYER:jersey",
+      "POSITION",
+      "BALL"
+    ],
+    "nl": "",
+    "dsl": "SELECT(AND(OR(POSSESSION(PLAYER(\"p1\",9)),POSSESSION(PLAYER(\"p2\",10))),POSITION(BALL(),3,4)))"
+  },
+  {
+    "id": "nest-or-of-ands",
+    "level": 5,
+    "features": [
+      "OR",
+      "AND:2",
+      "NESTED",
+      "POSITION",
+      "BALL",
+      "POSSESSION",
+      "TEAM:LEFT",
+      "TEAM:RIGHT"
+    ],
+    "nl": "",
+    "dsl": "SELECT(OR(AND(POSITION(BALL(),13),POSSESSION(TEAM(\"left\"))),AND(POSITION(BALL(),14),POSSESSION(TEAM(\"right\")))))"
   },
   {
     "id": "seq-pass-chain-3",
@@ -1085,6 +1144,23 @@
     ],
     "nl": "First the ball moves from 4 to 6 then it moves from 6 to 7 but this time i want it from the moment it enters zone 6 to the moment it leaves zone 7.",
     "dsl": "SELECT(BALL().MOVETO(4,6).MINRANGE(),BALL().MOVETO(6,7))"
+  },
+  {
+    "id": "demorgan-nested",
+    "level": 6,
+    "features": [
+      "NOT",
+      "AND",
+      "OR",
+      "NESTED",
+      "DEMORGAN",
+      "POSSESSION",
+      "PLAYER:jersey",
+      "POSITION",
+      "BALL"
+    ],
+    "nl": "",
+    "dsl": "SELECT(NOT(AND(OR(POSSESSION(PLAYER(\"p1\",5)),POSSESSION(PLAYER(\"p2\",8))),POSITION(BALL(),1,2,3,4))))"
   },
   {
     "id": "ev-startmin",
@@ -1350,6 +1426,44 @@
     "dsl": "SELECT(POSITION(TEAM(\"left\"),K(6),1,2,3,4).WHERE(STARTMIN(100),MINDURATION(50)))"
   },
   {
+    "id": "nest-three-levels",
+    "level": 7,
+    "features": [
+      "AND",
+      "OR",
+      "NESTED:3",
+      "POSSESSION",
+      "POSITION",
+      "PASSTO",
+      "MINRANGE",
+      "PLAYER:jersey",
+      "identifier-reuse",
+      "TEAM:RIGHT",
+      "K"
+    ],
+    "nl": "",
+    "dsl": "SELECT(AND(OR(AND(POSSESSION(PLAYER(\"p1\",7)),POSITION(PLAYER(\"p1\",7),6,7)),PLAYER(\"p1\",7).PASSTO(PLAYER(\"p2\",9)).MINRANGE()),POSITION(TEAM(\"right\"),K(4),1,2,3,4)))"
+  },
+  {
+    "id": "nest-group-minrange-spatial",
+    "level": 7,
+    "features": [
+      "AND",
+      "OR",
+      "NESTED",
+      "PLAYER.MOVETO",
+      "PLAYER:jersey",
+      "identifier-reuse",
+      "POSSESSION",
+      "TEAM:LEFT",
+      "MINRANGE:group",
+      "WHERE:event",
+      "RADIUS"
+    ],
+    "nl": "",
+    "dsl": "SELECT(AND(OR(PLAYER(\"p1\",4).MOVETO(1,2),PLAYER(\"p1\",4).MOVETO(4,3)),POSSESSION(TEAM(\"left\"))).MINRANGE().WHERE(RADIUS(0,0,30)))"
+  },
+  {
     "id": "g-startmin",
     "level": 8,
     "features": [
@@ -1597,6 +1711,28 @@
     ],
     "nl": "Left team has the ball for at least 20 frames, then the ball moves from 4 to 1 (minimal) for maximum 60 frames. This succession should start at 0 minimum and end at 700 maximum, with a duration of 400 max.",
     "dsl": "SELECT(POSSESSION(TEAM(\"left\")).WHERE(MINDURATION(20)),BALL().MOVETO(4,1).MINRANGE().WHERE(MAXDURATION(60))).WHERE(STARTMIN(0),ENDMAX(700),MAXDURATION(400))"
+  },
+  {
+    "id": "nest-seq-group-where",
+    "level": 8,
+    "features": [
+      "SEQ:2",
+      "OR",
+      "AND",
+      "NESTED",
+      "NOT",
+      "POSSESSION",
+      "PLAYER:jersey",
+      "POSITION",
+      "BALL",
+      "TEAM:RIGHT",
+      "WHERE:event",
+      "MINDURATION",
+      "WHERE:global",
+      "MAXDURATION"
+    ],
+    "nl": "",
+    "dsl": "SELECT(OR(POSSESSION(PLAYER(\"p1\",2)),POSSESSION(PLAYER(\"p2\",3))),AND(OR(POSITION(BALL(),6),POSITION(BALL(),7)),NOT(POSSESSION(TEAM(\"right\")))).WHERE(MINDURATION(10))).WHERE(MAXDURATION(250))"
   },
   {
     "id": "sm-search-all",
