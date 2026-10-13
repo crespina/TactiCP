@@ -15,7 +15,7 @@ import static org.maxicp.cp.CPFactory.makeSolver;
  * The steps of a SELECT follow one another whatever their kind: each step starts at the earliest on
  * the last frame of the previous one. An AND step is placed by its intersection, so its children may
  * start earlier, and an OR step by its chosen branch. Checked against direct scans of the ball's
- * zone sequence: a ball POSITION is a maximal stay, and a top-level step lasts at least two frames.
+ * zone sequence: a ball POSITION is a maximal stay, and a top-level step lasts at least one frame.
  */
 public class SequenceTest {
 
@@ -73,9 +73,9 @@ public class SequenceTest {
         for (String G : GAMES) {
             int[] Z = ballZones(game(G));
             Set<List<Integer>> expected = new HashSet<>();
-            for (int[] a : stays(Z, Set.of(1, 2, 3, 4), 2)) {
+            for (int[] a : stays(Z, Set.of(1, 2, 3, 4), 1)) {
                 for (int zone : new int[]{13, 14}) {
-                    for (int[] b : stays(Z, Set.of(zone), 2)) {
+                    for (int[] b : stays(Z, Set.of(zone), 1)) {
                         if (b[0] >= a[1] - 1) expected.add(List.of(a[0], a[1], b[0], b[1], b[0], b[1]));
                         else dropped++;
                     }
@@ -103,11 +103,11 @@ public class SequenceTest {
                 int[] Z = zones[id];
                 Set<List<Integer>> expected = new HashSet<>();
                 int pairs = 0;
-                for (int[] a : stays(Z, Set.of(1), 2)) {
+                for (int[] a : stays(Z, Set.of(1), 1)) {
                     for (int[] x : stays(Z, Set.of(1, 2, 3, 4), 1)) {
                         for (int[] y : stays(Z, Set.of(2), 1)) {
                             int s = Math.max(x[0], y[0]), e = Math.min(x[1], y[1]);
-                            if (e - s < 2) continue;
+                            if (e - s < 1) continue;
                             pairs++;
                             if (s >= a[1] - 1) {
                                 expected.add(List.of(a[0], a[1], s, e, x[0], x[1], y[0], y[1]));

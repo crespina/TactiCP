@@ -154,7 +154,7 @@ public class Query {
                     topIntervals.add(event_interval);
                     CPIntVar event_start = startOf(event_interval);
                     CPIntVar event_end = endOf(event_interval);
-                    cp.post(gt(minus(event_end, 1), event_start)); //because end non inclusive
+                    cp.post(gt(event_end, event_start)); // a step spans at least one frame (end is exclusive)
                     // the steps follow one another, whatever their kind: a step starts at the earliest
                     // on the last frame of the previous one (for an AND, its intersection; for an OR,
                     // its chosen branch)

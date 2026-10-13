@@ -15,7 +15,7 @@ import static org.maxicp.cp.CPFactory.makeSolver;
  * Player POSSESSION checked against a direct scan of the possession sequence, where a player keeps
  * the ball from one touch to the next as long as nobody else touches it. In SNGS-021 the right
  * players 5 and 6 hand the ball to each other seven times, and thirteen players never hold it.
- * Every expected interval is at least two frames long, as for any top-level event.
+ * Every expected interval is at least one frame long, as for any top-level event.
  */
 public class PlayerPossessionTest {
 
@@ -57,7 +57,7 @@ public class PlayerPossessionTest {
         Set<Stay> stays = new HashSet<>();
         for (int s = 1, e = 2; s < possession.length; s = e, e = s + 1) {
             while (e < possession.length && possession[e] == possession[s]) e++;
-            if (candidates.contains(possession[s]) && e - s >= 2) stays.add(new Stay(possession[s], s, e));
+            if (candidates.contains(possession[s])) stays.add(new Stay(possession[s], s, e));
         }
         return stays;
     }
@@ -68,7 +68,7 @@ public class PlayerPossessionTest {
         for (int s = 1, e = 2; s < possession.length; s = e, e = s + 1) {
             boolean free = possession[s] != c;
             while (e < possession.length && (possession[e] != c) == free) e++;
-            if (free && e - s >= 2) stays.add(new Stay(c, s, e));
+            if (free) stays.add(new Stay(c, s, e));
         }
         return stays;
     }
@@ -189,7 +189,7 @@ public class PlayerPossessionTest {
         assertEquals(expected, throughNot);
     }
 
-    /** [start, end) is a maximal run without c; a child of AND need not be two frames long. */
+    /** [start, end) is a maximal run without c. */
     private static boolean isMaximalWithout(int[] possession, int c, int start, int end) {
         for (int f = start; f < end; f++) if (possession[f] == c) return false;
         return start >= 1 && (start == 1 || possession[start - 1] == c) && (end == possession.length || possession[end] == c);
