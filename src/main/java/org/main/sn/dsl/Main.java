@@ -35,6 +35,20 @@ public class Main {
         // A2 check: TEAM("t") with no members is now ambiguous in Java (both varargs
         // overloads match), so this does not compile. It still resolves in Groovy.
         //SELECT(TEAM("t").MOVETO(1,2, 3)).searchAndPrint();
+        SELECT(
+                OR(
+                        POSSESSION(PLAYER("p1",2)),
+                        POSSESSION(PLAYER("p2",3))
+                ),
+                AND(
+                        OR(
+                                POSITION(BALL(),6),
+                                POSITION(BALL(),7)
+                        ),
+                        NOT(POSSESSION(TEAM("right")))
+                ).WHERE(MINDURATION(10))
+        ).WHERE(MAXDURATION(250));
+
 
         // Test passTo
         // -----------
