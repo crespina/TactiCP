@@ -803,7 +803,7 @@
       "POSITION",
       "BALL"
     ],
-    "nl": "",
+    "nl": "Find the intervals during which neither the ball is in zone 1 and 2 nor is in zones 3 and 4.",
     "dsl": "SELECT(NOT(OR(POSITION(BALL(),1,2),POSITION(BALL(),3,4))))"
   },
   {
@@ -818,7 +818,7 @@
       "POSITION",
       "BALL"
     ],
-    "nl": "",
+    "nl": "Find the intervals during which this does not happen: team left has the ball while the ball is in zone 13.",
     "dsl": "SELECT(NOT(AND(POSSESSION(TEAM(\"left\")),POSITION(BALL(),13))))"
   },
   {
@@ -958,7 +958,7 @@
       "POSITION",
       "BALL"
     ],
-    "nl": "",
+    "nl": "Find the moments during which simultaneously the ball is in zone 3 and 4 and either player 9 has the ball or player 10 has the possession.",
     "dsl": "SELECT(AND(OR(POSSESSION(PLAYER(\"p1\",9)),POSSESSION(PLAYER(\"p2\",10))),POSITION(BALL(),3,4)))"
   },
   {
@@ -974,7 +974,7 @@
       "TEAM:LEFT",
       "TEAM:RIGHT"
     ],
-    "nl": "",
+    "nl": "Find the moments during which either the ball is in zone 13 and team left has the possession, or the ball is in zone 14 and the right team has the possession of the ball.",
     "dsl": "SELECT(OR(AND(POSITION(BALL(),13),POSSESSION(TEAM(\"left\"))),AND(POSITION(BALL(),14),POSSESSION(TEAM(\"right\")))))"
   },
   {
@@ -1159,7 +1159,7 @@
       "POSITION",
       "BALL"
     ],
-    "nl": "",
+    "nl": "Find the intervals during which this does not happen: simultaneously player 5 or player 8 has the ball and the ball is in zones 1,2,3 and 4.",
     "dsl": "SELECT(NOT(AND(OR(POSSESSION(PLAYER(\"p1\",5)),POSSESSION(PLAYER(\"p2\",8))),POSITION(BALL(),1,2,3,4))))"
   },
   {
@@ -1441,7 +1441,7 @@
       "TEAM:RIGHT",
       "K"
     ],
-    "nl": "",
+    "nl": "Find the intervals when simultaneously those events happen: 1) either player 7 has the ball while being in zones 6 and 7 or player 7 passes to player 9 (minimal interval) and 2) at least four players from the right team are in zones 1,2,3,4.",
     "dsl": "SELECT(AND(OR(AND(POSSESSION(PLAYER(\"p1\",7)),POSITION(PLAYER(\"p1\",7),6,7)),PLAYER(\"p1\",7).PASSTO(PLAYER(\"p2\",9)).MINRANGE()),POSITION(TEAM(\"right\"),K(4),1,2,3,4)))"
   },
   {
@@ -1460,7 +1460,7 @@
       "WHERE:event",
       "RADIUS"
     ],
-    "nl": "",
+    "nl": "Find the intervals during which simultaneously player with id 4 moves from zone one to zone two or from zone 3 to zone 4 and the left team has the ball in the centered circle of radius 30.",
     "dsl": "SELECT(AND(OR(PLAYER(\"p1\",4).MOVETO(1,2),PLAYER(\"p1\",4).MOVETO(4,3)),POSSESSION(TEAM(\"left\"))).MINRANGE().WHERE(RADIUS(0,0,30)))"
   },
   {
@@ -1731,7 +1731,7 @@
       "WHERE:global",
       "MAXDURATION"
     ],
-    "nl": "",
+    "nl": "First, either player 2 or 3 has the ball, then, for minimum 10 frames, the ball is in zone 6 or in zone 7 while the right team doesn't have the ball. The whole thing must be less than 250 frames",
     "dsl": "SELECT(OR(POSSESSION(PLAYER(\"p1\",2)),POSSESSION(PLAYER(\"p2\",3))),AND(OR(POSITION(BALL(),6),POSITION(BALL(),7)),NOT(POSSESSION(TEAM(\"right\")))).WHERE(MINDURATION(10))).WHERE(MAXDURATION(250))"
   },
   {
