@@ -106,7 +106,7 @@ public class Query {
 
             startVars.clear();
             endVars.clear();
-            identityOwner.clear();
+            identityUsers.clear();
             mayBeAbsent.clear();
             alwaysPresentIdentities.clear();
             decisionVars.clear();
@@ -130,25 +130,6 @@ public class Query {
 
                 Map<Integer, GameStateReconstructionInstance.FrameData> frameData = instance.positions;
 
-                for (Event event : steps) {
-                    if (event instanceof AndEvent andEvent) {
-                        intervals.add(makeIntervalVar(cp, false, 0, n + 1)); //the whole AndEvent
-                        topIntervals.add(intervals.getLast());
-                        for (Event child : andEvent.children()) {
-                            intervals.add(makeIntervalVar(cp, false, 0, n + 1));
-                        }
-                    } else if (event instanceof OrEvent orEvent) {
-                        intervals.add(makeIntervalVar(cp, false,0, n + 1)); //the whole OrEvent
-                        topIntervals.add(intervals.getLast());
-                        for (Event child : orEvent.children()) {
-                            intervals.add(makeOptionalInterval(cp, 0, n + 1));
-                        }
-                    } else {
-                        intervals.add(makeIntervalVar(cp, false, 0, n + 1));
-                        topIntervals.add(intervals.getLast());
-                    }
-                }
-
                 for (int f = 0; f < n; f++) {
                     GameStateReconstructionInstance.FrameData framedata = frameData.get(f + 1);
                     Map<Integer, GameStateReconstructionInstance.PlayerInfo> fd = framedata.players; //(player id, player info)
@@ -167,59 +148,75 @@ public class Query {
 
                 CPIntervalVar prevTopInterval = null;
                 for (Event event : steps) {
-                    CPIntervalVar event_interval = intervals.get(counterEvent.get());
+                    // every step happens; the intervals of the members of a group are made with it
+                    CPIntervalVar event_interval = makeIntervalVar(cp, false, 0, n + 1);
+                    intervals.add(event_interval);
+                    topIntervals.add(event_interval);
                     CPIntVar event_start = startOf(event_interval);
                     CPIntVar event_end = endOf(event_interval);
                     cp.post(gt(minus(event_end, 1), event_start)); //because end non inclusive
+                    // the steps follow one another, whatever their kind: a step starts at the earliest
+                    // on the last frame of the previous one (for an AND, its intersection; for an OR,
+                    // its chosen branch)
+                    if (prevTopInterval != null) {
+                        cp.post(endBeforeStart(prevTopInterval, event_interval, 1));
+                    }
 
-                    modelEvent(event, cp, counterEvent, event_interval, event_start, event_end, prevTopInterval, ball_idx, n, positionZones, positionBox_x,
+                    modelEvent(event, List.of(), cp, counterEvent, event_interval, ball_idx, n, positionZones, positionBox_x,
                             positionBox_y, total_circle, extVars, intervals, total_rectangle, counterVars, teams,
                             IDENTIFIERS, total_xcenter, possession, total_ycenter, total_radius, total_xtop, total_ytop,
                             total_w, total_h, nbZones);
                     prevTopInterval = event_interval;
                 }
 
-                //AllDifferent on playersID
+                // Distinct names are distinct players. An identity stands for a player whenever one
+                // of the events naming it happens; the global allDifferent covers the identities
+                // that always do, the others are distinct from them only while they happen.
                 List<CPIntVar> alwaysPresent = new ArrayList<>();
                 List<String> branchLocal = new ArrayList<>();
+                Map<String, CPBoolVar> presence = new HashMap<>();
                 for (Map.Entry<String, CPIntVar> identity : IDENTIFIERS.entrySet()) {
-                    CPIntervalVar owner = identityOwner.get(identity.getKey());
-                    if (owner != null && mayBeAbsent.contains(owner) && !alwaysPresentIdentities.contains(identity.getKey())) branchLocal.add(identity.getKey());
-                    else alwaysPresent.add(identity.getValue());
+                    CPBoolVar present = identityPresence(identity.getKey());
+                    if (present == null) {
+                        alwaysPresent.add(identity.getValue());
+                    } else {
+                        branchLocal.add(identity.getKey());
+                        presence.put(identity.getKey(), present);
+                    }
                 }
 
                 if (!alwaysPresent.isEmpty()) cp.post(allDifferent(alwaysPresent.toArray(CPIntVar[]::new)));
 
                 for (int a = 0; a < branchLocal.size(); a++) {
                     CPIntVar va = IDENTIFIERS.get(branchLocal.get(a));
-                    CPIntervalVar oa = identityOwner.get(branchLocal.get(a));
+                    CPBoolVar pa = presence.get(branchLocal.get(a));
                     for (CPIntVar vb : alwaysPresent) {
-                        postDistinctWhenBothPresent(cp, oa, null, va, vb);
+                        postDistinctWhenBothPresent(cp, pa, null, va, vb);
                     }
                     for (int b = a + 1; b < branchLocal.size(); b++) {
-                        postDistinctWhenBothPresent(cp, oa, identityOwner.get(branchLocal.get(b)),
+                        postDistinctWhenBothPresent(cp, pa, presence.get(branchLocal.get(b)),
                                 va, IDENTIFIERS.get(branchLocal.get(b)));
                     }
                 }
 
+                // an identity that stands for nobody takes one value, so that it adds no answer
                 for (String name : branchLocal) {
                     CPIntVar identity = IDENTIFIERS.get(name);
-                    cp.post(implies(not(identityOwner.get(name).status()), isEq(identity, identity.min())));
+                    cp.post(implies(not(presence.get(name)), isEq(identity, identity.min())));
                 }
 
                 // an anonymous team member is another player than every named one, and than the
                 // anonymous members of the other team events
                 for (int a = 0; a < anonymousPlayers.size(); a++) {
                     AnonymousPlayer anonymous = anonymousPlayers.get(a);
+                    CPBoolVar pa = presenceOf(anonymous.owner());
                     for (Map.Entry<String, CPIntVar> identity : IDENTIFIERS.entrySet()) {
-                        String name = identity.getKey();
-                        CPIntervalVar owner = alwaysPresentIdentities.contains(name) ? null : identityOwner.get(name);
-                        postDistinctWhenBothPresent(cp, anonymous.owner(), owner, anonymous.player(), identity.getValue());
+                        postDistinctWhenBothPresent(cp, pa, presence.get(identity.getKey()), anonymous.player(), identity.getValue());
                     }
                     for (int b = a + 1; b < anonymousPlayers.size(); b++) {
                         AnonymousPlayer other = anonymousPlayers.get(b);
                         if (other.owner() == anonymous.owner()) continue;
-                        postDistinctWhenBothPresent(cp, anonymous.owner(), other.owner(), anonymous.player(), other.player());
+                        postDistinctWhenBothPresent(cp, pa, presenceOf(other.owner()), anonymous.player(), other.player());
                     }
                 }
 
@@ -329,8 +326,13 @@ public class Query {
     // ##################################
 
 
-    private void modelEvent(Event event, CPSolver cp, AtomicInteger counterEvent, CPIntervalVar event_interval, CPIntVar event_start, CPIntVar event_end,
-                            CPIntervalVar prevTopInterval,
+    /**
+     * Models {@code event} on {@code event_interval}: an atomic event, or an AND or OR whose members
+     * may be groups themselves. {@code groups} are the ANDs and ORs holding the event, outermost
+     * first. A member of an AND happens exactly when the AND does; exactly one branch of an OR
+     * happens when the OR does. So everything under an OR branch is optional.
+     */
+    private void modelEvent(Event event, List<Event> groups, CPSolver cp, AtomicInteger counterEvent, CPIntervalVar event_interval,
                             int ball_idx, int n, int[][] positionZones, int[][] positionBox_x,
                             int[][] positionBox_y, boolean total_circle, ArrayList<ExtendedCPVar> extVars, ArrayList<CPIntervalVar> intervals,
                             boolean total_rectangle, AtomicInteger counterVars, int[] teams,
@@ -338,6 +340,7 @@ public class Query {
                             int total_ycenter, int total_radius, int total_xtop, int total_ytop,
                             int total_w, int total_h, int nbZones) {
 
+        boolean optional = mayBeAbsent.contains(event_interval);
 
         if (event instanceof AndEvent andEvent) {
 
@@ -349,7 +352,11 @@ public class Query {
                     andEvent.isNegated,
                     andEvent.children().size()));
 
+            // a temporal WHERE on the AND bounds its intersection
+            postTemporalWhere(andEvent, event_interval);
+
             counterEvent.incrementAndGet();
+            List<Event> inner = within(groups, andEvent);
 
             CPIntVar[] childrenStarts = new CPIntVar[andEvent.children().size()];
             CPIntVar[] childrenEnds = new CPIntVar[andEvent.children().size()];
@@ -357,27 +364,35 @@ public class Query {
             int childIdx = 0;
 
             for (Event children : andEvent.children()) {
-                CPIntervalVar childInterval = intervals.get(counterEvent.get());
+                // a member happens exactly when the AND does
+                CPIntervalVar childInterval;
+                if (optional) {
+                    childInterval = makeOptionalInterval(cp, 0, n + 1);
+                    cp.post(eq(childInterval.status(), event_interval.status()));
+                } else {
+                    childInterval = makeIntervalVar(cp, false, 0, n + 1);
+                }
+                intervals.add(childInterval);
                 childrenStarts[childIdx] = startOf(childInterval);
                 childrenStarts[childIdx].removeAbove(n + 1);
                 childrenEnds[childIdx] = endOf(childInterval);
                 childrenEnds[childIdx].removeAbove(n + 1);
 
-                executeStep(children, cp, counterEvent, childInterval, childrenStarts[childIdx], childrenEnds[childIdx], null, ball_idx, n,
+                modelEvent(children, inner, cp, counterEvent, childInterval, ball_idx, n,
                         positionZones, positionBox_x, positionBox_y, total_circle, extVars, intervals, total_rectangle,
                         counterVars, teams, IDENTIFIERS, total_xcenter, possession, total_ycenter,
-                        total_radius, total_xtop, total_ytop, total_w, total_h, true, childIdx, andEvent.children().size(), nbZones);
+                        total_radius, total_xtop, total_ytop, total_w, total_h, nbZones);
 
                 childIdx++;
             }
 
-            //define the interval of the AND event
-            cp.post(eq(event_start, max(childrenStarts)));
-            cp.post(eq(event_end, minimum(childrenEnds)));
+            // the AND spans the intersection of its members; when it is absent, so are they, and
+            // every bound is the same ABSENT value
+            cp.post(eq(startOf(event_interval), max(childrenStarts)));
+            cp.post(eq(endOf(event_interval), minimum(childrenEnds)));
 
-        } else if (event instanceof OrEvent orEvent) { // or should return the union of intervals
+        } else if (event instanceof OrEvent orEvent) {
 
-            //we use frame_start and frame_end to represent the AND event interval
             extVars.add(new ExtendedCPVar(
                     event_interval,
                     counterVars.incrementAndGet(),
@@ -386,7 +401,11 @@ public class Query {
                     orEvent.isNegated,
                     orEvent.children().size()));
 
+            // a temporal WHERE on the OR bounds its chosen branch
+            postTemporalWhere(orEvent, event_interval);
+
             counterEvent.incrementAndGet();
+            List<Event> inner = within(groups, orEvent);
 
             CPIntVar[] childrenStarts = new CPIntVar[orEvent.children().size()];
             CPIntVar[] childrenEnds = new CPIntVar[orEvent.children().size()];
@@ -394,59 +413,84 @@ public class Query {
             int childIdx = 0;
             CPBoolVar[] statuses = new CPBoolVar[orEvent.children().size()];
             for (Event children : orEvent.children()) {
-                CPIntervalVar childInterval = intervals.get(counterEvent.get());
+                CPIntervalVar childInterval = makeOptionalInterval(cp, 0, n + 1);
+                intervals.add(childInterval);
                 childrenStarts[childIdx] = startOr(childInterval, n+1);
                 childrenStarts[childIdx].removeAbove(n + 1);
                 childrenEnds[childIdx] = endOr(childInterval, 0);
                 childrenEnds[childIdx].removeAbove(n + 1);
                 statuses[childIdx] = childInterval.status();
 
-                // a branch that cannot hold in this game is switched off, not fatal.
-                int childEventIdx = counterEvent.get();
+                // A branch that cannot hold in this game is switched off, not fatal: what it added
+                // to the answer is dropped, and every interval in it is absent.
+                int firstEvent = counterEvent.get();
+                int firstExtVar = extVars.size();
+                int firstInterval = intervals.size() - 1;
                 try {
-                    executeStep(children, cp, counterEvent, childInterval, startOf(childInterval), endOf(childInterval), null, ball_idx, n,
+                    modelEvent(children, inner, cp, counterEvent, childInterval, ball_idx, n,
                             positionZones, positionBox_x, positionBox_y, total_circle, extVars, intervals, total_rectangle,
                             counterVars, teams, IDENTIFIERS, total_xcenter, possession, total_ycenter,
-                            total_radius, total_xtop, total_ytop, total_w, total_h, true, childIdx, orEvent.children().size(), nbZones);
+                            total_radius, total_xtop, total_ytop, total_w, total_h, nbZones);
                 } catch (InconsistencyException e) {
-                    childInterval.setAbsent();
-                    counterEvent.set(childEventIdx + 1); //executeStep did not reach its own increment
+                    extVars.subList(firstExtVar, extVars.size()).clear();
+                    extVars.add(new ExtendedCPVar(childInterval, counterVars.incrementAndGet(), "ABSENT_BRANCH", firstEvent, false));
+                    for (CPIntervalVar itv : intervals.subList(firstInterval, intervals.size())) itv.setAbsent();
+                    counterEvent.set(firstEvent + eventCount(children));
                 }
 
                 childIdx++;
             }
 
-            cp.post(eq(sum(statuses), 1));
-
-            cp.post(eq(event_start, minimum(childrenStarts)));
-            cp.post(eq(event_end, max(childrenEnds)));
+            // exactly one branch happens when the OR does, and the OR spans it
+            if (optional) {
+                // when the OR is absent, so are its branches: its bounds take the same defaults
+                cp.post(eq(sum(statuses), event_interval.status()));
+                cp.post(eq(startOr(event_interval, n + 1), minimum(childrenStarts)));
+                cp.post(eq(endOr(event_interval, 0), max(childrenEnds)));
+            } else {
+                cp.post(eq(sum(statuses), 1));
+                cp.post(eq(startOf(event_interval), minimum(childrenStarts)));
+                cp.post(eq(endOf(event_interval), max(childrenEnds)));
+            }
 
         } else {
-            executeStep(event, cp, counterEvent, event_interval, event_start, event_end, prevTopInterval, ball_idx, n,
+            executeStep(event, groups, cp, counterEvent, event_interval, ball_idx, n,
                     positionZones, positionBox_x, positionBox_y, total_circle, extVars, intervals, total_rectangle,
                     counterVars, teams, IDENTIFIERS, total_xcenter, possession, total_ycenter,
-                    total_radius, total_xtop, total_ytop, total_w, total_h, false, 0, 0, nbZones);
+                    total_radius, total_xtop, total_ytop, total_w, total_h, nbZones);
         }
     }
 
+    /** {@code groups} followed by {@code group}. */
+    private static List<Event> within(List<Event> groups, Event group) {
+        List<Event> inner = new ArrayList<>(groups);
+        inner.add(group);
+        return inner;
+    }
 
-    private void executeStep(Event event, CPSolver cp, AtomicInteger counterEvent, CPIntervalVar eventInterval, CPIntVar event_start, CPIntVar event_end,
-                             CPIntervalVar prevTopInterval,
+    /** How many events {@code event} is made of, itself and every group or atomic event in it. */
+    private static int eventCount(Event event) {
+        List<Event> children = event instanceof AndEvent and ? and.children()
+                : event instanceof OrEvent or ? or.children() : List.of();
+        return 1 + children.stream().mapToInt(Query::eventCount).sum();
+    }
+
+
+    /**
+     * Models an atomic event. {@code groups} are the ANDs and ORs holding it, outermost first, none
+     * for a step of the sequence: their spatial WHERE and their MINRANGE apply to each atomic event
+     * in them.
+     */
+    private void executeStep(Event event, List<Event> groups, CPSolver cp, AtomicInteger counterEvent, CPIntervalVar eventInterval,
                              int ball_idx, int n, int[][] positionZones, int[][] positionBox_x,
                              int[][] positionBox_y, boolean total_circle, ArrayList<ExtendedCPVar> extVars, ArrayList<CPIntervalVar> intervals,
                              boolean total_rectangle, AtomicInteger counterVars,
                              int[] teams, Map<String, CPIntVar> IDENTIFIERS, int total_xcenter, int[] possession,
                              int total_ycenter, int total_radius, int total_xtop, int total_ytop,
-                             int total_w, int total_h, boolean isAndEvent, int childIdx, int nbChild, int nbZones) {
+                             int total_w, int total_h, int nbZones) {
 
         Action action = event.action();
         Entity subject = event.subject();
-        int event_timeStartMin = event.timeStartMin;
-        int event_timeStartMax = event.timeStartMax;
-        int event_timeEndMin = event.timeEndMin;
-        int event_timeEndMax = event.timeEndMax;
-        int event_durationMax = event.maxDuration;
-        int event_durationMin = event.minDuration;
         int event_radius = event.radius;
         int event_xcenter = event.xcenter;
         int event_ycenter = event.ycenter;
@@ -454,7 +498,8 @@ public class Query {
         int event_ytop = event.ytop;
         int event_w = event.w;
         int event_h = event.h;
-        boolean minrange = event.isMinrange;
+        // a MINRANGE on an AND or OR holding the event applies to each atomic event in it
+        boolean minrange = event.isMinrange || groups.stream().anyMatch(g -> g.isMinrange);
         Object payload = action.payload;
         boolean event_circle = (event_radius != -1);
         boolean event_rectangle = (event_w != -1 && event_h != -1);
@@ -470,33 +515,14 @@ public class Query {
 
         extVars.add(event_interval_ext);
 
-        if (prevTopInterval != null && !isAndEvent) {
-            cp.post(endBeforeStart(prevTopInterval, eventInterval, 1));
-        }
+        postTemporalWhere(event, eventInterval);
 
-        if (event_timeStartMin != -1) {
-            eventInterval.setStartMin(event_timeStartMin);
-        }
-        if (event_timeStartMax != -1) {
-            eventInterval.setStartMax(event_timeStartMax);
-        }
-        if (event_timeEndMin != -1) {
-            eventInterval.setEndMin(event_timeEndMin + 1); //end is exclusive so > k means "last frame >= k"
-        }
-        if (event_timeEndMax != -1) {
-            eventInterval.setEndMax(event_timeEndMax + 1);
-        }
-        if (event_durationMax != -1) {
-            eventInterval.setLengthMax(event_durationMax);
-        }
-        if (event_durationMin != -1) {
-            eventInterval.setLengthMin(event_durationMin);
-        }
-
-        // the shapes of the spatial WHERE, of the event and of the whole query; empty when there is none
+        // the shapes of the spatial WHERE, of the event, of the ANDs and ORs holding it, and of the
+        // whole query; empty when there is none
         List<Shape> shapes = whereShapes(event_circle, event_rectangle, total_circle, total_rectangle,
                 event_xcenter, event_ycenter, event_radius, event_xtop, event_ytop, event_w, event_h,
                 total_xcenter, total_ycenter, total_radius, total_xtop, total_ytop, total_w, total_h);
+        for (Event group : groups) shapes.addAll(shapesOf(group));
 
         switch (action.name) {
 
@@ -884,16 +910,21 @@ public class Query {
 
             // The team is in the zones while at least k of its members are (negated: are not),
             // whichever members they are on each frame: one maximal run of the count word, for each
-            // identity of the wildcard members. Spatial constraints: a member only counts on the
-            // frames where it is tracked and inside the shapes.
+            // identity of the wildcard members. Spatial constraints: as for a player, the WHERE keeps
+            // the runs on every frame of which at least k of the members counted are not seen
+            // outside the shapes.
             TeamMembers members = teamMembers(cp, team, teams, IDENTIFIERS, eventInterval);
             int[][] inside = shapes.isEmpty() ? null : insideByFrame(shapes, positionBox_x, positionBox_y, positionZones, n);
 
             List<int[]> rows = teamCandidates(members);
             List<CandidateMatch> matches = new ArrayList<>();
             for (int[] row : rows) {
-                int[] word = countWord(row, k, zoneSet, isNegated, positionZones, inside, n);
-                matches.add(window -> postPadded(cp, window, word, Automaton.NOTA_APLUS_NOTA(1, Set.of(1)), n));
+                int[] word = countWord(row, k, zoneSet, isNegated, positionZones, null, n);
+                int[] where = inside == null ? null : countWord(row, k, zoneSet, isNegated, positionZones, inside, n);
+                matches.add(window -> {
+                    postPadded(cp, window, word, Automaton.NOTA_APLUS_NOTA(1, Set.of(1)), n);
+                    if (where != null) postInsideThroughout(cp, where, window);
+                });
             }
             CPIntVar chosen = chooseCandidate(cp, eventInterval, matches, n);
             reportMembers(cp, members, linkWildcards(cp, eventInterval, members, rows, chosen), extVars, counterVars,
@@ -1023,8 +1054,8 @@ public class Query {
         return itv;
     }
 
-    /** The event interval each player identity was introduced by. */
-    private final Map<String, CPIntervalVar> identityOwner = new HashMap<>();
+    /** The intervals of the events naming each player identity. */
+    private final Map<String, Set<CPIntervalVar>> identityUsers = new HashMap<>();
 
     /** Names of identities used by at least one event that always happens. */
     private final Set<String> alwaysPresentIdentities = new HashSet<>();
@@ -1032,21 +1063,36 @@ public class Query {
     /** Records {@code name -> var} as an identity introduced by {@code owner}. */
     private void rememberIdentity(Map<String, CPIntVar> identifiers, String name, CPIntVar var, CPIntervalVar owner) {
         identifiers.put(name, var);
-        identityOwner.putIfAbsent(name, owner);
         noteIdentityUse(name, owner);
     }
 
     /** Records that {@code owner} refers to the identity {@code name}. */
     private void noteIdentityUse(String name, CPIntervalVar owner) {
+        identityUsers.computeIfAbsent(name, k -> Collections.newSetFromMap(new IdentityHashMap<>())).add(owner);
         if (!mayBeAbsent.contains(owner)) alwaysPresentIdentities.add(name);
     }
 
-    /** Posts {@code a != b}, but only while both owning events happen. */
-    private void postDistinctWhenBothPresent(CPSolver cp, CPIntervalVar ownerA, CPIntervalVar ownerB,
+    /** Whether {@code itv} happens: null when it always does. */
+    private CPBoolVar presenceOf(CPIntervalVar itv) {
+        return itv != null && mayBeAbsent.contains(itv) ? itv.status() : null;
+    }
+
+    /**
+     * Whether the identity {@code name} stands for a player: whenever one of the events naming it
+     * happens. Null when one of them always does.
+     */
+    private CPBoolVar identityPresence(String name) {
+        if (alwaysPresentIdentities.contains(name)) return null;
+        CPBoolVar[] statuses = identityUsers.get(name).stream().map(CPIntervalVar::status).toArray(CPBoolVar[]::new);
+        return statuses.length == 1 ? statuses[0] : not(isEq(sum(statuses), 0));
+    }
+
+    /** Posts {@code a != b}, but only while both happen ({@code null}: always). */
+    private void postDistinctWhenBothPresent(CPSolver cp, CPBoolVar presentA, CPBoolVar presentB,
                                              CPIntVar a, CPIntVar b) {
         List<CPBoolVar> guards = new ArrayList<>(2);
-        if (ownerA != null && mayBeAbsent.contains(ownerA)) guards.add(ownerA.status());
-        if (ownerB != null && mayBeAbsent.contains(ownerB)) guards.add(ownerB.status());
+        if (presentA != null) guards.add(presentA);
+        if (presentB != null) guards.add(presentB);
         if (guards.isEmpty()) {
             cp.post(neq(a, b));
         } else {
@@ -1162,6 +1208,38 @@ public class Query {
         return shapes;
     }
 
+    /** The shapes of the spatial WHERE written on {@code event} itself. */
+    private static List<Shape> shapesOf(Event event) {
+        return whereShapes(event.radius != -1, event.w != -1 && event.h != -1, false, false,
+                event.xcenter, event.ycenter, event.radius, event.xtop, event.ytop, event.w, event.h,
+                0, 0, 0, 0, 0, 0, 0);
+    }
+
+    /**
+     * The temporal WHERE written on {@code event}, as bounds on {@code interval}: the event itself,
+     * or, for an AND or OR, its intersection or its chosen branch.
+     */
+    private static void postTemporalWhere(Event event, CPIntervalVar interval) {
+        if (event.timeStartMin != -1) {
+            interval.setStartMin(event.timeStartMin);
+        }
+        if (event.timeStartMax != -1) {
+            interval.setStartMax(event.timeStartMax);
+        }
+        if (event.timeEndMin != -1) {
+            interval.setEndMin(event.timeEndMin + 1); //end is exclusive so > k means "last frame >= k"
+        }
+        if (event.timeEndMax != -1) {
+            interval.setEndMax(event.timeEndMax + 1);
+        }
+        if (event.maxDuration != -1) {
+            interval.setLengthMax(event.maxDuration);
+        }
+        if (event.minDuration != -1) {
+            interval.setLengthMin(event.minDuration);
+        }
+    }
+
     /** Where an entity stands with respect to the shapes of a spatial WHERE on one frame. */
     private static final int OUTSIDE = 0, INSIDE = 1, UNTRACKED = 2;
 
@@ -1189,9 +1267,9 @@ public class Query {
         return inside;
     }
 
-    /** Whether player {@code id} is seen inside the shapes on frame {@code f}: an untracked player is not. */
-    private static boolean isInside(int[][] inside, int id, int f) {
-        return id >= 0 && id < inside.length && inside[id][f] == INSIDE;
+    /** Whether player {@code id} is seen outside the shapes on frame {@code f}: an untracked player is not. */
+    private static boolean seenOutside(int[][] inside, int id, int f) {
+        return id >= 0 && id < inside.length && inside[id][f] == OUTSIDE;
     }
 
     /**
@@ -1464,8 +1542,8 @@ public class Query {
 
     /**
      * Team POSITION: 1 on the frames where at least {@code k} of the {@code ids} are in the zones
-     * (negated: are not, untracked members included) and, under a spatial WHERE, inside the shapes.
-     * Frame 0, the dummy frame, is 0.
+     * (negated: are not, untracked members included) and, given {@code inside}, are not seen outside
+     * the shapes there. Frame 0, the dummy frame, is 0.
      */
     private static int[] countWord(int[] ids, int k, Set<Integer> zones, boolean isNegated, int[][] positionZones,
                                    int[][] inside, int n) {
@@ -1474,7 +1552,7 @@ public class Query {
             int count = 0;
             for (int id : ids) {
                 boolean counts = zones.contains(zone(positionZones, id, f)) != isNegated;
-                if (counts && (inside == null || isInside(inside, id, f))) count++;
+                if (counts && (inside == null || !seenOutside(inside, id, f))) count++;
             }
             word[f] = count >= k ? 1 : 0;
         }
@@ -1813,24 +1891,26 @@ public class Query {
         AtomicInteger i = new AtomicInteger(0);
         List<Result.ResultEvent> events = new ArrayList<>();
         while (i.get() < extVars.size()) {
-            ExtendedCPVar ev = extVars.get(i.get());
-            if ("AND_interval".equals(ev.type) || "OR_interval".equals(ev.type)) {
-                CPIntervalVar interval = (CPIntervalVar) ev.var;
-                Result.GroupEvent ge = new Result.GroupEvent(ev.event_idx, ev.type.equals("AND_interval") ? "AND" : "OR", ev.subSz, new Result.ResultInterval(interval));
-                i.incrementAndGet();
-                for (int k = 0; k < ge.subSize && i.get() < extVars.size(); k++) {
-                    // every child is parsed so the cursor stays aligned, but an OR branch that was
-                    // not taken is absent: it belongs to the model, not to the match
-                    Result.ResultEvent child = parseSingleEvent(extVars, i);
-                    if (child != null && child.interval.present) ge.children.add(child);
-                }
-                events.add(ge);
-            } else {
-                Result.ResultEvent e = parseSingleEvent(extVars, i);
-                if (e != null) events.add(e);
-            }
+            Result.ResultEvent e = parseEvent(extVars, i);
+            if (e != null) events.add(e);
         }
         return new Result(solutionIndex, events, instance);
+    }
+
+    /** Parses the event at the cursor: an atomic event, or a group with its members. */
+    private Result.ResultEvent parseEvent(List<ExtendedCPVar> extVars, AtomicInteger i) {
+        ExtendedCPVar ev = extVars.get(i.get());
+        if (!"AND_interval".equals(ev.type) && !"OR_interval".equals(ev.type)) return parseSingleEvent(extVars, i);
+        CPIntervalVar interval = (CPIntervalVar) ev.var;
+        Result.GroupEvent ge = new Result.GroupEvent(ev.event_idx, ev.type.equals("AND_interval") ? "AND" : "OR", ev.subSz, new Result.ResultInterval(interval));
+        i.incrementAndGet();
+        for (int k = 0; k < ge.subSize && i.get() < extVars.size(); k++) {
+            // every member is parsed so the cursor stays aligned, but an OR branch that was not
+            // taken is absent: it belongs to the model, not to the match
+            Result.ResultEvent child = parseEvent(extVars, i);
+            if (child != null && child.interval.present) ge.children.add(child);
+        }
+        return ge;
     }
 
     private Result.ResultEvent parseSingleEvent(List<ExtendedCPVar> extVars, AtomicInteger i) {

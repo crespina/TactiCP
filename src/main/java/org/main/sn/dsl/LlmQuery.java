@@ -113,6 +113,7 @@ public class LlmQuery {
               With MINRANGE: the minimal contiguous interval where the predicate holds
                 (e.g. just the ball-in-flight portion of a pass).
               Without MINRANGE: the largest possession-based interval.
+              On an AND or OR, MINRANGE applies to every event inside it.
 
             MINRANGE is NOT the default. Add it only when the request asks for the short reading,
             and leave it off otherwise — a MINRANGE that was not asked for changes the result.
@@ -125,23 +126,27 @@ public class LlmQuery {
 
             ## Combinators
             - AND(event1, event2, ...)   — all events hold SIMULTANEOUSLY, i.e. their intervals overlap at the same time. AND says nothing about order: it is ONLY for co-occurring events, NEVER for events that happen one after another (see "Temporal semantics" below).
-            - OR(event1, event2, ...)    — at least one event holds
+            - OR(event1, event2, ...)    — one of the events holds; each match is one of them
             - NOT(event)                 — event does NOT hold (complement of intervals)
 
-            Rules for combinators — all five matter:
-            - NOT is only valid for atomic events: POSSESSION and POSITION. NOT(PASSTO(...)) and
-              NOT(MOVETO(...)) are rejected when the query runs, and NOT(AND(...)) / NOT(OR(...)) do
-              not negate the group at all — they negate each member separately, which is never what
-              was asked. To say "A holds and B does not", write AND(A, NOT(B)) with B atomic.
+            Rules for combinators — all of them matter:
+            - NOT applies to the atomic events POSSESSION and POSITION. NOT(PASSTO(...)) and
+              NOT(MOVETO(...)) are rejected when the query runs.
+            - NOT on a group follows De Morgan's laws, all the way down to the atomic events:
+                NOT(OR(a, b))  is AND(NOT(a), NOT(b)) — neither a nor b holds;
+                NOT(AND(a, b)) is OR(NOT(a), NOT(b))  — a does not hold, or b does not hold, each
+                                                        match being the moments one of them fails.
+              So every event under a NOT must be a POSSESSION or a POSITION, and NOT(NOT(a)) is a.
+              "Neither a nor b" is NOT(OR(a, b)). "A holds and B does not" is AND(A, NOT(B)).
             - NOT(POSITION(...)) is the correct way to say "not in zones ...". Never rewrite it as a
               positive list of the remaining zones: that is not equivalent (a player who is not
               tracked in a frame is in none of the zones, so the complement list misses them), and
               it is far slower. "At least 3 left players are not in zones 1, 2" is
               NOT(POSITION(TEAM("left"), K(3), 1, 2)) — keep the K and the original zones.
-            - AND and OR must NOT contain another AND or OR. Their arguments may only be atomic
-              events, labeled events, or NOT(atomic). A nested combinator makes the query fail.
-              When the request needs several groups, give each group its own argument of SELECT:
-              SELECT(AND(a, b), OR(c, d)) is valid; SELECT(AND(OR(a, b), c)) is not.
+            - AND and OR may contain other ANDs and ORs, at any depth. AND(OR(a, b), c) means c holds
+              at the same time as a or as b; OR(AND(a, b), c) means a and b hold together, or c holds.
+              Nesting is only for events that hold AT THE SAME TIME: groups that happen one after
+              another are separate arguments of SELECT, e.g. SELECT(AND(a, b), OR(c, d)).
             - Give an AND or an OR at least two arguments.
             - Keep the branches of an OR of the same kind and as specific as possible. An OR that
               mixes POSSESSION with another kind of event, or mixes a plain event with a NOT, can
@@ -175,8 +180,8 @@ public class LlmQuery {
               Signalled by words like: "at the same time", "while", "as", "during",
               "simultaneously", "when ... is also ...", "together with".
 
-            An "or" between events is ALWAYS a single OR(...) argument of SELECT — never a
-            comma-separated list, which would mean the events happen one after another.
+            An "or" between events is ALWAYS an OR(...) — never a comma-separated list, which would
+            mean the events happen one after another.
 
             Rule of thumb: AND = same time. A comma-separated list in SELECT = one after another.
             Never use AND to express ordering, and never rely on the comma sequence for events that
@@ -211,7 +216,9 @@ public class LlmQuery {
               "a pass lasting at most 20 frames, while the ball is in zone 3".
             When an AND or OR carries a constraint that applies to the group as a whole, put the
             WHERE on the AND/OR itself — AND(a, b).WHERE(MINDURATION(30)) — not on the SELECT, and
-            not on one member.
+            not on one member. On an AND or OR, a time constraint (START…, END…, …DURATION) bounds
+            the moment the group holds: the overlap of an AND, the chosen event of an OR. A
+            RECTANGLE or RADIUS applies to every event inside the group, as if written on each.
 
             ATLEAST and ATMOST are only valid on the full SELECT (not on individual events).
 
@@ -317,15 +324,21 @@ public class LlmQuery {
             Q: Find moments where the left team has possession, the ball is in zone 3 or 4, and player 9 is not in zone 13, in game SNGS-060.
             A: SELECT(AND(POSSESSION(TEAM("left")), POSITION(BALL(),3,4), NOT(POSITION(PLAYER("p9",9),13)))).FROM("SNGS-060")
 
+            Q: Find moments where player 5 has the ball while standing in zone 13, or the ball is in zone 14, in game SNGS-060.
+            A: SELECT(OR(AND(POSSESSION(PLAYER("p5",5)), POSITION(PLAYER("p5",5),13)), POSITION(BALL(),14))).FROM("SNGS-060")
+
+            Q: Find moments where neither player 4 nor player 6 has the ball, in game SNGS-060.
+            A: SELECT(NOT(OR(POSSESSION(PLAYER("p4",4)), POSSESSION(PLAYER("p6",6))))).FROM("SNGS-060")
+
             Q: Find passes that stay in the upper left part of the pitch in game SNGS-060.
             A: SELECT(PLAYER("p1").PASSTO(PLAYER("p2")).MINRANGE()).FROM("SNGS-060").WHERE(RECTANGLE(-62, 39, 62, 39))
 
             ## Output rules
             1. Output ONLY the DSL query on a single line — no markdown, no code fences, no explanation.
             2. The output MUST start with SELECT( and contain .FROM("...").
-            3. NEVER use NOT with PASSTO, MOVETO, AND, or OR.
-            4. NEVER put an AND or an OR inside another AND or OR — flatten it, or make each group a
-               separate argument of SELECT.
+            3. NEVER use NOT with PASSTO or MOVETO, nor with an AND or OR that contains one.
+            4. Nest an AND or an OR inside another only for events that hold at the same time;
+               events that happen one after another are separate arguments of SELECT.
             5. A whole side is TEAM("left") or TEAM("right"), always lowercase.
             6. Zones are integers 1..14.
             7. Give a player its jersey number whenever the request mentions one.
