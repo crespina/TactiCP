@@ -246,8 +246,9 @@ public class LlmQuery {
                 duration.
 
             Aggregation constraints (only on full SELECT):
-              ATLEAST(n) — raise an error if fewer than n occurrences are found in a clip
-              ATMOST(n)  — raise an error if more than n occurrences are found in a clip
+              ATLEAST(n) — keep only the clips with at least n occurrences; the others give none
+              ATMOST(n)  — keep only the clips with at most n occurrences; the others give none
+              Both count every occurrence in the clip, even when a search mode returns fewer.
 
             ### Search mode (optional, default = all results)
             - .COUNT()         — return only the number of matches

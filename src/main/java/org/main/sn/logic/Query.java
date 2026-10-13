@@ -282,16 +282,15 @@ public class Query {
                     ? solutionGuard.or(statistics -> System.nanoTime() > deadline)
                     : solutionGuard;
 
-            SearchStatistics stats = null;
-            if (searchMode != -1 || atMost != -1) {
-                if (searchMode == 0) stats = search.solve(capReached);
-                else if (searchMode >= 1)
-                    stats = search.solve(statistics -> statistics.numberOfSolutions() == searchMode || capReached.test(statistics));
-                else if (atMost >= 0)
-                    stats = search.solve(statistics -> statistics.numberOfSolutions() <= atMost || capReached.test(statistics));
-            } else {
-                stats = search.solve(capReached);
-            }
+            // SEARCH(k) caps how many answers a game returns (all for -1 and 0); ATLEAST(n) and
+            // ATMOST(n) bound how many it has. So the search goes on until the bounds can be
+            // decided: n answers for ATLEAST(n), n + 1 for ATMOST(n), past which the game is dropped
+            // anyway.
+            final int returned = searchMode >= 1 ? searchMode : Integer.MAX_VALUE;
+            final int stopAt = atMost >= 0 ? atMost + 1 : Math.max(returned, atLeast);
+            SearchStatistics stats = stopAt == Integer.MAX_VALUE
+                    ? search.solve(capReached)
+                    : search.solve(statistics -> statistics.numberOfSolutions() >= stopAt || capReached.test(statistics));
             searchNanos += System.nanoTime() - searchStart;
             if (timeLimitMs > 0 && System.nanoTime() > deadline) timeouts++;
             if (stats != null) {
@@ -308,11 +307,14 @@ public class Query {
                                 + "(0 disables it).");
             }
 
-            if (atLeast >= 0) {
-                if (solutionCounter.get() < atLeast) {
-                    //System.out.println("Number of solutions found (" + solutionCounter.get() + ") is less than the specified atLeast value (" + atLeast + ").");
-                    r.subList(r.size() - solutionCounter.get(), r.size()).clear();
-                }
+            // a game with fewer than ATLEAST or more than ATMOST answers gives none; otherwise it
+            // gives its first SEARCH(k) answers, in the order the search found them
+            int found = solutionCounter.get();
+            List<Result> ofThisGame = r.subList(r.size() - found, r.size());
+            if ((atLeast >= 0 && found < atLeast) || (atMost >= 0 && found > atMost)) {
+                ofThisGame.clear();
+            } else if (found > returned) {
+                ofThisGame.subList(returned, found).clear();
             }
         }
 
