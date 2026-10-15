@@ -623,8 +623,18 @@ public final class EvaluationPipeline {
     private static void appendEventSig(StringBuilder sb, Result.ResultEvent e) {
         String neg = e.negated ? "!" : "";
         if (e instanceof Result.GroupEvent ge) {
+            // AND/OR are commutative: sort the operands' signatures, otherwise AND(A,B)
+            // and AND(B,A) would compare unequal despite matching the same intervals.
+            // Top-level sequence steps (Result.events) keep their order.
+            List<String> kids = new ArrayList<>();
+            for (Result.ResultEvent c : ge.children) {
+                StringBuilder k = new StringBuilder();
+                appendEventSig(k, c);
+                kids.add(k.toString());
+            }
+            Collections.sort(kids);
             sb.append(ge.groupKind).append('(');
-            for (Result.ResultEvent c : ge.children) appendEventSig(sb, c);
+            for (String k : kids) sb.append(k);
             sb.append(')').append(itv(e)).append(';');
         } else if (e instanceof Result.PassEvent pe) {
             sb.append("PASS").append(neg).append(pe.passerId).append('>').append(pe.receiverId).append(itv(e)).append(';');
