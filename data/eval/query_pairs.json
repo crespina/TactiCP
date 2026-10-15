@@ -1460,7 +1460,7 @@
       "WHERE:event",
       "RADIUS"
     ],
-    "nl": "Find the intervals during which simultaneously player with id 4 moves from zone one to zone two or from zone 3 to zone 4 and the left team has the ball in the centered circle of radius 30.",
+    "nl": "Find the intervals during which simultaneously player with id 4 moves from zone one to zone two or from zone 4 to zone 3 and the left team has the ball in the centered circle of radius 30.",
     "dsl": "SELECT(AND(OR(PLAYER(\"p1\",4).MOVETO(1,2),PLAYER(\"p1\",4).MOVETO(4,3)),POSSESSION(TEAM(\"left\"))).MINRANGE().WHERE(RADIUS(0,0,30)))"
   },
   {
@@ -1731,7 +1731,7 @@
       "WHERE:global",
       "MAXDURATION"
     ],
-    "nl": "First, either player 2 or 3 has the ball, then, for minimum 10 frames, the ball is in zone 6 or in zone 7 while the right team doesn't have the ball. The whole thing must be less than 250 frames",
+    "nl": "First, either player 2 or 3 has the ball, then, for minimum 10 frames, the ball is either in zone 6 alone or in zone 7 alone while the right team doesn't have the ball. The whole thing must be less than 250 frames",
     "dsl": "SELECT(OR(POSSESSION(PLAYER(\"p1\",2)),POSSESSION(PLAYER(\"p2\",3))),AND(OR(POSITION(BALL(),6),POSITION(BALL(),7)),NOT(POSSESSION(TEAM(\"right\")))).WHERE(MINDURATION(10))).WHERE(MAXDURATION(250))"
   },
   {
