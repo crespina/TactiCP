@@ -78,6 +78,8 @@ public class Query {
         int total_start_max = seq.startMax;
         int total_end_min = seq.endMin;
         int total_end_max = seq.endMax;
+        int total_during_from = seq.duringFrom;
+        int total_during_to = seq.duringTo;
         int total_radius = seq.radius;
         int total_xcenter = seq.xcenter;
         int total_ycenter = seq.ycenter;
@@ -165,7 +167,7 @@ public class Query {
                     modelEvent(event, List.of(), cp, counterEvent, event_interval, ball_idx, n, positionZones, positionBox_x,
                             positionBox_y, total_circle, extVars, intervals, total_rectangle, counterVars, teams,
                             IDENTIFIERS, total_xcenter, possession, total_ycenter, total_radius, total_xtop, total_ytop,
-                            total_w, total_h, nbZones);
+                            total_w, total_h, nbZones, total_during_from, total_during_to);
                     prevTopInterval = event_interval;
                 }
 
@@ -340,7 +342,7 @@ public class Query {
                             boolean total_rectangle, AtomicInteger counterVars, int[] teams,
                             Map<String, CPIntVar> IDENTIFIERS, int total_xcenter, int[] possession,
                             int total_ycenter, int total_radius, int total_xtop, int total_ytop,
-                            int total_w, int total_h, int nbZones) {
+                            int total_w, int total_h, int nbZones, int total_during_from, int total_during_to) {
 
         boolean optional = mayBeAbsent.contains(event_interval);
 
@@ -383,7 +385,8 @@ public class Query {
                 modelEvent(children, inner, cp, counterEvent, childInterval, ball_idx, n,
                         positionZones, positionBox_x, positionBox_y, total_circle, extVars, intervals, total_rectangle,
                         counterVars, teams, IDENTIFIERS, total_xcenter, possession, total_ycenter,
-                        total_radius, total_xtop, total_ytop, total_w, total_h, nbZones);
+                        total_radius, total_xtop, total_ytop, total_w, total_h, nbZones, total_during_from,
+                        total_during_to);
 
                 childIdx++;
             }
@@ -432,7 +435,8 @@ public class Query {
                     modelEvent(children, inner, cp, counterEvent, childInterval, ball_idx, n,
                             positionZones, positionBox_x, positionBox_y, total_circle, extVars, intervals, total_rectangle,
                             counterVars, teams, IDENTIFIERS, total_xcenter, possession, total_ycenter,
-                            total_radius, total_xtop, total_ytop, total_w, total_h, nbZones);
+                            total_radius, total_xtop, total_ytop, total_w, total_h, nbZones, total_during_from,
+                            total_during_to);
                 } catch (InconsistencyException e) {
                     extVars.subList(firstExtVar, extVars.size()).clear();
                     extVars.add(new ExtendedCPVar(childInterval, counterVars.incrementAndGet(), "ABSENT_BRANCH", firstEvent, false));
@@ -459,7 +463,7 @@ public class Query {
             executeStep(event, groups, cp, counterEvent, event_interval, ball_idx, n,
                     positionZones, positionBox_x, positionBox_y, total_circle, extVars, intervals, total_rectangle,
                     counterVars, teams, IDENTIFIERS, total_xcenter, possession, total_ycenter,
-                    total_radius, total_xtop, total_ytop, total_w, total_h, nbZones);
+                    total_radius, total_xtop, total_ytop, total_w, total_h, nbZones, total_during_from, total_during_to);
         }
     }
 
@@ -489,7 +493,7 @@ public class Query {
                              boolean total_rectangle, AtomicInteger counterVars,
                              int[] teams, Map<String, CPIntVar> IDENTIFIERS, int total_xcenter, int[] possession,
                              int total_ycenter, int total_radius, int total_xtop, int total_ytop,
-                             int total_w, int total_h, int nbZones) {
+                             int total_w, int total_h, int nbZones, int total_during_from, int total_during_to) {
 
         Action action = event.action();
         Entity subject = event.subject();
@@ -519,35 +523,36 @@ public class Query {
 
         postTemporalWhere(event, eventInterval);
 
-        // the shapes of the spatial WHERE, of the event, of the ANDs and ORs holding it, and of the
-        // whole query; empty when there is none
+        // what the WHERE of the event, of the ANDs and ORs holding it, and of the whole query asks of
+        // each frame: the shapes of RECTANGLE and RADIUS, and the window of DURING
         List<Shape> shapes = whereShapes(event_circle, event_rectangle, total_circle, total_rectangle,
                 event_xcenter, event_ycenter, event_radius, event_xtop, event_ytop, event_w, event_h,
                 total_xcenter, total_ycenter, total_radius, total_xtop, total_ytop, total_w, total_h);
         for (Event group : groups) shapes.addAll(shapesOf(group));
+        FrameWhere where = frameWhere(shapes, event, groups, total_during_from, total_during_to);
 
         switch (action.name) {
 
             //BALL EVENTS
 
             case "BALL_MOVE_TO" -> model_BALL_MOVE_TO(cp, isNegated, payload, eventInterval, ball_idx, n,
-                    positionZones, positionBox_x, positionBox_y, shapes, minrange);
+                    positionZones, positionBox_x, positionBox_y, where, minrange);
 
             //PLAYER EVENTS
 
             case "PASS_TO" ->
                     model_PASS_TO(cp, counterEvent, isNegated, payload, eventInterval, ball_idx, n, possession,
-                            positionZones, positionBox_x, positionBox_y, shapes, subject, teams,
+                            positionZones, positionBox_x, positionBox_y, where, subject, teams,
                             IDENTIFIERS, counterVars, action, extVars, minrange);
 
-            case "PLAYER_MOVE_TO" -> model_PLAYER_MOVE_TO(cp, counterEvent, isNegated, eventInterval, shapes,
+            case "PLAYER_MOVE_TO" -> model_PLAYER_MOVE_TO(cp, counterEvent, isNegated, eventInterval, where,
                     subject, teams, positionBox_x, positionBox_y, positionZones, payload, n, IDENTIFIERS,
                     counterVars, action, extVars, minrange);
 
             //TEAM EVENTS
 
             case "TEAM_MOVE_TO" ->
-                    model_TEAM_MOVE_TO(cp, counterEvent, isNegated, eventInterval, shapes,
+                    model_TEAM_MOVE_TO(cp, counterEvent, isNegated, eventInterval, where,
                             subject, teams, positionBox_x, positionBox_y, positionZones, payload, n, IDENTIFIERS,
                             counterVars, action, extVars, minrange);
 
@@ -555,13 +560,13 @@ public class Query {
 
             case "POSSESSION" ->
                     model_POSSESSION(cp, counterEvent, isNegated, eventInterval, ball_idx, n,
-                            possession, shapes, subject, IDENTIFIERS, counterVars, action, extVars,
+                            possession, where, subject, IDENTIFIERS, counterVars, action, extVars,
                             teams, positionBox_x, positionBox_y, positionZones);
 
             // TEAM + PLAYER + BALL EVENTS
 
             case "POSITION" ->
-                    model_POSITION(cp, counterEvent, isNegated, eventInterval, shapes, subject, teams,
+                    model_POSITION(cp, counterEvent, isNegated, eventInterval, where, subject, teams,
                             positionBox_x, positionBox_y, positionZones, payload, n, IDENTIFIERS, counterVars,
                             action, extVars, ball_idx);
 
@@ -573,7 +578,7 @@ public class Query {
     private void
     model_BALL_MOVE_TO(CPSolver cp, boolean isNegated, Object payload, CPIntervalVar eventInterval,
                        int ball_idx, int n, int[][] positionZones, int[][] positionBox_x,
-                       int[][] positionBox_y, List<Shape> shapes, boolean minrange) {
+                       int[][] positionBox_y, FrameWhere where, boolean minrange) {
 
         //ball movement logic
 
@@ -589,13 +594,14 @@ public class Query {
         // the ball moves as a group of one: 1 in zone_start, 2 in zone_end, 0 elsewhere
         postMove(cp, eventInterval, groupWord(new int[]{ball_idx}, zone_start, zone_end, positionZones, n), minrange, n);
 
-        // spatial constraints
-        postBallInside(cp, eventInterval, shapes, ball_idx, positionBox_x, positionBox_y, positionZones, n);
+        // the WHERE: the ball is never seen outside the shapes while it moves
+        postThroughout(cp, eventInterval, where,
+                insideWord(where, new int[]{ball_idx}, positionBox_x, positionBox_y, positionZones, n));
     }
 
     public void model_PASS_TO(CPSolver cp, AtomicInteger counterEvent, boolean isNegated, Object payload, CPIntervalVar eventInterval,
                               int ball_idx, int n, int[] possession, int[][] positionZones, int[][] positionBox_x,
-                              int[][] positionBox_y, List<Shape> shapes,
+                              int[][] positionBox_y, FrameWhere where,
                               Entity subject, int[] teams, Map<String, CPIntVar> IDENTIFIERS,
                               AtomicInteger counterVars, Action action, ArrayList<ExtendedCPVar> extVars, boolean minrange) {
 
@@ -737,12 +743,13 @@ public class Query {
         }
 
 
-        // spatial constraints
-        postBallInside(cp, eventInterval, shapes, ball_idx, positionBox_x, positionBox_y, positionZones, n);
+        // the WHERE: the ball is never seen outside the shapes during the pass
+        postThroughout(cp, eventInterval, where,
+                insideWord(where, new int[]{ball_idx}, positionBox_x, positionBox_y, positionZones, n));
     }
 
     public void model_PLAYER_MOVE_TO(CPSolver cp, AtomicInteger counterEvent, boolean isNegated, CPIntervalVar eventInterval,
-                                     List<Shape> shapes, Entity subject, int[] teams, int[][] positionBox_x, int[][] positionBox_y,
+                                     FrameWhere where, Entity subject, int[] teams, int[][] positionBox_x, int[][] positionBox_y,
                                      int[][] positionZones, Object payload, int n, Map<String, CPIntVar> IDENTIFIERS,
                                      AtomicInteger counterVars, Action action, ArrayList<ExtendedCPVar> extVars, boolean minrange) {
 
@@ -770,23 +777,23 @@ public class Query {
         if (isNegated) {
             throw new IllegalArgumentException("Negation of PLAYER_MOVE_TO is not supported.");
         }
-        // one candidate per player: the player moves as a group of one, and, under a spatial WHERE,
-        // is never seen outside the shapes
+        // one candidate per player: the player moves as a group of one, and, under a WHERE, is
+        // never seen outside the shapes and stays in the DURING window
         int[] candidates = candidatesOf(player_id);
         List<CandidateMatch> matches = new ArrayList<>();
         for (int pl_id : candidates) {
             int[] word = groupWord(new int[]{pl_id}, zone_start, zone_end, positionZones, n);
-            int[] where = shapes.isEmpty() ? null : notSeenOutside(shapes, new int[]{pl_id}, positionBox_x, positionBox_y, positionZones, n);
+            int[] inside = insideWord(where, new int[]{pl_id}, positionBox_x, positionBox_y, positionZones, n);
             matches.add(window -> {
                 postMove(cp, window, word, minrange, n);
-                if (where != null) postInsideThroughout(cp, where, window);
+                postThroughout(cp, window, where, inside);
             });
         }
         linkIdentity(cp, eventInterval, player_id, candidates, chooseCandidate(cp, eventInterval, matches, n));
     }
 
     public void model_TEAM_MOVE_TO(CPSolver cp, AtomicInteger counterEvent, boolean isNegated, CPIntervalVar eventInterval,
-                                   List<Shape> shapes, Entity subject, int[] teams, int[][] positionBox_x, int[][] positionBox_y,
+                                   FrameWhere where, Entity subject, int[] teams, int[][] positionBox_x, int[][] positionBox_y,
                                    int[][] positionZones, Object payload, int n, Map<String, CPIntVar> IDENTIFIERS,
                                    AtomicInteger counterVars, Action action, ArrayList<ExtendedCPVar> extVars, boolean minrange) {
 
@@ -815,11 +822,11 @@ public class Query {
         List<CandidateMatch> matches = new ArrayList<>();
         for (Group group : groups) {
             int[] word = groupWord(group.players(), zone_start, zone_end, positionZones, n);
-            // spatial constraints: none of the k members that move is seen outside the shapes
-            int[] where = shapes.isEmpty() ? null : notSeenOutside(shapes, group.players(), positionBox_x, positionBox_y, positionZones, n);
+            // the WHERE: none of the k members that move is seen outside the shapes
+            int[] inside = insideWord(where, group.players(), positionBox_x, positionBox_y, positionZones, n);
             matches.add(window -> {
                 postMove(cp, window, word, minrange, n);
-                if (where != null) postInsideThroughout(cp, where, window);
+                postThroughout(cp, window, where, inside);
             });
         }
         CPIntVar chosen = chooseCandidate(cp, eventInterval, matches, n);
@@ -861,7 +868,7 @@ public class Query {
     }
 
     public void model_POSITION(CPSolver cp, AtomicInteger counterEvent, boolean isNegated, CPIntervalVar eventInterval,
-                               List<Shape> shapes, Entity subject, int[] teams, int[][] positionBox_x,
+                               FrameWhere where, Entity subject, int[] teams, int[][] positionBox_x,
                                int[][] positionBox_y, int[][] positionZones, Object payload, int n,
                                Map<String, CPIntVar> IDENTIFIERS, AtomicInteger counterVars, Action action, ArrayList<ExtendedCPVar> extVars, int ball_idx) {
 
@@ -883,17 +890,14 @@ public class Query {
             );
             extVars.add(player_id_ext);
 
-            // one candidate per player: a maximal stay in (negated: out of) the zones and, under a
-            // spatial WHERE, never seen outside the shapes
+            // one candidate per player: a maximal stay in (negated: out of) the zones on the frames the
+            // WHERE keeps, those where the player is not seen outside the shapes, in the DURING window
             int[] candidates = candidatesOf(player_id);
             List<CandidateMatch> matches = new ArrayList<>();
             for (int pl_id : candidates) {
-                int[] word = zoneWord(positionZones, pl_id, zoneSet, isNegated, n);
-                int[] where = shapes.isEmpty() ? null : notSeenOutside(shapes, new int[]{pl_id}, positionBox_x, positionBox_y, positionZones, n);
-                matches.add(window -> {
-                    postPadded(cp, window, word, Automaton.NOTA_APLUS_NOTA(1, Set.of(1)), n);
-                    if (where != null) postInsideThroughout(cp, where, window);
-                });
+                int[] word = restrict(zoneWord(positionZones, pl_id, zoneSet, isNegated, n),
+                        insideWord(where, new int[]{pl_id}, positionBox_x, positionBox_y, positionZones, n), where);
+                matches.add(window -> postPadded(cp, window, word, Automaton.NOTA_APLUS_NOTA(1, Set.of(1)), n));
             }
             linkIdentity(cp, eventInterval, player_id, candidates, chooseCandidate(cp, eventInterval, matches, n));
 
@@ -912,21 +916,17 @@ public class Query {
 
             // The team is in the zones while at least k of its members are (negated: are not),
             // whichever members they are on each frame: one maximal run of the count word, for each
-            // identity of the wildcard members. Spatial constraints: as for a player, the WHERE keeps
-            // the runs on every frame of which at least k of the members counted are not seen
-            // outside the shapes.
+            // identity of the wildcard members. Under a WHERE, a member counts only while it is not
+            // seen outside the shapes, and only the frames of the DURING window are kept.
             TeamMembers members = teamMembers(cp, team, teams, IDENTIFIERS, eventInterval);
-            int[][] inside = shapes.isEmpty() ? null : insideByFrame(shapes, positionBox_x, positionBox_y, positionZones, n);
+            int[][] inside = where.shapes().isEmpty() ? null
+                    : insideByFrame(where.shapes(), positionBox_x, positionBox_y, positionZones, n);
 
             List<int[]> rows = teamCandidates(members);
             List<CandidateMatch> matches = new ArrayList<>();
             for (int[] row : rows) {
-                int[] word = countWord(row, k, zoneSet, isNegated, positionZones, null, n);
-                int[] where = inside == null ? null : countWord(row, k, zoneSet, isNegated, positionZones, inside, n);
-                matches.add(window -> {
-                    postPadded(cp, window, word, Automaton.NOTA_APLUS_NOTA(1, Set.of(1)), n);
-                    if (where != null) postInsideThroughout(cp, where, window);
-                });
+                int[] word = restrict(countWord(row, k, zoneSet, isNegated, positionZones, inside, n), null, where);
+                matches.add(window -> postPadded(cp, window, word, Automaton.NOTA_APLUS_NOTA(1, Set.of(1)), n));
             }
             CPIntVar chosen = chooseCandidate(cp, eventInterval, matches, n);
             reportMembers(cp, members, linkWildcards(cp, eventInterval, members, rows, chosen), extVars, counterVars,
@@ -938,27 +938,32 @@ public class Query {
                 throw new IllegalArgumentException("At least one zone must be specified for POSITION of the ball");
             }
             Set<Integer> zoneSet = Arrays.stream(zones).boxed().collect(Collectors.toSet());
-            // one maximal stay of the ball in (negated: out of) the zones
-            postPadded(cp, eventInterval, zoneWord(positionZones, ball_idx, zoneSet, isNegated, n),
-                    Automaton.NOTA_APLUS_NOTA(1, Set.of(1)), n);
-
-            // spatial constraints
-            postBallInside(cp, eventInterval, shapes, ball_idx, positionBox_x, positionBox_y, positionZones, n);
+            // one maximal stay of the ball in (negated: out of) the zones, on the frames the WHERE keeps
+            int[] word = restrict(zoneWord(positionZones, ball_idx, zoneSet, isNegated, n),
+                    insideWord(where, new int[]{ball_idx}, positionBox_x, positionBox_y, positionZones, n), where);
+            postPadded(cp, eventInterval, word, Automaton.NOTA_APLUS_NOTA(1, Set.of(1)), n);
         }
     }
 
     public void model_POSSESSION(CPSolver cp, AtomicInteger counterEvent, boolean isNegated, CPIntervalVar eventInterval,
-                                 int ball_idx, int n, int[] possession, List<Shape> shapes,
+                                 int ball_idx, int n, int[] possession, FrameWhere where,
                                  Entity subject, Map<String, CPIntVar> IDENTIFIERS, AtomicInteger counterVars, Action action,
                                  ArrayList<ExtendedCPVar> extVars, int[] teams, int[][] positionBox_x, int[][] positionBox_y,
                                  int[][] positionZones) {
+
+        // the WHERE tests the ball: a possession keeps the frames where the ball is not seen outside
+        // the shapes, in the DURING window
+        int[] ballInside = insideWord(where, new int[]{ball_idx}, positionBox_x, positionBox_y, positionZones, n);
 
         if (subject instanceof Player player) {
 
             CPIntVar player_id = makeIntVar(cp, teams.length);
 
+            // the holder of the ball on the frames the WHERE keeps, nobody (0) on the others
+            int[] held = restrict(possession, ballInside, where);
+
             // a positive event reads p off the sequence: the holder of the ball on its first frame
-            CPIntVar possessionAtStart = isNegated ? null : element(possession, startOf(eventInterval));
+            CPIntVar possessionAtStart = isNegated ? null : element(held, startOf(eventInterval));
 
             if (IDENTIFIERS.get(identityKey(player)) == null) {
                 if (!isNegated) player_id = boundWhenPresent(cp, eventInterval, possessionAtStart, teams.length);
@@ -1013,39 +1018,34 @@ public class Query {
                 int[] candidates = validIds.stream().mapToInt(Integer::intValue).sorted().toArray();
                 List<CandidateMatch> matches = new ArrayList<>();
                 for (int pl_id : candidates) {
-                    int[] word = new int[n + 1];
-                    for (int f = 1; f <= n; f++) word[f] = possession[f] != pl_id ? 1 : 0;
+                    int[] notHeld = new int[n + 1];
+                    for (int f = 1; f <= n; f++) notHeld[f] = possession[f] != pl_id ? 1 : 0;
+                    int[] word = restrict(notHeld, ballInside, where);
                     matches.add(window -> postPadded(cp, window, word, Automaton.NOTA_APLUS_NOTA(1, Set.of(1)), n));
                 }
                 linkIdentity(cp, eventInterval, player_id, candidates, chooseCandidate(cp, eventInterval, matches, n));
             } else {
                 // one maximal stay of a single candidate: a direct handover to another one ends it
-                postPadded(cp, eventInterval, possession, Automaton.NOTX_XPLUS_NOTX(teams.length, validIds), n);
+                postPadded(cp, eventInterval, held, Automaton.NOTX_XPLUS_NOTX(teams.length, validIds), n);
             }
-
-            // spatial constraints
-            postBallInside(cp, eventInterval, shapes, ball_idx, positionBox_x, positionBox_y, positionZones, n);
 
         } else if (subject instanceof Team team) {
 
             // The team has the ball from a member's touch to a member's touch, as long as nobody
             // outside the team touches it: the ball-free frames in between belong to it. One maximal
-            // run of that word (negated: of the other frames), for each identity of the wildcard
-            // members.
+            // run of that word (negated: of the other frames) on the frames the WHERE keeps, for each
+            // identity of the wildcard members. Such a run may start or end on a ball-free frame.
             TeamMembers members = teamMembers(cp, team, teams, IDENTIFIERS, eventInterval);
 
             List<int[]> rows = teamCandidates(members);
             List<CandidateMatch> matches = new ArrayList<>();
             for (int[] row : rows) {
-                int[] word = teamPossessionWord(possession, row, isNegated, n);
+                int[] word = restrict(teamPossessionWord(possession, row, isNegated, n), ballInside, where);
                 matches.add(window -> postPadded(cp, window, word, Automaton.NOTA_APLUS_NOTA(1, Set.of(1)), n));
             }
             CPIntVar chosen = chooseCandidate(cp, eventInterval, matches, n);
             reportMembers(cp, members, linkWildcards(cp, eventInterval, members, rows, chosen), extVars, counterVars,
                     action, counterEvent);
-
-            // spatial constraints: the ball, as for a player
-            postBallInside(cp, eventInterval, shapes, ball_idx, positionBox_x, positionBox_y, positionZones, n);
         }
     }
 
@@ -1289,12 +1289,67 @@ public class Query {
         return word;
     }
 
-    /** Spatial WHERE on the ball: it is never seen outside the shapes while the event happens. */
-    private static void postBallInside(CPSolver cp, CPIntervalVar eventInterval, List<Shape> shapes, int ball_idx,
-                                       int[][] positionBox_x, int[][] positionBox_y, int[][] positionZones, int n) {
-        if (shapes.isEmpty()) return;
-        postInsideThroughout(cp, notSeenOutside(shapes, new int[]{ball_idx}, positionBox_x, positionBox_y, positionZones, n),
-                eventInterval);
+    /**
+     * What a WHERE asks of each frame: to be inside the {@code shapes} (RECTANGLE, RADIUS) and in the
+     * frames [{@code from}, {@code to}] of DURING ({@code from} = -1: no DURING). A state (POSITION,
+     * POSSESSION) keeps the frames that meet it, so its runs are the maximal runs of the state and of
+     * that condition; a move or a pass must meet it on every one of its frames.
+     */
+    private record FrameWhere(List<Shape> shapes, int from, int to) {
+        boolean hasWindow() {
+            return from != -1;
+        }
+    }
+
+    /**
+     * The frame conditions of an atomic event: {@code shapes}, and the frames that every DURING
+     * allows, of the event, of the ANDs and ORs holding it and of the whole query.
+     */
+    private static FrameWhere frameWhere(List<Shape> shapes, Event event, List<Event> groups, int queryFrom, int queryTo) {
+        List<int[]> windows = new ArrayList<>();
+        windows.add(new int[]{event.duringFrom, event.duringTo});
+        for (Event group : groups) windows.add(new int[]{group.duringFrom, group.duringTo});
+        windows.add(new int[]{queryFrom, queryTo});
+        int from = -1, to = -1;
+        for (int[] window : windows) {
+            if (window[0] == -1) continue;
+            from = Math.max(from, window[0]);
+            to = to == -1 ? window[1] : Math.min(to, window[1]);
+        }
+        return new FrameWhere(shapes, from, to);
+    }
+
+    /** {@link #notSeenOutside} for the shapes of {@code where}; null when it has none. */
+    private static int[] insideWord(FrameWhere where, int[] ids, int[][] positionBox_x, int[][] positionBox_y,
+                                    int[][] positionZones, int n) {
+        return where.shapes().isEmpty() ? null : notSeenOutside(where.shapes(), ids, positionBox_x, positionBox_y, positionZones, n);
+    }
+
+    /**
+     * A state under a WHERE: {@code word} with 0 on the frames where {@code inside} is 0 (none: no
+     * shape) and on those outside the DURING window.
+     */
+    private static int[] restrict(int[] word, int[] inside, FrameWhere where) {
+        if (inside == null && !where.hasWindow()) return word;
+        int[] kept = word.clone();
+        for (int f = 0; f < kept.length; f++) {
+            boolean outside = inside != null && inside[f] == 0;
+            boolean outOfWindow = where.hasWindow() && (f < where.from() || f > where.to());
+            if (outside || outOfWindow) kept[f] = 0;
+        }
+        return kept;
+    }
+
+    /**
+     * A move or a pass under a WHERE: {@code window} only covers frames where {@code inside} is 1
+     * (none: no shape), within the DURING window.
+     */
+    private static void postThroughout(CPSolver cp, CPIntervalVar window, FrameWhere where, int[] inside) {
+        if (inside != null) postInsideThroughout(cp, inside, window);
+        if (where.hasWindow()) {
+            window.setStartMin(where.from());
+            window.setEndMax(where.to() + 1); // end is exclusive
+        }
     }
 
     // ###########

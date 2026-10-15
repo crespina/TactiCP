@@ -790,6 +790,9 @@
             <dt><code>MAXDURATION(nFrames)</code></dt>
             <dd>Limit the maximal length of the pattern.</dd>
 
+            <dt><code>DURING(from, to)</code></dt>
+            <dd>Only frames <code>from</code> to <code>to</code>. A position or a possession is cut to them; a move or a pass must lie inside them.</dd>
+
 
           </dl>
 
@@ -898,7 +901,7 @@
       // Events
       { re: /\b(POSSESSION|POSITION|PASSTO|MOVETO)\b/g, cls: 'dsl-kw-event' },
       // Constraints
-      { re: /\b(MAXDURATION|MINDURATION|MAX_DURATION|MIN_DURATION|STARTMIN|STARTMAX|ENDMIN|ENDMAX|START|END|WITHIN|RADIUS|RECTANGLE|ATMOST|ATLEAST|MINRANGE|MIN_RANGE)\b/g, cls: 'dsl-kw-constraint' },
+      { re: /\b(MAXDURATION|MINDURATION|MAX_DURATION|MIN_DURATION|STARTMIN|STARTMAX|ENDMIN|ENDMAX|DURING|START|END|WITHIN|RADIUS|RECTANGLE|ATMOST|ATLEAST|MINRANGE|MIN_RANGE)\b/g, cls: 'dsl-kw-constraint' },
       // Dataset keywords
       { re: /\b(TRAIN|TEST|VALID|ALL|FIRST)\b/g, cls: 'dsl-kw-dataset' },
       // Numbers (standalone — not inside placeholders)

@@ -175,7 +175,8 @@ public final class AstAnalyzer {
         put(m, "startMin", se.startMin);   put(m, "startMax", se.startMax);
         put(m, "endMin", se.endMin);       put(m, "endMax", se.endMax);
         put(m, "minDuration", se.minDuration); put(m, "maxDuration", se.maxDuration);
-        put(m, "radius", se.radius);       put(m, "xcenter", se.xcenter);   put(m, "ycenter", se.ycenter);
+        put(m, "duringFrom", se.duringFrom); put(m, "duringTo", se.duringTo);
+        put(m, "radius", se.radius);      put(m, "xcenter", se.xcenter);   put(m, "ycenter", se.ycenter);
         put(m, "xtop", se.xtop);           put(m, "ytop", se.ytop);
         put(m, "w", se.w);                 put(m, "h", se.h);
         put(m, "atLeast", se.atLeast);     put(m, "atMost", se.atMost);
@@ -187,7 +188,8 @@ public final class AstAnalyzer {
         put(m, "startMin", e.timeStartMin); put(m, "startMax", e.timeStartMax);
         put(m, "endMin", e.timeEndMin);     put(m, "endMax", e.timeEndMax);
         put(m, "minDuration", e.minDuration); put(m, "maxDuration", e.maxDuration);
-        put(m, "radius", e.radius);         put(m, "xcenter", e.xcenter); put(m, "ycenter", e.ycenter);
+        put(m, "duringFrom", e.duringFrom); put(m, "duringTo", e.duringTo);
+        put(m, "radius", e.radius);        put(m, "xcenter", e.xcenter); put(m, "ycenter", e.ycenter);
         put(m, "xtop", e.xtop);             put(m, "ytop", e.ytop);
         put(m, "w", e.w);                   put(m, "h", e.h);
         return m;

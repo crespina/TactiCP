@@ -204,8 +204,10 @@ public class LlmQuery {
             2. On the full SELECT expression, to constrain the whole matched sequence:
                  SELECT(...).FROM("...").WHERE(constraint, ...)
                Example: SELECT(eventA, eventB).WHERE(STARTMIN(100), ENDMAX(500))
-               This restricts the overall start/end/duration/location of the entire match. It may be
-               written more than once, and before or after the search mode.
+               START…, END… and …DURATION here bound the whole sequence, from the start of its first
+               event to the end of its last. RECTANGLE, RADIUS and DURING apply to each event of it,
+               as if written on each. It may be written more than once, and before or after the
+               search mode.
 
             Decide which one from the wording:
             - A constraint describing the WHOLE pattern goes on the SELECT.
@@ -218,7 +220,8 @@ public class LlmQuery {
             WHERE on the AND/OR itself — AND(a, b).WHERE(MINDURATION(30)) — not on the SELECT, and
             not on one member. On an AND or OR, a time constraint (START…, END…, …DURATION) bounds
             the moment the group holds: the overlap of an AND, the chosen event of an OR. A
-            RECTANGLE or RADIUS applies to every event inside the group, as if written on each.
+            RECTANGLE, RADIUS or DURING applies to every event inside the group, as if written on
+            each.
 
             ATLEAST and ATMOST are only valid on the full SELECT (not on individual events).
 
@@ -229,21 +232,30 @@ public class LlmQuery {
               ENDMAX(n)      — the match must end at or before frame n
               MINDURATION(n) — the match must last at least n frames
               MAXDURATION(n) — the match must last at most n frames
+              DURING(a, b)   — only frames a to b, both included: a POSITION or a POSSESSION is cut
+                               to those frames, a pass or a move must lie inside them
             Use the number exactly as the request writes it and never add or subtract 1 for
             "more than" / "less than": "longer than 30 frames" is MINDURATION(30), "less than 300
             frames" is MAXDURATION(300), "more than 2 occurrences" is ATLEAST(2), "less than 10
             times" is ATMOST(10), "more than once" is ATLEAST(1). This applies to occurrence counts
             exactly as it does to durations — never write ATMOST(9) for "less than 10 times".
 
+            On a POSITION or a POSSESSION, "between frame a and frame b" or "from frame a to frame b"
+            is DURING(a, b): a stay that began before frame a is cut to start at a. STARTMIN, ENDMAX
+            and the others keep or drop whole matches: use them for "starts after frame a", "ends
+            before frame b". On a pass or a move, DURING(a, b) and STARTMIN(a), ENDMAX(b) are the same.
+
             Spatial constraints (whole numbers of metres, in the same frame as the zones: the pitch
             is centred on (0,0), x from -62 to +62, y from -39 to +39):
-              RECTANGLE(xtop, ytop, width, height) — the match must stay inside this rectangle for
-                its whole duration. (xtop, ytop) is the TOP-LEFT corner: x runs from xtop rightwards
+              RECTANGLE(xtop, ytop, width, height) — only the moments inside this rectangle. A
+                POSITION or a POSSESSION is cut to the frames where its subject (the ball, for a
+                POSSESSION) is inside it, so a stay that leaves the rectangle and comes back gives one
+                match per part. A pass or a move must stay inside it for its whole duration.
+                (xtop, ytop) is the TOP-LEFT corner: x runs from xtop rightwards
                 to xtop+width, and y runs DOWNWARDS from ytop to ytop-height. So the whole pitch is
                 RECTANGLE(-62, 39, 125, 78), the upper left quarter is RECTANGLE(-62, 39, 62, 39),
                 and a small box around the centre is RECTANGLE(-5, 5, 10, 10).
-              RADIUS(cx, cy, r) — the match must stay within radius r of (cx, cy) for its whole
-                duration.
+              RADIUS(cx, cy, r) — the same as RECTANGLE, for the disc of radius r around (cx, cy).
 
             Aggregation constraints (only on full SELECT):
               ATLEAST(n) — keep only the clips with at least n occurrences; the others give none
