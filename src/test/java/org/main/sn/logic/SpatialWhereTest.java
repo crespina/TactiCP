@@ -7,17 +7,21 @@ import org.main.sn.dsl.SelectExpr;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.IntPredicate;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.main.sn.dsl.Factory.*;
 import static org.maxicp.cp.CPFactory.makeSolver;
 
 /**
- * Spatial WHERE on ball and player events, checked against direct scans. A WHERE keeps the answers
- * of the event during which its subject (the ball for PASSTO and POSSESSION) is never seen outside
- * the shapes: a frame where the subject is not tracked neither confirms nor breaks it. Positions
- * are read on the frame itself, the last frame of the clip included. Each test draws a circle
- * around the subject during one answer, so that the WHERE keeps at least that answer.
+ * Spatial WHERE on ball and player events, checked against direct scans. The WHERE tests the
+ * subject of the event, the ball for PASSTO and POSSESSION, frame by frame: a frame where the
+ * subject is not tracked neither confirms nor breaks it. A POSITION or a POSSESSION keeps the frames
+ * where its subject is not seen outside the shapes, so its answers are the maximal runs of the state
+ * on those frames. A move or a pass is kept whole when its subject is never seen outside the shapes
+ * during it, and dropped otherwise. Positions are read on the frame itself, the last frame of the
+ * clip included. Each test draws a circle around the subject during one answer, so that the WHERE
+ * keeps at least that answer.
  */
 public class SpatialWhereTest {
 
@@ -82,6 +86,23 @@ public class SpatialWhereTest {
             if (dx * dx + dy * dy > c.r * c.r) return false;
         }
         return true;
+    }
+
+    /** Whether {@code id} is seen outside the circle on frame f: never when it is not tracked there. */
+    private static boolean outside(GameStateReconstructionInstance g, int id, int f, Circle c) {
+        return !neverOutside(g, id, f, f + 1, c);
+    }
+
+    /** Maximal runs, from frame 1, of the frames 1..n where {@code in} holds. */
+    private static Set<Answer> runs(int who, int n, IntPredicate in) {
+        Set<Answer> runs = new HashSet<>();
+        for (int s = 1, e; s <= n; s = e) {
+            e = s + 1;
+            if (!in.test(s)) continue;
+            while (e <= n && in.test(e)) e++;
+            runs.add(new Answer(who, s, e));
+        }
+        return runs;
     }
 
     private static boolean untrackedDuring(GameStateReconstructionInstance g, int id, int start, int end) {
@@ -149,7 +170,7 @@ public class SpatialWhereTest {
     }
 
     @Test
-    public void playerStayInsideTheCircle() throws IOException {
+    public void playerStaysAreCutToTheCircle() throws IOException {
         String G = "SNGS-022";
         GameStateReconstructionInstance g = game(G);
         int[][] Z = zones(g);
@@ -157,15 +178,55 @@ public class SpatialWhereTest {
         for (boolean negated : new boolean[]{false, true}) {
             Set<Answer> all = new HashSet<>();
             for (int c : left(g)) all.addAll(stays(Z[c], c, zs, negated));
-            Answer one = all.stream().filter(a -> a.end - a.start < 200).findFirst().orElseThrow();
-            Circle circle = around(g, one.who, one.start, one.end);
-            Set<Answer> expected = keep(all, g, circle, -1);
-            assertTrue(expected.contains(one));
-            assertTrue(expected.size() < all.size());
+            // a circle around one stay, such that other stays leave it and come back: they are cut,
+            // not dropped
+            Circle circle = null;
+            Set<Answer> expected = null;
+            for (Answer one : all.stream().filter(a -> a.end - a.start < 200).sorted(Comparator.comparingInt(Answer::start)).toList()) {
+                Circle c = around(g, one.who, one.start, one.end);
+                Set<Answer> cut = new HashSet<>();
+                for (int p : left(g)) cut.addAll(runs(p, g.n, f -> zs.contains(Z[p][f]) != negated && !outside(g, p, f, c)));
+                if (!cut.equals(keep(all, g, c, -1))) {
+                    assertTrue(cut.contains(one));
+                    circle = c;
+                    expected = cut;
+                    break;
+                }
+            }
+            assertNotNull(circle);
             Event e = POSITION(PLAYER("p", "left"), 1, 2, 3, 4);
             if (negated) e = NOT(e);
             assertEquals(expected, run(SELECT(e).FROM(G).WHERE(RADIUS(circle.x, circle.y, circle.r))), negated ? "negated" : "positive");
         }
+    }
+
+    @Test
+    public void durationIsMeasuredOnTheCutStays() throws IOException {
+        // a temporal WHERE bounds the answers the spatial one leaves, so it reads their cut length:
+        // a stay cut shorter than MINDURATION is dropped, though the whole stay was long enough
+        String G = "SNGS-022";
+        GameStateReconstructionInstance g = game(G);
+        int[][] Z = zones(g);
+        Set<Integer> zs = Set.of(1, 2, 3, 4);
+        int length = 20;
+        for (int p : left(g)) {
+            Set<Answer> all = stays(Z[p], p, zs, false);
+            for (Answer one : all.stream().filter(a -> a.end - a.start >= length && a.end - a.start < 200)
+                    .sorted(Comparator.comparingInt(Answer::start)).toList()) {
+                Circle circle = around(g, p, one.start, one.end);
+                Set<Answer> cut = runs(p, g.n, f -> zs.contains(Z[p][f]) && !outside(g, p, f, circle));
+                Set<Answer> expected = new HashSet<>();
+                for (Answer a : cut) if (a.end - a.start >= length) expected.add(a);
+                boolean longCutShort = all.stream().anyMatch(a -> a.end - a.start >= length
+                        && cut.stream().anyMatch(x -> x.start >= a.start && x.end <= a.end && x.end - x.start < length));
+                if (!longCutShort) continue;
+                assertTrue(expected.contains(one));
+                assertEquals(expected, run(SELECT(POSITION(PLAYER("p", p), 1, 2, 3, 4)
+                        .WHERE(RADIUS(circle.x, circle.y, circle.r), MINDURATION(length))).FROM(G)));
+                return;
+            }
+        }
+        fail("no stay cut shorter than " + length + " frames");
     }
 
     @Test
@@ -244,10 +305,31 @@ public class SpatialWhereTest {
             while (e < P.length && P[e] == P[s]) e++;
             if (P[s] != 0 && (g.teams[P[s]] == 0 || g.teams[P[s]] == 1)) stays.add(new Answer(P[s], s, e));
         }
-        Answer one = stays.stream().filter(a -> untrackedDuring(g, g.ball_idx, a.start, a.end)).findFirst().orElseThrow();
-        Circle circle = around(g, g.ball_idx, one.start, one.end);
-        Set<Answer> expected = keep(stays, g, circle, g.ball_idx);
-        assertTrue(expected.contains(one));
+        // a circle around the ball during a possession, such that other possessions leave it and
+        // come back: they are cut, not dropped
+        Circle circle = null;
+        Set<Answer> expected = null;
+        for (Answer one : stays.stream().sorted(Comparator.comparingInt(Answer::start)).toList()) {
+            Circle c = around(g, g.ball_idx, one.start, one.end);
+            // the holder on the frames where the ball is not seen outside the circle, nobody on the others
+            int[] held = new int[P.length];
+            for (int f = 1; f < P.length; f++) held[f] = outside(g, g.ball_idx, f, c) ? 0 : P[f];
+            Set<Answer> cut = new HashSet<>();
+            for (int s = 1, e = 2; s < held.length; s = e, e = s + 1) {
+                while (e < held.length && held[e] == held[s]) e++;
+                if (held[s] != 0 && (g.teams[held[s]] == 0 || g.teams[held[s]] == 1)) cut.add(new Answer(held[s], s, e));
+            }
+            if (!cut.equals(keep(stays, g, c, g.ball_idx))) {
+                assertTrue(cut.contains(one));
+                circle = c;
+                expected = cut;
+                break;
+            }
+        }
+        assertNotNull(circle);
+        // a frame where the ball is untracked does not cut a possession
+        final Set<Answer> cut = expected;
+        assertTrue(cut.stream().anyMatch(a -> untrackedDuring(g, g.ball_idx, a.start, a.end)));
         assertEquals(expected, run(SELECT(POSSESSION(PLAYER("holder"))).FROM(G).WHERE(RADIUS(circle.x, circle.y, circle.r))));
 
         // a pass: a stay, ball-free frames, a stay of a teammate

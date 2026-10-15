@@ -217,13 +217,12 @@ public class TeamEventsTest {
     }
 
     @Test
-    public void spatialWhereKeepsTheRunsWhereKMembersStayInsideTheShape() throws IOException {
-        // As for a player, a spatial WHERE filters the runs found without it: a run is kept when, on
-        // each of its frames, at least k members are in (negated: out of) the zones and not seen
+    public void spatialWhereCountsOnlyTheMembersInsideTheShape() throws IOException {
+        // As for a player, a spatial WHERE cuts the runs to the frames that meet it: the answers are
+        // the maximal runs where at least k members are in (negated: out of) the zones and not seen
         // outside the shape; an untracked member is never seen outside. The circle is drawn around
         // the members counted during one run, so that the WHERE keeps at least that run, and the run
-        // is chosen so that this filter differs from refining the zones with the shape, which would
-        // give the maximal runs of that frame condition instead.
+        // is chosen so that cutting differs from keeping or dropping the runs found without it.
         String G = "SNGS-022";
         GameStateReconstructionInstance g = game(G);
         int[][] Z = zones(g);
@@ -247,12 +246,11 @@ public class TeamEventsTest {
                     return count >= s.k;
                 };
                 List<int[]> kept = all.stream().filter(r -> IntStream.range(r[0], r[1]).allMatch(holds)).toList();
-                Set<Answer> filtered = answersOf(roster, kept);
-                if (!filtered.equals(answersOf(roster, runs(g.n, holds)))) {
-                    assertTrue(filtered.contains(new Answer(roster, one[0], one[1])), label);
-                    assertTrue(kept.size() < all.size(), label);
+                Set<Answer> cut = answersOf(roster, runs(g.n, holds));
+                if (!cut.equals(answersOf(roster, kept))) {
+                    assertTrue(cut.contains(new Answer(roster, one[0], one[1])), label);
                     circle = c;
-                    expected = filtered;
+                    expected = cut;
                     break;
                 }
             }
@@ -393,9 +391,15 @@ public class TeamEventsTest {
         }
         assertTrue(memberOutside);
 
+        // the possession is cut to the frames where the ball is not seen outside the circle; such a
+        // run may start or end on a ball-free frame
+        int[] P = possession(g);
+        Set<Integer> team = new HashSet<>(left);
+        int[] circle = {cx, cy, r};
+        Set<Answer> expected = answersOf(left, runs(g.n, f -> teamHasBall(P, team, f, g.n) && !seenOutside(g, g.ball_idx, f, circle)));
         Set<Answer> near = run(SELECT(POSSESSION(TEAM("left"))).FROM(G).WHERE(RADIUS(cx, cy, r)));
         assertTrue(near.contains(first));
-        assertTrue(all.containsAll(near));
+        assertEquals(expected, near);
         assertTrue(run(SELECT(POSSESSION(TEAM("left"))).FROM(G).WHERE(RADIUS(55, 30, 3))).isEmpty());
 
         // a custom team given by numbers used to throw here

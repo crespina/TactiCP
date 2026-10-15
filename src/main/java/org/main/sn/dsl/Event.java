@@ -9,6 +9,8 @@ public abstract class Event {
     public int timeEndMax = -1;
     public int maxDuration = -1;
     public int minDuration = -1;
+    public int duringFrom = -1;
+    public int duringTo = -1;
     public int xtop = -1;
     public int ytop = -1;
     public int w = -1;
@@ -33,6 +35,10 @@ public abstract class Event {
                 case ENDMAX -> this.timeEndMax = w.values()[0];
                 case MAXDURATION -> this.maxDuration = w.values()[0];
                 case MINDURATION -> this.minDuration = w.values()[0];
+                case DURING -> {
+                    this.duringFrom = w.values()[0];
+                    this.duringTo = w.values()[1];
+                }
                 case RADIUS -> {
                     this.xcenter = w.values()[0];
                     this.ycenter = w.values()[1];
@@ -85,6 +91,8 @@ public abstract class Event {
         timeEndMax = other.timeEndMax;
         maxDuration = other.maxDuration;
         minDuration = other.minDuration;
+        duringFrom = other.duringFrom;
+        duringTo = other.duringTo;
         xtop = other.xtop;
         ytop = other.ytop;
         w = other.w;

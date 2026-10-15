@@ -197,6 +197,19 @@ public class Factory {
         return Where.of(Where.Kind.MINDURATION, frames);
     }
 
+    /**
+     * Only the frames from {@code from} to {@code to}, both included. Like RECTANGLE and RADIUS, it
+     * holds frame by frame: a POSITION or a POSSESSION keeps its frames in the window, a move or a
+     * pass must lie inside it.
+     */
+    public static Where DURING(int from, int to) {
+        if (from < 0 || from > to) {
+            throw new IllegalArgumentException("DURING(from, to) needs 0 <= from <= to, got DURING("
+                    + from + ", " + to + ").");
+        }
+        return Where.of(Where.Kind.DURING, from, to);
+    }
+
     public static Where RECTANGLE(int xtop, int ytop, int w, int h) {
         return Where.of(Where.Kind.RECTANGLE, xtop, ytop, w, h);
     }

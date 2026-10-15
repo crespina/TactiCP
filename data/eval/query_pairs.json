@@ -1431,7 +1431,7 @@
     "features": [
       "AND",
       "OR",
-      "NESTED:3",
+      "NESTED",
       "POSSESSION",
       "POSITION",
       "PASSTO",
@@ -1456,7 +1456,7 @@
       "identifier-reuse",
       "POSSESSION",
       "TEAM:LEFT",
-      "MINRANGE:group",
+      "MINRANGE",
       "WHERE:event",
       "RADIUS"
     ],

@@ -21,6 +21,8 @@ public final class SelectExpr {
     public int startMax = -1;
     public int endMin = -1;
     public int endMax = -1;
+    public int duringFrom = -1;
+    public int duringTo = -1;
     public int xcenter = -1;
     public int ycenter = -1;
     public int radius = -1;
@@ -88,6 +90,10 @@ public final class SelectExpr {
                 case ENDMAX -> this.endMax = w.values()[0];
                 case MAXDURATION -> this.maxDuration = w.values()[0];
                 case MINDURATION -> this.minDuration = w.values()[0];
+                case DURING -> {
+                    this.duringFrom = w.values()[0];
+                    this.duringTo = w.values()[1];
+                }
                 case RADIUS -> {
                     this.xcenter = w.values()[0];
                     this.ycenter = w.values()[1];

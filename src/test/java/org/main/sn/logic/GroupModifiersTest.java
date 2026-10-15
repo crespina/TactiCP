@@ -14,10 +14,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.main.sn.dsl.Factory.*;
 
 /**
- * WHERE and MINRANGE written on an AND or an OR. A temporal WHERE bounds the group's interval: the
- * intersection of an AND, the chosen branch of an OR. A spatial WHERE and a MINRANGE apply to each
- * member, as if they were written on every one of them; a spatial WHERE on the whole query applies
- * to each event in the same way.
+ * WHERE and MINRANGE written on an AND or an OR. A bound on the start, the end or the duration bounds
+ * the group's interval: the intersection of an AND, the chosen branch of an OR. A spatial WHERE, a
+ * DURING and a MINRANGE apply to each member, as if they were written on every one of them; a
+ * spatial WHERE or a DURING on the whole query applies to each event in the same way.
  */
 public class GroupModifiersTest {
 
@@ -84,11 +84,21 @@ public class GroupModifiersTest {
 
     @Test
     public void spatialWhereOnAGroupAppliesToEachMember() throws Exception {
+        frameWhereOnAGroupAppliesToEachMember(RADIUS(0, 0, 25));
+    }
+
+    @Test
+    public void duringOnAGroupAppliesToEachMember() throws Exception {
+        frameWhereOnAGroupAppliesToEachMember(DURING(200, 500));
+    }
+
+    /** A WHERE that holds frame by frame, written on a group, on each member, or on the query. */
+    private static void frameWhereOnAGroupAppliesToEachMember(Where where) throws Exception {
         // the first member tests the player, the second one the ball
         Map<String, Supplier<Event[]>> members = new LinkedHashMap<>();
         members.put("AND", () -> new Event[]{POSITION(PLAYER("p", "left"), 1, 2, 3, 4), POSITION(BALL(), 1, 2, 3, 4)});
         members.put("OR", () -> new Event[]{POSITION(PLAYER("p", "left"), 1, 2), POSITION(BALL(), 3, 4)});
-        int dropped = 0;
+        int changed = 0;
         Map<String, Integer> kept = new HashMap<>();
         for (String G : GAMES) {
             for (Map.Entry<String, Supplier<Event[]>> entry : members.entrySet()) {
@@ -97,26 +107,25 @@ public class GroupModifiersTest {
                 Set<Answer> without = run(and ? AND(m) : OR(m), G);
 
                 m = entry.getValue().get();
-                Set<Answer> onGroup = run((and ? AND(m) : OR(m)).WHERE(RADIUS(0, 0, 25)), G);
+                Set<Answer> onGroup = run((and ? AND(m) : OR(m)).WHERE(where), G);
                 kept.merge(entry.getKey(), onGroup.size(), Integer::sum);
 
                 m = entry.getValue().get();
-                for (Event e : m) e.WHERE(RADIUS(0, 0, 25));
+                for (Event e : m) e.WHERE(where);
                 Set<Answer> onEachMember = run(and ? AND(m) : OR(m), G);
 
                 m = entry.getValue().get();
                 Factory.reset();
-                Set<Answer> onTheQuery = run(SELECT(and ? AND(m) : OR(m)).FROM(G).WHERE(RADIUS(0, 0, 25)));
+                Set<Answer> onTheQuery = run(SELECT(and ? AND(m) : OR(m)).FROM(G).WHERE(where));
 
-                String label = entry.getKey() + " " + G;
+                String label = entry.getKey() + ".WHERE(" + where + ") " + G;
                 assertEquals(onEachMember, onGroup, label);
                 assertEquals(onTheQuery, onGroup, label);
-                assertTrue(without.containsAll(onGroup), label);
-                dropped += without.size() - onGroup.size();
+                if (!onGroup.equals(without)) changed++;
             }
         }
         assertTrue(kept.get("AND") > 0 && kept.get("OR") > 0, kept.toString());
-        assertTrue(dropped > 0);
+        assertTrue(changed > 0);
     }
 
     @Test
