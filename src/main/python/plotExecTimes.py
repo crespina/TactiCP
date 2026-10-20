@@ -84,9 +84,19 @@ def plot_three_queries():
     ax.spines['left'].set_visible(False)
     
     # Plot each curve as scatter points
-    ax.scatter(matches, simple_times, color='blue', label='Simple Query')
-    ax.scatter(matches, middle_times, color='green', label='Intermediate Query')
-    ax.scatter(matches, hard_times, color='red', label='Hard Query')
+    ax.scatter(matches, simple_times,
+               marker='o',  edgecolors='black', s=40, color='#E69F00',
+               label='Simple Query')
+    ax.scatter(matches, middle_times,
+               marker='s',  edgecolors='black', s=40, color='#009E73',
+               label='Intermediate Query')
+    ax.scatter(matches, hard_times,
+               marker='^',  edgecolors='black', s=40, color='#CC79A7',
+               label='Hard Query')
+
+    #ax.scatter(matches, simple_times, color='#0072B2', label='Simple Query')
+    #ax.scatter(matches, middle_times, color='#009E73', label='Intermediate Query')
+    #ax.scatter(matches, hard_times, color='#D55E00', label='Hard Query')
 
     # Remove top and right spines
     ax.spines['top'].set_visible(False)
@@ -99,7 +109,7 @@ def plot_three_queries():
     ax.legend(loc='lower right', fontsize=18)
     
     plt.tight_layout()
-    plt.savefig("exec_time3.pdf")
+    plt.savefig("exectime3.pdf")
     plt.show()
 
 plot_three_queries()

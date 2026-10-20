@@ -226,9 +226,19 @@ def plot_large_queries500():
     #fig, ax = plt.subplots(figsize=(8,6))
     fig, ax = plt.subplots()
 
-    ax.scatter(matches, simple_times, color='blue', label='Simple Query')
-    ax.scatter(matches, intermediate_times, color='green', label='Intermediate Query')
-    ax.scatter(matches, hard_times, color='red', label='Hard Query')
+    #ax.scatter(matches, simple_times, color='blue', label='Simple Query')
+    #ax.scatter(matches, intermediate_times, color='green', label='Intermediate Query')
+    #ax.scatter(matches, hard_times, color='red', label='Hard Query')
+
+    ax.scatter(matches, simple_times,
+               marker='o',  edgecolors='black', s=40, color='#E69F00',
+               label='Simple Query')
+    ax.scatter(matches, intermediate_times,
+               marker='s',  edgecolors='black', s=40, color='#009E73',
+               label='Intermediate Query')
+    ax.scatter(matches, hard_times,
+               marker='^',  edgecolors='black', s=40, color='#CC79A7',
+               label='Hard Query')
 
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
@@ -248,17 +258,29 @@ def plot_large_queries500():
     plt.savefig("trunc3.pdf")
     plt.show()
 
-#plot_large_queries500()
+plot_large_queries500()
 
 def barplot67():
     labels = ["Simple", "Intermediate", "Hard"]
     times = [6.202, 48.151, 1119.826]
-    colors = ["blue", "green", "red"]
+    colors = ["#E69F00", "#009E73", "#CC79A7"]
+    hatches = ['///', '...', 'xx']
     x_positions = [0.0, 0.7, 1.4]
 
     fig, ax = plt.subplots()
 
-    ax.bar(x_positions, times, color=colors, width=0.5)
+    bars = ax.bar(
+        x_positions,
+        times,
+        color=colors,
+        width=0.5,
+        edgecolor='black',
+        linewidth=1.0
+    )
+
+    for bar, hatch in zip(bars, hatches):
+        bar.set_hatch(hatch)
+
     ax.set_xticks(x_positions)
     ax.set_xticklabels(labels)
 
@@ -277,7 +299,7 @@ def barplot67():
     plt.savefig("barplot67.pdf")
     plt.show()
 
-barplot67()
+#barplot67()
 
 
 matches = [
