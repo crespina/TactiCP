@@ -232,6 +232,72 @@
     }
     video.visible { display: block; }
 
+    /* ─── NL → DSL translate helper ─────────────────────────── */
+    .translate-helper {
+      margin-bottom: 1rem;
+      padding: clamp(.6rem, 1vw, .9rem);
+      border: 1px dashed var(--input-border);
+      border-radius: 10px;
+      background: var(--example-bg);
+    }
+    .translate-label {
+      display: block;
+      font-size: clamp(.78rem, 1vw, .9rem);
+      color: var(--heading-muted);
+      margin-bottom: .55rem;
+    }
+    .translate-label strong { color: var(--accent); }
+    .translate-row {
+      display: flex;
+      gap: .6rem;
+      flex-wrap: wrap;
+      align-items: stretch;
+    }
+    .nl-textarea {
+      flex: 1 1 240px;
+      min-width: 0;
+      min-height: 46px;
+      background: var(--input-bg);
+      color: var(--text-main);
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      padding: .55rem .65rem;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: clamp(.78rem, 1vw, .9rem);
+      resize: vertical;
+    }
+    .nl-textarea:focus { outline: none; border-color: var(--accent); }
+    .translate-controls {
+      display: flex;
+      gap: .5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    #nl-dataset {
+      flex: 0 0 auto;
+      width: auto;
+      min-width: 130px;
+      background: var(--input-bg);
+      color: var(--text-main);
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      padding: .45rem .55rem;
+      font-size: clamp(.75rem, 1vw, .85rem);
+    }
+    #translate-btn {
+      align-self: center;
+      background: #7c3aed;
+    }
+    #translate-btn:hover { background: #6d28d9; }
+    .translate-status {
+      font-size: .82rem;
+      color: var(--status-muted);
+      margin-top: .5rem;
+      min-height: 1.1em;
+    }
+    .translate-status.error { color: #f87171; }
+    .translate-status.ok    { color: #4ade80; }
+
     /* ─── Query section ─────────────────────────────────────── */
     .query-row { display: flex; gap: .75rem; flex-wrap: wrap; }
     textarea {
@@ -724,6 +790,9 @@
             <dt><code>MAXDURATION(nFrames)</code></dt>
             <dd>Limit the maximal length of the pattern.</dd>
 
+            <dt><code>DURING(from, to)</code></dt>
+            <dd>Only frames <code>from</code> to <code>to</code>. A position or a possession is cut to them; a move or a pass must lie inside them.</dd>
+
 
           </dl>
 
@@ -737,6 +806,29 @@
       <!-- ── 4. Query input ─────────────────────────────────── -->
       <div class="card">
         <h2>Query</h2>
+
+        <!-- ── NL → DSL translate helper ─────────────────────── -->
+        <div class="translate-helper">
+          <label class="translate-label" for="nl-input">
+            💬 <strong>Need help with your query?</strong> Describe it in plain English and let us translate it.
+          </label>
+          <div class="translate-row">
+            <textarea id="nl-input" class="nl-textarea" spellcheck="true"
+              placeholder="e.g.  find all passes from player 11 to any player"></textarea>
+            <div class="translate-controls">
+              <select id="nl-dataset" title="Which dataset should the query search?">
+                <option value="all">all datasets</option>
+                <option value="train">train split</option>
+                <option value="test">test split</option>
+                <option value="valid">valid split</option>
+              </select>
+              <button id="translate-btn" onclick="translateQuery()">✨ Translate</button>
+              <div class="spinner" id="translate-spinner"></div>
+            </div>
+          </div>
+          <div id="translate-status" class="translate-status"></div>
+        </div>
+
         <div class="query-row">
           <div class="code-editor">
             <textarea id="query-input" spellcheck="false"
@@ -809,7 +901,7 @@
       // Events
       { re: /\b(POSSESSION|POSITION|PASSTO|MOVETO)\b/g, cls: 'dsl-kw-event' },
       // Constraints
-      { re: /\b(MAXDURATION|MINDURATION|MAX_DURATION|MIN_DURATION|STARTMIN|STARTMAX|ENDMIN|ENDMAX|START|END|WITHIN|RADIUS|RECTANGLE|ATMOST|ATLEAST|MINRANGE|MIN_RANGE)\b/g, cls: 'dsl-kw-constraint' },
+      { re: /\b(MAXDURATION|MINDURATION|MAX_DURATION|MIN_DURATION|STARTMIN|STARTMAX|ENDMIN|ENDMAX|DURING|START|END|WITHIN|RADIUS|RECTANGLE|ATMOST|ATLEAST|MINRANGE|MIN_RANGE)\b/g, cls: 'dsl-kw-constraint' },
       // Dataset keywords
       { re: /\b(TRAIN|TEST|VALID|ALL|FIRST)\b/g, cls: 'dsl-kw-dataset' },
       // Numbers (standalone — not inside placeholders)
@@ -875,6 +967,7 @@
       const res  = await fetch('/api/instances');
       const data = await res.json();
       const sel  = document.getElementById('instance-select');
+      const dsSel = document.getElementById('nl-dataset');
       sel.innerHTML = '<option value="">— choose an instance —</option>';
       data.forEach(inst => {
         instanceMap[inst.id] = inst;
@@ -882,6 +975,14 @@
         opt.value = inst.id;
         opt.textContent = inst.label + (inst.hasVideo === 'true' ? '' : ' (no video)');
         sel.appendChild(opt);
+
+        // Also offer each instance as a translate-dataset target
+        if (dsSel) {
+          const dsOpt = document.createElement('option');
+          dsOpt.value = inst.id;
+          dsOpt.textContent = inst.id;
+          dsSel.appendChild(dsOpt);
+        }
       });
     } catch (e) {
       setStatus('Failed to load instances: ' + e.message, 'error');
@@ -917,6 +1018,58 @@
     vid.load();
     setStatus('');
   });
+
+  // ─────────────────────────────────────────────────────────────
+  // Translate a natural-language description into a DSL query
+  // ─────────────────────────────────────────────────────────────
+  async function translateQuery() {
+    const desc    = document.getElementById('nl-input').value.trim();
+    const dataset = document.getElementById('nl-dataset').value;
+    const btn     = document.getElementById('translate-btn');
+    const spinner = document.getElementById('translate-spinner');
+
+    if (!desc) {
+      setTranslateStatus('Please describe your query in English first.', 'error');
+      return;
+    }
+
+    btn.disabled = true;
+    spinner.classList.add('active');
+    setTranslateStatus('Translating your description…');
+
+    try {
+      const res  = await fetch('/api/translate', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ description: desc, dataset })
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        setTranslateStatus('Translation failed: ' + (data.error || 'unknown error'), 'error');
+        return;
+      }
+
+      // Drop the generated DSL into the query box and refresh highlighting
+      const qbox = document.getElementById('query-input');
+      qbox.value = data.query;
+      syncHighlight();
+      setTranslateStatus('Translated — review the query below, then hit ▶ Run.', 'ok');
+      qbox.scrollIntoView({ behavior: 'smooth' });
+      qbox.focus();
+    } catch (e) {
+      setTranslateStatus('Request failed: ' + e.message, 'error');
+    } finally {
+      btn.disabled = false;
+      spinner.classList.remove('active');
+    }
+  }
+
+  function setTranslateStatus(msg, cls) {
+    const el = document.getElementById('translate-status');
+    el.textContent = msg;
+    el.className   = 'translate-status' + (cls ? ' ' + cls : '');
+  }
 
   // ─────────────────────────────────────────────────────────────
   // Run query
@@ -1160,6 +1313,11 @@
   // Allow Ctrl+Enter to submit
   document.getElementById('query-input').addEventListener('keydown', e => {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) runQuery();
+  });
+
+  // Ctrl+Enter in the English box triggers translation
+  document.getElementById('nl-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); translateQuery(); }
   });
 
   // Load an example query into the input

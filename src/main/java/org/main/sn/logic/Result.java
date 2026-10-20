@@ -54,7 +54,7 @@ public class Result {
         private void appendEventStrings(List<String> out, ResultEvent e, int indent) {
             String pad = " ".repeat(indent);
             if (e instanceof GroupEvent ge) {
-                out.add(pad + " THE NEXT " + ge.subSize + " EVENTS ARE PART OF THE \"" + ge.groupKind + "\" | frames: " + ge.interval);
+                out.add(pad + " THE NEXT " + ge.children.size() + " EVENTS ARE PART OF THE \"" + ge.groupKind + "\" | frames: " + ge.interval);
                 for (ResultEvent child : ge.children) appendEventStrings(out, child, indent + 2);
             } else if (e instanceof PassEvent p) {
                 out.add(pad + "EVENT # " + p.eventIdx + (p.negated ? " NOT PASS" : " PASS"));
@@ -90,8 +90,16 @@ public class Result {
         public final int start;
         public final int end;
         public final int length;
-        public ResultInterval(CPIntervalVar interval) {this.start = interval.startMin(); this.end = interval.endMax(); this.length = interval.lengthMin();}
-        @Override public String toString() { return "present start = " + start + " length = " + length+ " end = " + end; }
+        /** false for an OR branch that was not taken: its bounds describe no real match */
+        public final boolean present;
+        public ResultInterval(CPIntervalVar interval) {
+            this.start = interval.startMin(); this.end = interval.endMax(); this.length = interval.lengthMin();
+            this.present = interval.isPresent();
+        }
+        @Override public String toString() {
+            if (!present) return "absent";
+            return "present start = " + start + " length = " + length+ " end = " + end;
+        }
     }
 
     // base event

@@ -64,7 +64,6 @@ public class GameStateReconstructionInstance implements Instance {
                             GK_ids[1] = pid;
                         }
                     }
-                    if (pid > maxPlayerId) maxPlayerId = pid;
                     String team = (ann.attributes.team != null) ? ann.attributes.team : "ball";
                     if (!tmpTeams.containsKey(pid)) {
                         switch (team) {
@@ -81,6 +80,9 @@ public class GameStateReconstructionInstance implements Instance {
                             }
                         }
                     }
+                    // count the id only once it is final: a duplicate ball track is remapped
+                    // onto ball_idx above and never stored, so it must not grow the teams array
+                    if (pid > maxPlayerId) maxPlayerId = pid;
                     frame.players.put(
                             pid,
                             new PlayerInfo(pid, team, pos)

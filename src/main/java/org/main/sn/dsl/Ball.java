@@ -11,10 +11,6 @@ public final class Ball extends Entity {
         return INSTANCE;
     }
 
-    public BallEvent MOVETO(int z) {
-        return BallEvent.moveTo(z);
-    }
-
     public BallEvent MOVETO(int s, int e) {
         return BallEvent.moveTo(s, e);
     }
