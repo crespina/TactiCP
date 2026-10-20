@@ -362,9 +362,6 @@ public class Query {
             counterEvent.incrementAndGet();
             List<Event> inner = within(groups, andEvent);
 
-            CPIntVar[] childrenStarts = new CPIntVar[andEvent.children().size()];
-            CPIntVar[] childrenEnds = new CPIntVar[andEvent.children().size()];
-
             int childIdx = 0;
 
             for (Event children : andEvent.children()) {
