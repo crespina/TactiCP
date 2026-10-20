@@ -476,7 +476,15 @@ public class QueryTest {
 
     @Test
     public void TestAND() throws IOException {
+        //SELECT(POSSESSION(PLAYER("p", 13))).FROM("SNGS-061").searchAndPrint();
+        //SELECT(BALL().MOVETO(6,7)).FROM("SNGS-061").searchAndPrint();
 
+        SelectExpr andQuery = SELECT(
+                AND(POSSESSION(PLAYER("p", 13)),
+                        BALL().MOVETO(6, 7))
+        ).FROM("SNGS-061");
+
+        andQuery.searchAndPrint();
     }
 
     @Test
