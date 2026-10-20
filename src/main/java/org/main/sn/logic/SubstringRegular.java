@@ -5,8 +5,7 @@ import org.maxicp.cp.engine.core.AbstractCPConstraint;
 import org.maxicp.cp.engine.core.CPIntervalVar;
 import org.maxicp.util.exception.InconsistencyException;
 
-import java.util.List;
-import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Regular Constraint for Interval Variables
@@ -14,12 +13,24 @@ import java.util.ArrayList;
  * is recognized by the automaton
  */
 public class SubstringRegular extends AbstractCPConstraint {
+    private static final int UNREACHED = Integer.MAX_VALUE;
+
     private final int[] x; // fixed sequence
     private final CPIntervalVar interval; // variable representing start and end of matching subsequence
     private final int[][] transitionFct;
     private final int initialState;
-    private final List<Integer> finalStates;
+    private final boolean[] isFinal;
+    private final boolean hasFinal;
     private final int n; // length of the fixed sequence
+    private final int nbStates;
+    private final int alphabetSize; // symbols 0..alphabetSize-1 have a transition column
+
+    // Layered DAG over (position, state), flattened as i * nbStates + q and reused across calls:
+    // min/max path length from a start (fwd) and to an end (bwd), UNREACHED / -1 when unreachable.
+    private final int[] fwdMinDist;
+    private final int[] fwdMaxDist;
+    private final int[] bwdMinDist;
+    private final int[] bwdMaxDist;
 
     /**
      * Creates a regular constraint for intervals.
@@ -37,14 +48,19 @@ public class SubstringRegular extends AbstractCPConstraint {
         this.x = x;
         this.interval = interval;
         this.n = x.length;
-        int nbStates = automaton.getAutomaton().length;
+        this.nbStates = automaton.getAutomaton().length;
         this.initialState = automaton.getInitState();
         int[][] A = automaton.getAutomaton();
 
-        finalStates = new ArrayList<>();
+        isFinal = new boolean[nbStates];
+        boolean anyFinal = false;
         for (int state : automaton.getAcceptingStates()) {
-            finalStates.add(state);
+            if (state >= 0 && state < nbStates) {
+                isFinal[state] = true;
+                anyFinal = true;
+            }
         }
+        hasFinal = anyFinal;
 
         // Find max value in sequence
         int maxVal = Integer.MIN_VALUE;
@@ -52,6 +68,7 @@ public class SubstringRegular extends AbstractCPConstraint {
             if (x[i] > maxVal) maxVal = x[i];
         }
 
+        alphabetSize = maxVal + 1;
         transitionFct = new int[nbStates][maxVal + 1];
         for (int i = 0; i < nbStates; i++) {
             //assert (A[i].length == maxVal + 1);
@@ -59,6 +76,17 @@ public class SubstringRegular extends AbstractCPConstraint {
                 transitionFct[i][j] = A[i][j];
             }
         }
+
+        fwdMinDist = new int[(n + 1) * nbStates];
+        fwdMaxDist = new int[(n + 1) * nbStates];
+        bwdMinDist = new int[(n + 1) * nbStates];
+        bwdMaxDist = new int[(n + 1) * nbStates];
+    }
+
+    /** The DAG pass costs O(n |Q|): let the cheap propagators reach their fixpoint first. */
+    @Override
+    public int priority() {
+        return 1;
     }
 
     @Override
@@ -69,9 +97,13 @@ public class SubstringRegular extends AbstractCPConstraint {
 
     @Override
     public void propagate() {
-        // The interval must be present to satisfy the constraint
+        // An absent interval carries no match obligation: the constraint is vacuously true.
+        // Only "absent" means that -- an optional interval whose status is still undecided is
+        // filtered as if present, which is sound because its bounds only ever matter in a
+        // solution where it turns out to be present.
         if (interval.isAbsent()) {
-            throw new InconsistencyException();
+            setActive(false);
+            return;
         }
 
         int startMin = interval.startMin();
@@ -80,8 +112,6 @@ public class SubstringRegular extends AbstractCPConstraint {
         int endMax = interval.endMax();
         int lengthMin = interval.lengthMin();
         int lengthMax = interval.lengthMax();
-
-        int nbStates = transitionFct.length;
 
         // ---------------------------------------------------------------
         // 1. Build the layered DAG and compute forward reachability.
@@ -92,46 +122,49 @@ public class SubstringRegular extends AbstractCPConstraint {
         //    feeding x[s..i-1] into the automaton from initialState
         //    reaches state q, with path length (i - s) <= lengthMax.
         //
+        //    Only layers lo..hi can lie on a path from a start to an end,
+        //    so the passes below never look outside [startMin, endMax].
+        //
         //    For each reachable (i, q) we track:
         //      fwdMinDist[i][q] = minimum path length from any source
         //      fwdMaxDist[i][q] = maximum path length from any source
         // ---------------------------------------------------------------
 
-        boolean[][] fwdReachable = new boolean[n + 1][nbStates];
-        int[][] fwdMinDist = new int[n + 1][nbStates];
-        int[][] fwdMaxDist = new int[n + 1][nbStates];
+        int lo = startMin;
+        int hi = Math.min(endMax, n);
+        int lastStart = Math.min(startMax, n);  // starts are the layers lo..lastStart
+        int firstEnd = Math.max(endMin, 0);     // ends are the layers firstEnd..hi
 
-        for (int i = 0; i <= n; i++) {
-            for (int q = 0; q < nbStates; q++) {
-                fwdMinDist[i][q] = Integer.MAX_VALUE;
-                fwdMaxDist[i][q] = -1;
-            }
+        if (lo <= hi) {
+            Arrays.fill(fwdMinDist, lo * nbStates, (hi + 1) * nbStates, UNREACHED);
+            Arrays.fill(fwdMaxDist, lo * nbStates, (hi + 1) * nbStates, -1);
+            Arrays.fill(bwdMinDist, lo * nbStates, (hi + 1) * nbStates, UNREACHED);
+            Arrays.fill(bwdMaxDist, lo * nbStates, (hi + 1) * nbStates, -1);
         }
 
         // Seed: every valid start position s injects (s, initialState) with distance 0
-        boolean[] isSeeded = new boolean[n + 1];
-        for (int s = startMin; s <= Math.min(startMax, n); s++) {
-            fwdReachable[s][initialState] = true;
-            fwdMinDist[s][initialState] = Math.min(fwdMinDist[s][initialState], 0);
-            fwdMaxDist[s][initialState] = Math.max(fwdMaxDist[s][initialState], 0);
-            isSeeded[s] = true;
+        for (int s = lo; s <= Math.min(lastStart, hi); s++) {
+            fwdMinDist[s * nbStates + initialState] = 0;
+            fwdMaxDist[s * nbStates + initialState] = 0;
         }
 
         // Forward pass: propagate through transitions
-        for (int i = 0; i < n; i++) {
+        for (int i = lo; i < hi; i++) {
             int value = x[i];
+            if (value < 0 || value >= alphabetSize) continue;
+            int layer = i * nbStates;
             for (int q = 0; q < nbStates; q++) {
-                if (!fwdReachable[i][q]) continue;
-                if (value < 0 || value >= transitionFct[q].length) continue;
+                int minDist = fwdMinDist[layer + q];
+                if (minDist == UNREACHED) continue;
                 int qNext = transitionFct[q][value];
                 if (qNext < 0) continue;
-                int newMinDist = fwdMinDist[i][q] + 1;
-                int newMaxDist = fwdMaxDist[i][q] + 1;
+                int newMinDist = minDist + 1;
                 // Prune paths that already exceed lengthMax
                 if (newMinDist > lengthMax) continue;
-                fwdReachable[i + 1][qNext] = true;
-                fwdMinDist[i + 1][qNext] = Math.min(fwdMinDist[i + 1][qNext], newMinDist);
-                fwdMaxDist[i + 1][qNext] = Math.max(fwdMaxDist[i + 1][qNext], newMaxDist);
+                int newMaxDist = fwdMaxDist[layer + q] + 1;
+                int next = layer + nbStates + qNext;
+                if (newMinDist < fwdMinDist[next]) fwdMinDist[next] = newMinDist;
+                if (newMaxDist > fwdMaxDist[next]) fwdMaxDist[next] = newMaxDist;
             }
         }
 
@@ -146,45 +179,34 @@ public class SubstringRegular extends AbstractCPConstraint {
         //      bwdMaxDist[i][q] = maximum path length to the sink
         // ---------------------------------------------------------------
 
-        boolean[][] bwdReachable = new boolean[n + 1][nbStates];
-        int[][] bwdMinDist = new int[n + 1][nbStates];
-        int[][] bwdMaxDist = new int[n + 1][nbStates];
-
-        for (int i = 0; i <= n; i++) {
-            for (int q = 0; q < nbStates; q++) {
-                bwdMinDist[i][q] = Integer.MAX_VALUE;
-                bwdMaxDist[i][q] = -1;
-            }
-        }
-
         // Seed: every valid end position e with a final state
-        boolean[] isSinkSeeded = new boolean[n + 1];
-        for (int e = Math.max(endMin, 0); e <= Math.min(endMax, n); e++) {
-            for (int qf : finalStates) {
-                if (qf >= 0 && qf < nbStates) {
-                    bwdReachable[e][qf] = true;
-                    bwdMinDist[e][qf] = 0;
-                    bwdMaxDist[e][qf] = 0;
-                    isSinkSeeded[e] = true;
+        if (hasFinal) {
+            for (int e = Math.max(firstEnd, lo); e <= hi; e++) {
+                for (int qf = 0; qf < nbStates; qf++) {
+                    if (isFinal[qf]) {
+                        bwdMinDist[e * nbStates + qf] = 0;
+                        bwdMaxDist[e * nbStates + qf] = 0;
+                    }
                 }
             }
         }
 
         // Backward pass: propagate backwards through transitions
-        for (int i = n - 1; i >= 0; i--) {
+        for (int i = hi - 1; i >= lo; i--) {
             int value = x[i];
+            if (value < 0 || value >= alphabetSize) continue;
+            int layer = i * nbStates;
             for (int q = 0; q < nbStates; q++) {
-                if (value < 0 || value >= transitionFct[q].length) continue;
                 int qNext = transitionFct[q][value];
                 if (qNext < 0) continue;
-                if (!bwdReachable[i + 1][qNext]) continue;
-                int newMinDist = bwdMinDist[i + 1][qNext] + 1;
-                int newMaxDist = bwdMaxDist[i + 1][qNext] + 1;
+                int minDist = bwdMinDist[layer + nbStates + qNext];
+                if (minDist == UNREACHED) continue;
+                int newMinDist = minDist + 1;
                 // Prune paths that already exceed lengthMax
                 if (newMinDist > lengthMax) continue;
-                bwdReachable[i][q] = true;
-                bwdMinDist[i][q] = Math.min(bwdMinDist[i][q], newMinDist);
-                bwdMaxDist[i][q] = Math.max(bwdMaxDist[i][q], newMaxDist);
+                int newMaxDist = bwdMaxDist[layer + nbStates + qNext] + 1;
+                if (newMinDist < bwdMinDist[layer + q]) bwdMinDist[layer + q] = newMinDist;
+                if (newMaxDist > bwdMaxDist[layer + q]) bwdMaxDist[layer + q] = newMaxDist;
             }
         }
 
@@ -210,13 +232,17 @@ public class SubstringRegular extends AbstractCPConstraint {
         int minValidLength = Integer.MAX_VALUE;
         int maxValidLength = -1;
 
-        for (int i = 0; i <= n; i++) {
+        for (int i = lo; i <= hi; i++) {
+            boolean isStart = i <= lastStart;
+            boolean isEnd = hasFinal && i >= firstEnd;
+            int layer = i * nbStates;
             for (int q = 0; q < nbStates; q++) {
-                if (!fwdReachable[i][q] || !bwdReachable[i][q]) continue;
+                int k = layer + q;
+                if (fwdMinDist[k] == UNREACHED || bwdMinDist[k] == UNREACHED) continue;
 
                 // Total path length range through this node
-                int totalMinLen = fwdMinDist[i][q] + bwdMinDist[i][q];
-                int totalMaxLen = fwdMaxDist[i][q] + bwdMaxDist[i][q];
+                int totalMinLen = fwdMinDist[k] + bwdMinDist[k];
+                int totalMaxLen = fwdMaxDist[k] + bwdMaxDist[k];
 
                 // Check feasibility with length constraints
                 if (totalMinLen > lengthMax || totalMaxLen < lengthMin) continue;
@@ -229,12 +255,12 @@ public class SubstringRegular extends AbstractCPConstraint {
                 maxValidLength = Math.max(maxValidLength, clampedMax);
 
                 // This node is a valid start position if it was seeded as a source
-                if (isSeeded[i] && q == initialState) {
+                if (isStart && q == initialState) {
                     // i is a start position; check that the path from here can
                     // reach the sink with a valid length
-                    if (bwdMinDist[i][q] <= lengthMax && bwdMaxDist[i][q] >= lengthMin) {
-                        int startClampedMin = Math.max(bwdMinDist[i][q], lengthMin);
-                        int startClampedMax = Math.min(bwdMaxDist[i][q], lengthMax);
+                    if (bwdMinDist[k] <= lengthMax && bwdMaxDist[k] >= lengthMin) {
+                        int startClampedMin = Math.max(bwdMinDist[k], lengthMin);
+                        int startClampedMax = Math.min(bwdMaxDist[k], lengthMax);
                         if (startClampedMin <= startClampedMax) {
                             minValidStart = Math.min(minValidStart, i);
                             maxValidStart = Math.max(maxValidStart, i);
@@ -243,12 +269,12 @@ public class SubstringRegular extends AbstractCPConstraint {
                 }
 
                 // This node is a valid end position if it was seeded as a sink
-                if (isSinkSeeded[i] && finalStates.contains(q)) {
+                if (isEnd && isFinal[q]) {
                     // i is an end position; check that a path from a source
                     // can reach here with a valid length
-                    if (fwdMinDist[i][q] <= lengthMax && fwdMaxDist[i][q] >= lengthMin) {
-                        int endClampedMin = Math.max(fwdMinDist[i][q], lengthMin);
-                        int endClampedMax = Math.min(fwdMaxDist[i][q], lengthMax);
+                    if (fwdMinDist[k] <= lengthMax && fwdMaxDist[k] >= lengthMin) {
+                        int endClampedMin = Math.max(fwdMinDist[k], lengthMin);
+                        int endClampedMax = Math.min(fwdMaxDist[k], lengthMax);
                         if (endClampedMin <= endClampedMax) {
                             minValidEnd = Math.min(minValidEnd, i);
                             maxValidEnd = Math.max(maxValidEnd, i);
@@ -259,7 +285,15 @@ public class SubstringRegular extends AbstractCPConstraint {
         }
 
         if (maxValidStart == -1 || maxValidEnd == -1 || maxValidLength == -1) {
-            throw new InconsistencyException();
+            // No window of the sequence is accepted by the automaton. For a present interval
+            // that is a dead end; for an optional one it only means this branch cannot be
+            // taken, so mark it absent and let the surrounding disjunction carry on.
+            if (interval.isPresent()) {
+                throw new InconsistencyException();
+            }
+            interval.setAbsent();
+            setActive(false);
+            return;
         }
 
         // Update interval bounds

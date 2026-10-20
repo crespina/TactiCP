@@ -21,6 +21,8 @@ public final class SelectExpr {
     public int startMax = -1;
     public int endMin = -1;
     public int endMax = -1;
+    public int duringFrom = -1;
+    public int duringTo = -1;
     public int xcenter = -1;
     public int ycenter = -1;
     public int radius = -1;
@@ -49,6 +51,19 @@ public final class SelectExpr {
         return this;
     }
 
+    /**
+     * Shorthand for {@code .WHERE(ATLEAST(n))}. Writing the aggregation guard
+     * directly on the SELECT is a natural spelling and costs nothing to accept.
+     */
+    public SelectExpr ATLEAST(int n) {
+        return WHERE(Factory.ATLEAST(n));
+    }
+
+    /** Shorthand for {@code .WHERE(ATMOST(n))}. See {@link #ATLEAST(int)}. */
+    public SelectExpr ATMOST(int n) {
+        return WHERE(Factory.ATMOST(n));
+    }
+
     public SelectExpr SEARCH(int mode){
         this.searchMode = mode;
         return this;
@@ -75,6 +90,10 @@ public final class SelectExpr {
                 case ENDMAX -> this.endMax = w.values()[0];
                 case MAXDURATION -> this.maxDuration = w.values()[0];
                 case MINDURATION -> this.minDuration = w.values()[0];
+                case DURING -> {
+                    this.duringFrom = w.values()[0];
+                    this.duringTo = w.values()[1];
+                }
                 case RADIUS -> {
                     this.xcenter = w.values()[0];
                     this.ycenter = w.values()[1];
@@ -130,6 +149,50 @@ public final class SelectExpr {
 
         return this;
 
+    }
+
+    /**
+     * Enumerates the individual game identifiers that a {@code FROM} dataset
+     * string expands to, <em>without</em> loading any game state. Each returned
+     * token is itself a valid single-game {@code FROM} argument (e.g.
+     * {@code "SNGS-060"}), so a caller can run a query one game at a time by
+     * rewriting the dataset to each token in turn.
+     *
+     * <p>The token grammar mirrors {@link #FROM(String)}: {@code "all"} expands to
+     * every game in the {@code train}/{@code test}/{@code valid} splits, a split
+     * name expands to that split's games, and explicit {@code SNGS-…} /
+     * {@code scalability-…} tokens are single games returned as-is. Results are
+     * de-duplicated and sorted by id, so the iteration order — and hence which
+     * game first reveals a difference between two queries — is deterministic.
+     */
+    public static List<String> gamesOf(String ids) throws IOException {
+        Set<String> tokens = Arrays.stream(ids.split(","))
+                .map(String::trim)
+                .filter(t -> !t.isEmpty())
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        // "all" = every game across all splits.
+        if (tokens.remove("all") | tokens.remove("ALL")) {
+            tokens.addAll(SPLITS);
+        }
+
+        Set<String> games = new TreeSet<>();   // sorted + de-duplicated
+        for (String split : SPLITS) {
+            if (tokens.contains(split) || tokens.contains(split.toUpperCase())) {
+                Path splitDir = ROOT.resolve(split.toLowerCase());
+                try (Stream<Path> s = Files.list(splitDir)) {
+                    s.filter(Files::isDirectory)
+                            .map(p -> p.getFileName().toString())
+                            .forEach(games::add);
+                }
+            }
+        }
+        for (String token : tokens) {
+            if (token.startsWith("SNGS-") || token.startsWith("scalability-")) {
+                games.add(token);
+            }
+        }
+        return new ArrayList<>(games);
     }
 
     private static Path findSNGS(String name) {
