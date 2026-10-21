@@ -13,19 +13,22 @@ track id was a player's in an earlier clip.
 Usage (the instances of the paper):
     python src/main/python/scalability_generator.py \
         --inputs data/SoccerNet/gamestate-2024/train/SNGS-061 --repeat 90 \
-        --output data/SoccerNet/gamestate-2024/scalability
+        --output data/SoccerNet/gamestate-2024/scalability --clean
 
---sizes takes sizes and start:stop:step ranges (stop included), by default
-50:1500:50 2000:10500:500 67500. Only the fields the Java parser reads are written, unless
---keep-all-fields is given (a 67,500-frame instance is then about four times larger).
+--sizes takes sizes and start:stop:step ranges (stop included), by default 750 1500
+2250:67500:2250: whole copies of a 750-frame clip, up to a 45-minute half. Only the fields the
+Java parser reads are written, unless --keep-all-fields is given (a 67,500-frame instance is
+then about four times larger). Scalability.java runs every size folder of the output directory:
+--clean first removes the size folders already there.
 """
 
 import argparse
 import json
 import os
+import shutil
 import sys
 
-DEFAULT_SIZES = ["50:1500:50", "2000:10500:500", "67500"]
+DEFAULT_SIZES = ["750", "1500", "2250:67500:2250"]
 
 # what GameStateReconstructionInstance reads, field by field
 KEPT = {
@@ -112,6 +115,8 @@ def main():
                         help="Sizes in frames, or start:stop:step ranges (default: %(default)s).")
     parser.add_argument("--keep-all-fields", action="store_true",
                         help="Copy every annotation field, not only those the Java parser reads.")
+    parser.add_argument("--clean", action="store_true",
+                        help="Remove the size folders already in the output directory before writing.")
     args = parser.parse_args()
 
     if len(set(args.inputs)) > 1:
@@ -132,6 +137,17 @@ def main():
 
     os.makedirs(args.output, exist_ok=True)
     sizes = parse_sizes(args.sizes)
+    existing = [d for d in os.listdir(args.output)
+                if d.isdigit() and os.path.isdir(os.path.join(args.output, d))]
+    if args.clean:
+        for d in existing:
+            shutil.rmtree(os.path.join(args.output, d))
+        print(f"Removed {len(existing)} size folder(s) from {args.output}")
+    else:
+        others = sorted((int(d) for d in existing if int(d) not in sizes))
+        if others:
+            print(f"WARNING: {args.output} also holds sizes {others}, which Scalability.java will run too; "
+                  f"use --clean to remove them.", file=sys.stderr)
     for n in sizes:
         if n > len(sequence):
             print(f"  skipping {n}: only {len(sequence)} frames available", file=sys.stderr)
