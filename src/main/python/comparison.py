@@ -29,77 +29,20 @@ def predict_exec_times():
 	print(f"Standard deviation: {std_time:.4f} seconds")
 	
 
-def my_exec_time():
-	# Updated total time per game in ms
-	spotting_times = {
-		"SNGS-060": 154.0,
-		"SNGS-061": 131.0,
-		"SNGS-062": 134.0,
-		"SNGS-063": 116.0,
-		"SNGS-064": 105.0,
-		"SNGS-065": 97.0,
-		"SNGS-066": 115.0,
-		"SNGS-067": 100.0,
-		"SNGS-068": 97.0,
-		"SNGS-069": 91.0,
-		"SNGS-070": 83.0,
-		"SNGS-071": 101.0,
-		"SNGS-072": 86.0,
-		"SNGS-073": 114.0,
-		"SNGS-074": 107.0,
-		"SNGS-075": 89.0,
-		"SNGS-076": 123.0,
-		"SNGS-077": 91.0,
-		"SNGS-097": 87.0,
-		"SNGS-098": 70.0,
-		"SNGS-099": 77.0,
-		"SNGS-100": 86.0,
-		"SNGS-101": 70.0,
-		"SNGS-102": 103.0,
-		"SNGS-103": 95.0,
-		"SNGS-104": 101.0,
-		"SNGS-105": 94.0,
-		"SNGS-106": 74.0,
-		"SNGS-107": 80.0,
-		"SNGS-108": 76.0,
-		"SNGS-109": 84.0,
-		"SNGS-110": 79.0,
-		"SNGS-111": 75.0,
-		"SNGS-112": 82.0,
-		"SNGS-113": 95.0,
-		"SNGS-114": 73.0,
-		"SNGS-115": 78.0,
-		"SNGS-151": 82.0,
-		"SNGS-152": 89.0,
-		"SNGS-153": 70.0,
-		"SNGS-154": 75.0,
-		"SNGS-155": 64.0,
-		"SNGS-156": 71.0,
-		"SNGS-157": 71.0,
-		"SNGS-158": 67.0,
-		"SNGS-159": 73.0,
-		"SNGS-160": 67.0,
-		"SNGS-161": 69.0,
-		"SNGS-162": 79.0,
-		"SNGS-163": 70.0,
-		"SNGS-164": 97.0,
-		"SNGS-165": 73.0,
-		"SNGS-166": 83.0,
-		"SNGS-167": 72.0,
-		"SNGS-168": 83.0,
-		"SNGS-169": 74.0,
-		"SNGS-170": 79.0
-	}
+def parse_jar_pass_output_times(jar_stdout: str) -> Dict[str, float]:
+	"""Per-clip time in seconds from PassPrediction's "split/SNGS-xxx -> N ms" lines."""
+	pattern = re.compile(r"(SNGS-\d+)\s*->\s*(\d+(?:\.\d+)?)\s*ms")
+	return {m.group(1): float(m.group(2)) / 1000 for m in pattern.finditer(jar_stdout)}
 
-	# Convert to numpy array
-	times_array = np.array(list(spotting_times.values()))
 
-	# Compute average and std
-	avg_time = np.mean(times_array)
-	std_time = np.std(times_array)
+def my_exec_time(times: Dict[str, float]) -> None:
+	"""Mean and std of the per-clip times; the first clip also pays for JVM warm-up."""
+	values = np.array(list(times.values()))
+	print(f"Average time per clip over {len(values)} clips: {np.mean(values):.4f} seconds "
+		  f"(std {np.std(values):.4f} s)")
+	print(f"Without the first clip (JVM warm-up, {values[0]:.3f} s): {np.mean(values[1:]):.4f} seconds "
+		  f"(std {np.std(values[1:]):.4f} s)")
 
-	print(f"Average spotting time per game: {avg_time/1000:.5f} seconds")
-	print(f"Standard deviation: {std_time/1000:.5f} seconds")
 
 def extract_pass_frame_ranges(
 	results_spotting_path: str | Path,
@@ -414,12 +357,18 @@ if __name__ == "__main__":
 		/ "comparison"
 	)
 
+	# output of PassPrediction, run on the VM (java -cp ... org.main.sn.experiments.PassPrediction > passes_vm.txt)
+	parser = argparse.ArgumentParser(description="Compare TactiCP's pass detections with the ML model's.")
+	parser.add_argument("--passes", type=Path,
+						default=Path(__file__).resolve().parents[3] / "data" / "comparison" / "passes_vm.txt")
+	args = parser.parse_args()
+	pass_output = args.passes.read_text(encoding="utf-8")
+
 	all_results = extract_passes_for_all_sngs_folders(default_comparison_root, fps=25)
-	  
-	raw_jar = run_experiment_jar()
-	result_jar = parse_jar_pass_output_start_frames(raw_jar.stdout)
+
+	result_jar = parse_jar_pass_output_start_frames(pass_output)
 	report = compare_detection_dictionaries(all_results, result_jar)
 	print_comparison_summary(report)
-	
+
 	predict_exec_times()
-	my_exec_time()
+	my_exec_time(parse_jar_pass_output_times(pass_output))
