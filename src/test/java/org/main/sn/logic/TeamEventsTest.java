@@ -19,7 +19,7 @@ import static org.maxicp.cp.CPFactory.makeSolver;
  * sequences.
  * <ul>
  *   <li>POSITION(TEAM, K(k), zones): the maximal runs where at least k members are in the zones
- *       (negated: are not), whichever members they are on each frame.</li>
+ *       (negated: where fewer than k are), whichever members they are on each frame.</li>
  *   <li>POSSESSION(TEAM): the maximal runs from a member's touch to a member's touch with no touch
  *       by anyone else in between; the ball-free frames in between belong to it.</li>
  *   <li>TEAM.MOVETO(zs, ze, k): a group of k members makes the move when it is all in zs, then all
@@ -123,12 +123,12 @@ public class TeamEventsTest {
     // POSITION
     // ########
 
-    /** Frames where at least k of the ids are in (negated: out of) the zones. */
+    /** Frames where at least k of the ids are in the zones (negated: where fewer than k are). */
     private static List<int[]> countRuns(int[][] Z, List<Integer> ids, Set<Integer> zones, int k, boolean negated, int n) {
         return runs(n, f -> {
             int c = 0;
-            for (int id : ids) if (zones.contains(Z[id][f]) != negated) c++;
-            return c >= k;
+            for (int id : ids) if (zones.contains(Z[id][f])) c++;
+            return (c >= k) != negated;
         });
     }
 
@@ -201,14 +201,14 @@ public class TeamEventsTest {
         return dx * dx + dy * dy > circle[2] * circle[2];
     }
 
-    /** A circle around every position, seen during [run[0], run[1]), of the members counted there. */
+    /** A circle around every position, seen during [run[0], run[1]), of the members in the zones there. */
     private static int[] circleAround(GameStateReconstructionInstance g, int[][] Z, List<Integer> ids, Set<Integer> zones,
-                                      boolean negated, int[] run) {
+                                      int[] run) {
         int minX = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE, minY = Integer.MAX_VALUE, maxY = Integer.MIN_VALUE;
         for (int f = run[0]; f < run[1]; f++) {
             for (int id : ids) {
                 GameStateReconstructionInstance.PlayerInfo p = g.positions.get(f).players.get(id);
-                if (p == null || zones.contains(Z[id][f]) == negated) continue;
+                if (p == null || !zones.contains(Z[id][f])) continue;
                 minX = Math.min(minX, (int) p.pos().x()); maxX = Math.max(maxX, (int) p.pos().x());
                 minY = Math.min(minY, (int) p.pos().y()); maxY = Math.max(maxY, (int) p.pos().y());
             }
@@ -218,41 +218,47 @@ public class TeamEventsTest {
 
     @Test
     public void spatialWhereCountsOnlyTheMembersInsideTheShape() throws IOException {
-        // As for a player, a spatial WHERE cuts the runs to the frames that meet it: the answers are
-        // the maximal runs where at least k members are in (negated: out of) the zones and not seen
-        // outside the shape; an untracked member is never seen outside. The circle is drawn around
-        // the members counted during one run, so that the WHERE keeps at least that run, and the run
-        // is chosen so that cutting differs from keeping or dropping the runs found without it.
+        // A shape filters the members before they are counted: the answers are the maximal runs
+        // where at least k members are in the zones and not seen outside the shape (negated: where
+        // fewer than k are); an untracked member is never seen outside. The circle is drawn around
+        // the members counted during one run, so that the WHERE keeps at least that run. Positive,
+        // the run is chosen so that cutting differs from keeping or dropping the runs found without
+        // the WHERE; negated, so that the WHERE changes the answers.
         String G = "SNGS-022";
         GameStateReconstructionInstance g = game(G);
         int[][] Z = zones(g);
         record Setting(String side, int k, int[] zones, boolean negated) {}
         for (Setting s : List.of(new Setting("right", 3, new int[]{1, 2, 3, 4}, false),
-                new Setting("left", 8, new int[]{1, 2}, true))) {
+                new Setting("right", 3, new int[]{1, 2, 3, 4}, true))) {
             String label = s.side + " K(" + s.k + ") " + Arrays.toString(s.zones) + (s.negated ? " negated" : "");
             List<Integer> roster = side(g, s.side.equals("left") ? 0 : 1);
             Set<Integer> set = new HashSet<>();
             for (int z : s.zones) set.add(z);
+            List<int[]> stays = countRuns(Z, roster, set, s.k, false, g.n);
             List<int[]> all = countRuns(Z, roster, set, s.k, s.negated, g.n);
 
             int[] circle = null;
             Set<Answer> expected = null;
-            for (int[] one : all) {
+            for (int[] one : stays) {
                 if (one[1] - one[0] >= 200) continue;
-                int[] c = circleAround(g, Z, roster, set, s.negated, one);
-                IntPredicate holds = f -> {
+                int[] c = circleAround(g, Z, roster, set, one);
+                IntPredicate counted = f -> {
                     int count = 0;
-                    for (int id : roster) if (set.contains(Z[id][f]) != s.negated && !seenOutside(g, id, f, c)) count++;
+                    for (int id : roster) if (set.contains(Z[id][f]) && !seenOutside(g, id, f, c)) count++;
                     return count >= s.k;
                 };
-                List<int[]> kept = all.stream().filter(r -> IntStream.range(r[0], r[1]).allMatch(holds)).toList();
+                IntPredicate holds = s.negated ? counted.negate() : counted;
                 Set<Answer> cut = answersOf(roster, runs(g.n, holds));
-                if (!cut.equals(answersOf(roster, kept))) {
+                if (s.negated) {
+                    if (cut.equals(answersOf(roster, all))) continue;
+                } else {
+                    List<int[]> kept = all.stream().filter(r -> IntStream.range(r[0], r[1]).allMatch(holds)).toList();
+                    if (cut.equals(answersOf(roster, kept))) continue;
                     assertTrue(cut.contains(new Answer(roster, one[0], one[1])), label);
-                    circle = c;
-                    expected = cut;
-                    break;
                 }
+                circle = c;
+                expected = cut;
+                break;
             }
             assertNotNull(circle, label);
 

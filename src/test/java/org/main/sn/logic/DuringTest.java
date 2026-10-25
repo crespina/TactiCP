@@ -138,13 +138,16 @@ public class DuringTest {
             if (negated) e = NOT(e);
             assertEquals(players, run(SELECT(e.WHERE(DURING(from, to))).FROM(G)), "player " + label);
 
+            // 7 to 9 left players are in the zones on each frame of the window: with k = 8, the
+            // team and its negation both hold on part of it
             List<Integer> roster = left(g);
-            int k = 3;
+            int k = 8;
             Set<Answer> team = runs(roster.getFirst(), g.n, f -> {
                 int count = 0;
-                for (int id : roster) if (zs.contains(Z[id][f]) != negated) count++;
-                return count >= k && window.test(f);
+                for (int id : roster) if (zs.contains(Z[id][f])) count++;
+                return (count >= k) != negated && window.test(f);
             });
+            assertFalse(team.isEmpty(), "team " + label);
             e = POSITION(TEAM("left"), K(k), 1, 2, 3, 4);
             if (negated) e = NOT(e);
             assertEquals(team, run(SELECT(e.WHERE(DURING(from, to))).FROM(G)), "team " + label);

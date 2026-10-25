@@ -141,8 +141,12 @@ public class LlmQuery {
             - NOT(POSITION(...)) is the correct way to say "not in zones ...". Never rewrite it as a
               positive list of the remaining zones: that is not equivalent (a player who is not
               tracked in a frame is in none of the zones, so the complement list misses them), and
-              it is far slower. "At least 3 left players are not in zones 1, 2" is
-              NOT(POSITION(TEAM("left"), K(3), 1, 2)) — keep the K and the original zones.
+              it is far slower.
+            - On a team, NOT negates the count: NOT(POSITION(TEAM("left"), K(3), 1, 2)) holds while
+              FEWER than 3 left players are in zones 1, 2, i.e. at most 2 — keep the K and the
+              original zones. "No left player is in zones 1, 2" is NOT(POSITION(TEAM("left"), 1, 2)).
+              "At least 3 left players are outside zones 1, 2" is NOT a NOT: it is
+              POSITION(TEAM("left"), K(3), ...) listing every other zone of 1..14.
             - AND and OR may contain other ANDs and ORs, at any depth. AND(OR(a, b), c) means c holds
               at the same time as a or as b; OR(AND(a, b), c) means a and b hold together, or c holds.
               Nesting is only for events that hold AT THE SAME TIME: groups that happen one after
