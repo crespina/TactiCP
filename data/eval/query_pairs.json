@@ -563,7 +563,7 @@
       "TEAM:RIGHT",
       "K:implicit"
     ],
-    "nl": "Find the moments during which at least one player of the right team is not in zones 4 or 5.",
+    "nl": "Find the moments during which no player of the right team is in zones 4 or 5.",
     "dsl": "SELECT(NOT(POSITION(TEAM(\"right\"),4,5)))"
   },
   {
@@ -575,7 +575,7 @@
       "TEAM:LEFT",
       "K"
     ],
-    "nl": "Find the intervals during which at least 3 players from the left team are not in zones 1, 2.",
+    "nl": "Find the intervals during which fewer than 3 players from the left team are in zones 1, 2.",
     "dsl": "SELECT(NOT(POSITION(TEAM(\"left\"),K(3),1,2)))"
   },
   {
@@ -2114,7 +2114,7 @@
       "K",
       "SEARCH:k"
     ],
-    "nl": "Find 4 intervals during which the following pattern happens. First, team left has the possession while the ball is in any of zones 1,2,3 or 4 and at least 6 players from team right are not in any of zones 1 or 2. This should start between 0 and 400, end between 20 and 700, last between 10 and 300, and happen in a rectangle (-62,39,125,78). Then either the ball moves from zone 4 to 14 (minrange) in a circle of radius 20 centered in (30,0), or the ball moves from zone 3 to 14 (minrange) in the same circle. The whole pattern should happen between 1 and 50 times, start between 0 and 500, end between 50 and 750, last between 20 and 500 and be in a circle of radius 60 centered in the middle of the pitch.",
+    "nl": "Find 4 intervals during which the following pattern happens. First, team left has the possession while the ball is in any of zones 1,2,3 or 4 and fewer than 6 players from team right are in any of zones 1 or 2. This should start between 0 and 400, end between 20 and 700, last between 10 and 300, and happen in a rectangle (-62,39,125,78). Then either the ball moves from zone 4 to 14 (minrange) in a circle of radius 20 centered in (30,0), or the ball moves from zone 3 to 14 (minrange) in the same circle. The whole pattern should happen between 1 and 50 times, start between 0 and 500, end between 50 and 750, last between 20 and 500 and be in a circle of radius 60 centered in the middle of the pitch.",
     "dsl": "SELECT(AND(POSSESSION(TEAM(\"left\")),POSITION(BALL(),1,2,3,4),NOT(POSITION(TEAM(\"right\"),K(6),1,2))).WHERE(STARTMIN(0),STARTMAX(400),ENDMIN(20),ENDMAX(700),MINDURATION(10),MAXDURATION(300),RECTANGLE(-62,39,125,78)),OR(BALL().MOVETO(4,14).MINRANGE().WHERE(RADIUS(30,0,20)),BALL().MOVETO(3,14).MINRANGE().WHERE(RADIUS(30,0,20)))).WHERE(STARTMIN(0),STARTMAX(500),ENDMIN(50),ENDMAX(750),MINDURATION(20),MAXDURATION(500),RADIUS(0,0,60),ATLEAST(1),ATMOST(50)).SEARCH(4)"
   },
   {
@@ -2174,7 +2174,7 @@
       "WHERE:global",
       "SEARCH:all"
     ],
-    "nl": "Player 1 has the ball while being in zone 13 and the right team doesn't have the ball and 5 of its players or more are not in zones 1,2,3,4. this should last more than 10 frames but less than 400 and it should be contained in a rectangle which top left corner is in (-62,39) and of width 125 and length 78. Then either the ball is in zone 13, or 14, or 5 (choose) for maximum 60 frames. The succession of both events should start after 0 and end before 750. There should be at least one solution but search for all.",
+    "nl": "Player 1 has the ball while being in zone 13 and the right team doesn't have the ball and fewer than 5 of its players are in zones 1,2,3,4. this should last more than 10 frames but less than 400 and it should be contained in a rectangle which top left corner is in (-62,39) and of width 125 and length 78. Then either the ball is in zone 13, or 14, or 5 (choose) for maximum 60 frames. The succession of both events should start after 0 and end before 750. There should be at least one solution but search for all.",
     "dsl": "SELECT(AND(POSSESSION(PLAYER(\"p1\",1)),POSITION(PLAYER(\"p1\",1),13),NOT(POSSESSION(TEAM(\"right\"))),NOT(POSITION(TEAM(\"right\"),K(5),1,2,3,4))).WHERE(MINDURATION(10),MAXDURATION(400),RECTANGLE(-62,39,125,78)),OR(POSITION(BALL(),13),POSITION(BALL(),14),POSITION(BALL(),5)).WHERE(MAXDURATION(60))).WHERE(STARTMIN(0),ENDMAX(750),ATLEAST(1)).SEARCH(\"all\")"
   },
   {

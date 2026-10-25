@@ -914,10 +914,10 @@ public class Query {
             }
             Set<Integer> zoneSet = Arrays.stream(zones).boxed().collect(Collectors.toSet());
 
-            // The team is in the zones while at least k of its members are (negated: are not),
-            // whichever members they are on each frame: one maximal run of the count word, for each
-            // identity of the wildcard members. Under a WHERE, a member counts only while it is not
-            // seen outside the shapes, and only the frames of the DURING window are kept.
+            // The team is in the zones while at least k of its members are (negated: while fewer than
+            // k are), whichever members they are on each frame: one maximal run of the count word, for
+            // each identity of the wildcard members. Under a WHERE, a member counts only while it is
+            // not seen outside the shapes, and only the frames of the DURING window are kept.
             TeamMembers members = teamMembers(cp, team, teams, IDENTIFIERS, eventInterval);
             int[][] inside = where.shapes().isEmpty() ? null
                     : insideByFrame(where.shapes(), positionBox_x, positionBox_y, positionZones, n);
@@ -1599,8 +1599,9 @@ public class Query {
 
     /**
      * Team POSITION: 1 on the frames where at least {@code k} of the {@code ids} are in the zones
-     * (negated: are not, untracked members included) and, given {@code inside}, are not seen outside
-     * the shapes there. Frame 0, the dummy frame, is 0.
+     * and, given {@code inside}, are not seen outside the shapes there. Negated, 1 on every other
+     * frame: fewer than {@code k} members are counted, untracked members never being. Frame 0, the
+     * dummy frame, is 0.
      */
     private static int[] countWord(int[] ids, int k, Set<Integer> zones, boolean isNegated, int[][] positionZones,
                                    int[][] inside, int n) {
@@ -1608,10 +1609,10 @@ public class Query {
         for (int f = 1; f <= n; f++) {
             int count = 0;
             for (int id : ids) {
-                boolean counts = zones.contains(zone(positionZones, id, f)) != isNegated;
+                boolean counts = zones.contains(zone(positionZones, id, f));
                 if (counts && (inside == null || !seenOutside(inside, id, f))) count++;
             }
-            word[f] = count >= k ? 1 : 0;
+            word[f] = (count >= k) != isNegated ? 1 : 0;
         }
         return word;
     }
