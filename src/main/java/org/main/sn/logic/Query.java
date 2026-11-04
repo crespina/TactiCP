@@ -42,6 +42,9 @@ public class Query {
 
     private final Set<CPIntervalVar> mayBeAbsent = Collections.newSetFromMap(new IdentityHashMap<>());
 
+    /** The optional windows of the candidates of an event (see chooseCandidate), absent unless chosen. */
+    private final Set<CPIntervalVar> candidateWindows = Collections.newSetFromMap(new IdentityHashMap<>());
+
     /** Variables the search branches on besides the identities and the event intervals. */
     private final List<CPIntVar> decisionVars = new ArrayList<>();
 
@@ -110,6 +113,7 @@ public class Query {
             endVars.clear();
             identityUsers.clear();
             mayBeAbsent.clear();
+            candidateWindows.clear();
             alwaysPresentIdentities.clear();
             decisionVars.clear();
             identityUses.clear();
@@ -1141,6 +1145,12 @@ public class Query {
 
     /** Creates the padded helper interval that carries an automaton match for {@code eventInterval}. */
     private CPIntervalVar paddedFor(CPSolver cp, CPIntervalVar eventInterval, int lengthMax) {
+        if (candidateWindows.contains(eventInterval)) {
+            // a candidate window: optional, and not an event interval
+            CPIntervalVar padded = makeIntervalVar(cp, 0, lengthMax);
+            cp.post(eq(padded.status(), eventInterval.status()));
+            return padded;
+        }
         boolean optional = mayBeAbsent.contains(eventInterval);
         CPIntervalVar padded = optional ? makeOptionalInterval(cp, 0, lengthMax) : makeIntervalVar(cp, false, 0, lengthMax);
         if (optional) cp.post(eq(padded.status(), eventInterval.status()));
@@ -1152,6 +1162,10 @@ public class Query {
      * symbols. Conditioned on presence, so an unselected branch constrains nothing.
      */
     private void linkPadded(CPSolver cp, CPIntervalVar eventInterval, CPIntervalVar padded) {
+        if (candidateWindows.contains(eventInterval)) {
+            cp.post(new PaddedWindow(eventInterval, padded, 2));
+            return;
+        }
         CPIntVar s = startOf(eventInterval);
         CPIntVar e = endOf(eventInterval);
         CPIntVar paddedStart = startOf(padded);
@@ -1503,21 +1517,25 @@ public class Query {
         }
     }
 
-    /** Posts the match of one candidate on {@code window}, and throws if that candidate has none. */
+    /**
+     * Posts the match of one candidate on {@code window}. Without any match, a present window
+     * fails and an optional one becomes absent.
+     */
     private interface CandidateMatch {
         void post(CPIntervalVar window);
     }
 
     /**
      * {@code eventInterval} is the match of exactly one candidate. A single candidate is posted on
-     * the event interval itself, and null is returned. Otherwise each candidate gets its own window,
-     * tied to the event interval while it is the chosen one, and the index of the chosen candidate
-     * is returned: a search variable, so every answer is checked against the candidate it stands
-     * for. With none left, the event cannot happen.
+     * the event interval itself, and null is returned. Otherwise each candidate gets an optional
+     * window, {@code eventInterval = windows[chosen]} with every other window absent
+     * ({@link AlternativeElement}), and {@code chosen} is returned: a search variable, so every
+     * answer is checked against the candidate it stands for.
      * <p>
-     * A candidate without any match fails while its window is posted. That failure clears the
-     * pending propagation, so it must only ever touch the candidate's own new variables: the
-     * failures are recorded first, and the choice is built afterwards from the candidates left.
+     * A candidate without any match only makes its window absent, and its value leaves
+     * {@code chosen}; nothing fails while the model is built. With no candidate left, the event
+     * cannot happen. An unselected OR branch keeps {@code chosen} on the first candidate with a
+     * match, so it adds no duplicate answer.
      */
     private CPIntVar chooseCandidate(CPSolver cp, CPIntervalVar eventInterval, List<CandidateMatch> candidates, int n) {
         if (candidates.isEmpty()) throw new InconsistencyException();
@@ -1526,32 +1544,19 @@ public class Query {
             return null;
         }
         CPIntervalVar[] windows = new CPIntervalVar[candidates.size()];
-        for (int i = 0; i < candidates.size(); i++) {
-            CPIntervalVar window = makeIntervalVar(cp, false, 0, n + 1);
-            try {
-                candidates.get(i).post(window);
-                windows[i] = window;
-            } catch (InconsistencyException e) {
-                // no match: this candidate cannot be chosen
-            }
+        int first = -1;
+        for (int i = 0; i < windows.length; i++) {
+            windows[i] = makeIntervalVar(cp, 0, n + 1); // optional
+            candidateWindows.add(windows[i]);
+            candidates.get(i).post(windows[i]);
+            if (first < 0 && !windows[i].isAbsent()) first = i;
         }
-        if (Arrays.stream(windows).allMatch(Objects::isNull)) throw new InconsistencyException();
+        if (first < 0) throw new InconsistencyException();
 
         CPIntVar chosen = makeIntVar(cp, candidates.size());
-        for (int i = 0; i < windows.length; i++) {
-            if (windows[i] == null) chosen.remove(i); // a new variable, in no constraint yet
-        }
-        for (int i = 0; i < windows.length; i++) {
-            if (windows[i] == null) continue;
-            CPBoolVar isChosen = isEq(chosen, i);
-            impliesWhenPresent(cp, eventInterval, isChosen, isEq(start(windows[i]), startOf(eventInterval)));
-            impliesWhenPresent(cp, eventInterval, isChosen, isEq(end(windows[i]), endOf(eventInterval)));
-        }
+        int absentValue = mayBeAbsent.contains(eventInterval) ? first : -1;
+        cp.post(new AlternativeElement(eventInterval, windows, chosen, absentValue));
         decisionVars.add(chosen);
-        // an unselected OR branch keeps a single candidate, so it adds no duplicate answer
-        if (mayBeAbsent.contains(eventInterval)) {
-            cp.post(implies(not(eventInterval.status()), isEq(chosen, chosen.min())));
-        }
         return chosen;
     }
 
