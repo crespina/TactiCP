@@ -250,9 +250,12 @@ included and is subject to its own terms.
 ## Citation
 
 ```bibtex
-@misc{crespin2026tacticp,
-  author = {Crespin, Augustin and Schaus, Pierre},
-  title  = {An Offline Neuro-Symbolic Football Pattern Retrieval Approach Using Constraint Programming},
-  year   = {2026}
+@inproceedings{crespin2026offline,
+  title={An Offline Neuro-Symbolic Football Pattern Retrieval Approach Using Constraint Programming},
+  author={Crespin, Augustin and Schaus, Pierre},
+  booktitle={32nd International Conference on Principles and Practice of Constraint Programming (CP 2026)},
+  pages={16--1},
+  year={2026},
+  organization={Schloss Dagstuhl--Leibniz-Zentrum fur Informatik}
 }
 ```
