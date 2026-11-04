@@ -12,7 +12,7 @@ public class Factory {
      * single query (the "same name = same player" rule). This cache is static and
      * therefore shared across every query evaluated in the same JVM, so a batch
      * evaluator MUST call this between queries — otherwise a player named {@code "p1"}
-     * in one query would inherit the jersey/team assigned to {@code "p1"} in a
+     * in one query would inherit the ID/team assigned to {@code "p1"} in a
      * previously-parsed query, silently corrupting the results.
      */
     public static void reset() {

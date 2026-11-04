@@ -996,24 +996,18 @@
     const id   = this.value;
     const vid  = document.getElementById('main-video');
     if (!id || !instanceMap[id] || instanceMap[id].hasVideo !== 'true') {
+      vid.onerror = null;
       vid.classList.remove('visible');
       vid.src = '';
       setStatus('');
       return;
     }
     const { split } = instanceMap[id];
-    const url = `/api/video/${split}/${id}`;
-
-    // call debug endpoint to verify path resolution before loading
-    const debug = await (await fetch(url + '/debug')).text();
-    setStatus(debug);
-    if (debug.includes('exists=false')) {
-      setStatus(debug, 'error');
+    vid.onerror = () => {
+      setStatus('Could not load the video of ' + id + '.', 'error');
       vid.classList.remove('visible');
-      return;
-    }
-
-    vid.src = url;
+    };
+    vid.src = `/api/video/${split}/${id}`;
     vid.classList.add('visible');
     vid.load();
     setStatus('');

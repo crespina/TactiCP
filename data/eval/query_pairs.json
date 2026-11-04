@@ -20,11 +20,11 @@
     "dsl": "SELECT(POSSESSION(PLAYER(\"p1\")))"
   },
   {
-    "id": "poss-player-jersey",
+    "id": "poss-player-id",
     "level": 1,
     "features": [
       "POSSESSION",
-      "PLAYER:jersey"
+      "PLAYER:id"
     ],
     "nl": "Find when player seven has the possession of the ball.",
     "dsl": "SELECT(POSSESSION(PLAYER(\"p7\",7)))"
@@ -50,11 +50,11 @@
     "dsl": "SELECT(POSSESSION(PLAYER(\"pr\",\"right\")))"
   },
   {
-    "id": "poss-player-jersey-team",
+    "id": "poss-player-id-team",
     "level": 1,
     "features": [
       "POSSESSION",
-      "PLAYER:jersey+team"
+      "PLAYER:id+team"
     ],
     "nl": "Find when player nine, a player from the right team, had the possession of the ball",
     "dsl": "SELECT(POSSESSION(PLAYER(\"p9\",9,\"right\")))"
@@ -80,11 +80,11 @@
     "dsl": "SELECT(POSSESSION(TEAM(\"right\")))"
   },
   {
-    "id": "poss-team-from-jerseys",
+    "id": "poss-team-from-ids",
     "level": 1,
     "features": [
       "POSSESSION",
-      "TEAM:jerseys"
+      "TEAM:ids"
     ],
     "nl": "Find when any of players seven, nine, and eleven had the ball.",
     "dsl": "SELECT(POSSESSION(TEAM(\"t1\",7,9,11)))"
@@ -131,21 +131,21 @@
     "dsl": "SELECT(POSITION(PLAYER(\"p1\"),1,2,3,4,5,6,7,8,9,10,11,12,13,14))"
   },
   {
-    "id": "pos-player-jersey",
+    "id": "pos-player-id",
     "level": 1,
     "features": [
       "POSITION",
-      "PLAYER:jersey"
+      "PLAYER:id"
     ],
     "nl": "Find when player thirteen was in zone thirteen.",
     "dsl": "SELECT(POSITION(PLAYER(\"p13\",13),13))"
   },
   {
-    "id": "pos-player-jersey-team",
+    "id": "pos-player-id-team",
     "level": 1,
     "features": [
       "POSITION",
-      "PLAYER:jersey+team"
+      "PLAYER:id+team"
     ],
     "nl": "Find when player one, from the left team, was in zone thirteen.",
     "dsl": "SELECT(POSITION(PLAYER(\"gk\",1,\"left\"),13))"
@@ -213,11 +213,11 @@
     "dsl": "SELECT(POSITION(TEAM(\"right\"),2))"
   },
   {
-    "id": "pos-team-jerseys-implicit-k",
+    "id": "pos-team-ids-implicit-k",
     "level": 1,
     "features": [
       "POSITION",
-      "TEAM:jerseys",
+      "TEAM:ids",
       "K:implicit"
     ],
     "nl": "Find when one player or more of the team composed of players with ids two, three and four are in zone seven.",
@@ -267,11 +267,11 @@
     "dsl": "SELECT(PLAYER(\"p1\").PASSTO(PLAYER(\"p2\")))"
   },
   {
-    "id": "pass-jerseys",
+    "id": "pass-ids",
     "level": 2,
     "features": [
       "PASSTO",
-      "PLAYER:jersey",
+      "PLAYER:id",
       "MINRANGE"
     ],
     "nl": "Find the minimal intervals when player 11 passes to player 16.",
@@ -293,29 +293,29 @@
     "level": 2,
     "features": [
       "PASSTO",
-      "PLAYER:jersey+team",
+      "PLAYER:id+team",
       "MINRANGE"
     ],
     "nl": "Find the minimal intervals during which Player 10 from team left passes to Player 4 from the same team.",
     "dsl": "SELECT(PLAYER(\"p10\",10,\"left\").PASSTO(PLAYER(\"p4\",4,\"left\")).MINRANGE())"
   },
   {
-    "id": "pass-jersey-to-anon",
+    "id": "pass-id-to-anon",
     "level": 2,
     "features": [
       "PASSTO",
-      "PLAYER:jersey",
+      "PLAYER:id",
       "MINRANGE"
     ],
     "nl": "Find the minimal intervals when player seven passes to another player.",
     "dsl": "SELECT(PLAYER(\"p7\",7).PASSTO(PLAYER(\"q\")).MINRANGE())"
   },
   {
-    "id": "pass-anon-to-jersey",
+    "id": "pass-anon-to-id",
     "level": 2,
     "features": [
       "PASSTO",
-      "PLAYER:jersey",
+      "PLAYER:id",
       "MINRANGE"
     ],
     "nl": "Find the minimal intervals during which any player passes to player seven.",
@@ -341,11 +341,11 @@
     "dsl": "SELECT(PLAYER(\"p1\").MOVETO(6,7))"
   },
   {
-    "id": "player-move-jersey",
+    "id": "player-move-id",
     "level": 2,
     "features": [
       "PLAYER.MOVETO",
-      "PLAYER:jersey",
+      "PLAYER:id",
       "MINRANGE"
     ],
     "nl": "Find the minimal intervals during which player 13 moves from zone 6 to 7.",
@@ -415,11 +415,11 @@
     "dsl": "SELECT(TEAM(\"right\").MOVETO(7,3,2).MINRANGE())"
   },
   {
-    "id": "team-move-jerseys-k3",
+    "id": "team-move-ids-k3",
     "level": 2,
     "features": [
       "TEAM.MOVETO",
-      "TEAM:jerseys",
+      "TEAM:ids",
       "MINRANGE"
     ],
     "nl": "Find the smallest intervals during which at least 3 players from the team comprising of players 8, 9, 10 and 11 move from zone 11 to zone 10.",
@@ -451,7 +451,7 @@
     "level": 2,
     "features": [
       "TEAM.MOVETO",
-      "TEAM:jerseys",
+      "TEAM:ids",
       "MINRANGE",
       "edge:k=1"
     ],
@@ -522,12 +522,12 @@
     "dsl": "SELECT(NOT(POSSESSION(TEAM(\"left\"))))"
   },
   {
-    "id": "not-poss-team-jerseys",
+    "id": "not-poss-team-ids",
     "level": 3,
     "features": [
       "NOT",
       "POSSESSION",
-      "TEAM:jerseys"
+      "TEAM:ids"
     ],
     "nl": "Find when the team comprising of players seven and 9 does not have the ball.",
     "dsl": "SELECT(NOT(POSSESSION(TEAM(\"t1\",7,9))))"
@@ -954,7 +954,7 @@
       "OR",
       "NESTED",
       "POSSESSION",
-      "PLAYER:jersey",
+      "PLAYER:id",
       "POSITION",
       "BALL"
     ],
@@ -1155,7 +1155,7 @@
       "NESTED",
       "DEMORGAN",
       "POSSESSION",
-      "PLAYER:jersey",
+      "PLAYER:id",
       "POSITION",
       "BALL"
     ],
@@ -1436,7 +1436,7 @@
       "POSITION",
       "PASSTO",
       "MINRANGE",
-      "PLAYER:jersey",
+      "PLAYER:id",
       "identifier-reuse",
       "TEAM:RIGHT",
       "K"
@@ -1452,7 +1452,7 @@
       "OR",
       "NESTED",
       "PLAYER.MOVETO",
-      "PLAYER:jersey",
+      "PLAYER:id",
       "identifier-reuse",
       "POSSESSION",
       "TEAM:LEFT",
@@ -1470,7 +1470,7 @@
       "WHERE:event",
       "DURING",
       "POSSESSION",
-      "PLAYER:jersey"
+      "PLAYER:id"
     ],
     "nl": "Player 10 has the ball between frame 200 and frame 400",
     "dsl": "SELECT(POSSESSION(PLAYER(\"p10\",10)).WHERE(DURING(200,400)))"
@@ -1774,7 +1774,7 @@
       "NESTED",
       "NOT",
       "POSSESSION",
-      "PLAYER:jersey",
+      "PLAYER:id",
       "POSITION",
       "BALL",
       "TEAM:RIGHT",
@@ -1809,7 +1809,7 @@
       "DURING",
       "MINDURATION",
       "POSSESSION",
-      "PLAYER:jersey"
+      "PLAYER:id"
     ],
     "nl": "Player 3 has the possession of the ball between frames 100 and 400 for at least 20 frames.",
     "dsl": "SELECT(POSSESSION(PLAYER(\"p3\",3))).WHERE(DURING(100,400),MINDURATION(20))"
@@ -2122,7 +2122,7 @@
     "level": 10,
     "features": [
       "SEQ:4",
-      "PLAYER:jersey+team",
+      "PLAYER:id+team",
       "PASSTO",
       "POSITION",
       "WHERE:event",

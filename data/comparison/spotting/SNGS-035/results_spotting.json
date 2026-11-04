@@ -1,0 +1,75 @@
+{
+    "UrlLocal": "SNGS-035",
+    "predictions": [
+        {
+            "gameTime": "1 - 00:06",
+            "label": "PASS",
+            "position": "6600",
+            "half": "1",
+            "confidence": "0.7681674957275391"
+        },
+        {
+            "gameTime": "1 - 00:07",
+            "label": "DRIVE",
+            "position": "7440",
+            "half": "1",
+            "confidence": "0.8822444677352905"
+        },
+        {
+            "gameTime": "1 - 00:08",
+            "label": "PASS",
+            "position": "8720",
+            "half": "1",
+            "confidence": "0.9429692029953003"
+        },
+        {
+            "gameTime": "1 - 00:10",
+            "label": "DRIVE",
+            "position": "10280",
+            "half": "1",
+            "confidence": "0.9101295471191406"
+        },
+        {
+            "gameTime": "1 - 00:11",
+            "label": "PASS",
+            "position": "11440",
+            "half": "1",
+            "confidence": "0.23215030133724213"
+        },
+        {
+            "gameTime": "1 - 00:12",
+            "label": "DRIVE",
+            "position": "12000",
+            "half": "1",
+            "confidence": "0.33170372247695923"
+        },
+        {
+            "gameTime": "1 - 00:13",
+            "label": "PASS",
+            "position": "13480",
+            "half": "1",
+            "confidence": "0.9347415566444397"
+        },
+        {
+            "gameTime": "1 - 00:16",
+            "label": "PASS",
+            "position": "16360",
+            "half": "1",
+            "confidence": "0.28324249386787415"
+        },
+        {
+            "gameTime": "1 - 00:17",
+            "label": "DRIVE",
+            "position": "17000",
+            "half": "1",
+            "confidence": "0.6224611401557922"
+        },
+        {
+            "gameTime": "1 - 00:22",
+            "label": "PASS",
+            "position": "22320",
+            "half": "1",
+            "confidence": "0.8024259209632874"
+        }
+    ]
+}

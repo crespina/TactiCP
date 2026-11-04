@@ -3,7 +3,6 @@ package org.main.sn.logic;
 import org.main.util.ConstraintPattern;
 import org.main.util.Instance;
 import org.maxicp.cp.engine.core.CPSolver;
-import org.main.util.BoundingBox;
 
 import java.util.*;
 
@@ -20,87 +19,7 @@ public class Possession implements ConstraintPattern {
     @Override
     public void apply(CPSolver cp, Instance instance) {
 
-        if (instance instanceof TrackingInstance soccer) {
-
-            int n = soccer.n;
-            Map<Integer, List<BoundingBox>> frames = soccer.frames;
-            int[] players_right_idx = soccer.players_right_idx;
-            int[] players_left_idx = soccer.players_left_idx;
-            int ball_idx = soccer.ball_idx;
-
-            int[] result = new int[n + 1];
-            int threshold = 45;
-            double[][] acc = soccer.acc;
-            double[][] dthetas = soccer.dthetas;
-
-            for (Map.Entry<Integer, List<BoundingBox>> entry : frames.entrySet()) {
-                int frameID = entry.getKey();
-                List<BoundingBox> frame = entry.getValue();
-                double ball_x = -1;
-                double ball_y = -1;
-                double ball_h = -1;
-                double ball_w = -1;
-                for (BoundingBox box : frame) {
-                    if (box.cls_id == ball_idx) {
-                        ball_x = box.x;
-                        ball_y = box.y;
-                        ball_h = box.height;
-                        ball_w = box.width;
-                    }
-                }
-                if (ball_x == -1) {
-                    result[frameID] = 0;
-                    continue;
-                }
-                int closest_player = -1;
-                double bestDist = Double.POSITIVE_INFINITY;
-                for (BoundingBox box : frame) {
-                    if ((Arrays.stream(players_right_idx).anyMatch(x -> x == box.cls_id)) || (Arrays.stream(players_left_idx).anyMatch(x -> x == box.cls_id))) {
-                        //Euclidean distance
-                        //double dx = box.x + box.width/2 - ball_x - ball_w/2;
-                        //double dy = box.y + box.height/2 - ball_y - ball_h/2;
-                        //double dist = Math.hypot(dx, dy);
-
-                        //edge-to-edge distance
-//                        double dx = Math.max(0, Math.max(box.x - (ball_x + ball_w),
-//                                ball_x - (box.x + box.width)));
-//                        double dy = Math.max(0, Math.max(box.y - (ball_y + ball_h),
-//                                ball_y - (box.y + box.height)));
-//                        double dist = Math.hypot(dx, dy);
-
-                        //Euclidean distance with players feet
-                        double dx = box.x + (double) box.width / 2 - ball_x - ball_w / 2;
-                        double dy = box.y + box.height - ball_y - ball_h / 2;
-                        double dist = Math.hypot(dx, dy);
-
-                        if (dist < bestDist) {
-                            bestDist = dist;
-                            closest_player = box.cls_id;
-                        }
-                    }
-                }
-                double wAcc = 1.0;
-                double wDir = 30.0;
-                double displacement_ball_score = wAcc * acc[frameID][ball_idx] + wDir * dthetas[frameID][ball_idx];
-
-                if (closest_player == -1) {
-                    result[frameID] = 0;
-                }
-                if (displacement_ball_score > 47 && bestDist < threshold * 3) {
-                    result[frameID] = closest_player;
-                } else {
-                    if (bestDist < threshold) {
-                        result[frameID] = closest_player;
-                    } else {
-                        result[frameID] = 0;
-                    }
-                }
-            }
-
-            this.result = result;
-
-
-        } else if (instance instanceof GameStateReconstructionInstance soccer) {
+        if (instance instanceof GameStateReconstructionInstance soccer) {
             // it's a GSRInstance
 
             Map<Integer, GameStateReconstructionInstance.FrameData> positions = soccer.positions;
@@ -140,7 +59,7 @@ public class Possession implements ConstraintPattern {
 
                     double dist_x = pi.pos().x() - ball.pos().x();
                     double dist_y = pi.pos().y() - ball.pos().y();
-                    distancesReconstruction[pi.trackId()] = Math.hypot(dist_x, dist_y);
+                    distancesReconstruction[pi.id()] = Math.hypot(dist_x, dist_y);
                 }
 
                 // 2) Compute distance player-ball with tracking information
@@ -152,7 +71,7 @@ public class Possession implements ConstraintPattern {
 
                         double dist_x = pi.pos().x_center() - ball.pos().x_center();
                         double dist_y = pi.pos().y_center() - pi.pos().h() / 2 - ball.pos().y_center();
-                        distancesTracking[pi.trackId()] = Math.hypot(dist_x, dist_y);
+                        distancesTracking[pi.id()] = Math.hypot(dist_x, dist_y);
                     }
                 } else {
                     Arrays.fill(distancesTracking, 0);

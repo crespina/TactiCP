@@ -65,9 +65,8 @@ def build_frame_index(annotations, mapping):
             team = attrs.get("team", "unknown")
 
         frames[frame_idx].append({
-            "track_id": ann.get("track_id"),
+            "id": ann.get("track_id"),
             "team": team,
-            "jersey": attrs.get("jersey", ""),
             "role": role,
             "x": float(pos[0]),
             "y": float(pos[1]),
@@ -131,7 +130,7 @@ def draw_and_write_video(frames_positions, total_frames, out_path, fps=25, figsi
             ax.scatter(a["x"], a["y"], s=150, marker="o",
                        edgecolors="k", linewidths=0.5, color=color)
 
-            label = str(a.get("jersey", "")) or str(a.get("track_id", ""))
+            label = str(a.get("id", ""))
             ax.text(a["x"], a["y"] + 0.2, label,
                     ha="center", va="bottom", fontsize=8, weight="bold")
 

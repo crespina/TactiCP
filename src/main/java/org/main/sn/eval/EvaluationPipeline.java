@@ -52,7 +52,7 @@ import java.util.stream.Collectors;
  * <pre>
  *   --input &lt;pairs.json&gt;        (required) JSON array of {nl, dsl} objects
  *   --output &lt;results.csv&gt;      default eval_results.csv
- *   --model &lt;groq-model-id&gt;     default llama-3.3-70b-versatile
+ *   --model &lt;model-id&gt;          default openai/gpt-oss-120b
  *   --temperature &lt;double&gt;      default 0.0
  *   --max-retries &lt;int&gt;         default 3
  *   --eval-dataset &lt;string&gt;     default "all" (what BOTH queries run on)
@@ -99,13 +99,13 @@ public final class EvaluationPipeline {
             carry one, ignore it.
 
             Entities:
-              PLAYER("name") | PLAYER("name", jersey) | PLAYER("name", "left"|"right")
-              PLAYER("name", jersey, "left"|"right")  — the order is (name, jersey, team)
+              PLAYER("name") | PLAYER("name", id) | PLAYER("name", "left"|"right")
+              PLAYER("name", id, "left"|"right")      — the order is (name, id, team)
               BALL()
               TEAM("left") | TEAM("right")            — a whole side, always lowercase
-              TEAM("name", jersey, ...) | TEAM("name", PLAYER(...), ...)  — a custom team,
+              TEAM("name", id, ...) | TEAM("name", PLAYER(...), ...)  — a custom team,
                                                          which must always list its members
-              The same player identifier used twice means the same player both times.
+              The same player name used twice means the same player both times.
 
             Events:
               PLAYER("p").PASSTO(PLAYER("q"))         — a pass
@@ -139,14 +139,14 @@ public final class EvaluationPipeline {
 
             ## What to check
 
-            The entities and jersey numbers, the events, the temporal reading (sequence
+            The entities and their IDs, the events, the temporal reading (sequence
             vs simultaneous), the zones, the constraints and the search mode.
 
             Judge meaning, not style. Answer 1 whenever the query asks for what the
             request asks for — a plain request translated by the obvious short query is
             a good translation, and needs nothing added to it. Ignore the choice of
-            identifier names. Do not demand detail the request never mentioned: no
-            jersey number when it names no player, no WHERE when it states no
+            names. Do not demand detail the request never mentioned: no
+            ID when it names no player, no WHERE when it states no
             constraint, no search mode when it asks for no particular number of
             results. Answer 0 only for a real defect: a different meaning from the
             request, something the request asked for that is missing, or DSL that
@@ -938,7 +938,7 @@ public final class EvaluationPipeline {
         }
 
         private static String keyOf(String id, String nl, String goldDsl) {
-            return id + ' ' + nl + ' ' + goldDsl;
+            return id + '\0' + nl + '\0' + goldDsl;
         }
 
         /** The row must come from a run configured exactly like this one. */

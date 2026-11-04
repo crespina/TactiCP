@@ -5,10 +5,10 @@ Builds long instances from SoccerNet Game State clips: the frames of the --input
 order, repeated --repeat times and renumbered 1..n. Each requested size n is written to
 <output>/<n>/Labels-GameState.json (the first n frames of that sequence).
 
-Repeat a single clip. Track ids are kept as they are, and the engine identifies players and
-the ball by track id. Ids restart in every clip, so gluing DIFFERENT clips puts different
-players under one id, fixes their team from the first clip, and loses the ball wherever its
-track id was a player's in an earlier clip.
+Repeat a single clip. IDs are kept as they are, and the engine identifies players and the ball
+by their ID. IDs restart in every clip, so gluing DIFFERENT clips puts different players under
+one ID, fixes their team from the first clip, and loses the ball wherever its ID was a player's
+in an earlier clip.
 
 Usage (the instances of the paper):
     python src/main/python/scalability_generator.py \
@@ -34,7 +34,7 @@ DEFAULT_SIZES = ["750", "1500", "2250:67500:2250"]
 KEPT = {
     "track_id": None,
     "category_id": None,
-    "attributes": ("role", "jersey", "team"),
+    "attributes": ("role", "team"),
     "bbox_pitch": ("x_bottom_middle", "y_bottom_middle"),
     "bbox_image": ("x_center", "y_center", "w", "h"),
 }
@@ -120,7 +120,7 @@ def main():
     args = parser.parse_args()
 
     if len(set(args.inputs)) > 1:
-        print("WARNING: different clips reuse the same track ids for different players and the ball; "
+        print("WARNING: different clips reuse the same IDs for different players and the ball; "
               "see the module docstring.", file=sys.stderr)
 
     clips = []

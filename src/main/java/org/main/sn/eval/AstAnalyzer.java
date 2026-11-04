@@ -34,7 +34,7 @@ public final class AstAnalyzer {
         COMBINATOR,     // AND vs OR vs plain sequence
         EVENT,          // event type, negation, or its zone/K parameters
         MINRANGE,       // .MINRANGE() present on one side only
-        ENTITY,         // player jersey/team/coreference, ball vs player, team membership
+        ENTITY,         // player ID/team/coreference, ball vs player, team membership
         WHERE,          // WHERE constraints (temporal/spatial/aggregation) differ
         SEARCHMODE,     // .COUNT()/.SEARCH(...) differ
         PARSE           // one side could not be parsed into an AST
@@ -291,7 +291,7 @@ public final class AstAnalyzer {
         switch (a.kind()) {
             case "PLAYER" -> {
                 if (!Objects.equals(a.id(), b.id())) {
-                    return new Diff(Category.ENTITY, path + ": player jersey number "
+                    return new Diff(Category.ENTITY, path + ": player ID "
                             + a.id() + " vs " + b.id());
                 }
                 if (!Objects.equals(a.team(), b.team())) {
