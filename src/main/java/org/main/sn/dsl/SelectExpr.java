@@ -7,7 +7,6 @@ import org.main.sn.logic.Result;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -35,9 +34,7 @@ public final class SelectExpr {
     public int atLeast = -1;
     public int searchMode = -1; // 0: all, 1: first, other: count
 
-    static final Path ROOT = Paths.get(
-            System.getProperty("user.home"),
-            "GeometricPatternMatching", "data", "SoccerNet", "gamestate-2024");
+    static final Path ROOT = DataRoot.PATH;
     static final List<String> SPLITS = List.of("train", "test", "valid");
 
     public SelectExpr(Event... exprs) {
@@ -195,23 +192,31 @@ public final class SelectExpr {
         return new ArrayList<>(games);
     }
 
+    /** A clip or instance name is one folder name: no separators, no "..". */
+    private static void checkName(String name) {
+        if (!name.matches("[A-Za-z0-9_-]+")) throw new IllegalArgumentException("Invalid clip name: " + name);
+    }
+
     private static Path findSNGS(String name) {
+        checkName(name);
         for (String split : SPLITS) {
             Path candidate = ROOT.resolve(split).resolve(name);
             if (Files.exists(candidate)) {
                 return candidate;
             }
         }
-        throw new IllegalArgumentException("Unknown SNGS folder: " + name);
+        throw new IllegalArgumentException("Unknown clip: " + name
+                + " (no such folder in the train, test or valid split of the dataset; see DATA_ROOT)");
     }
 
     private static Path findScalability(String name) {
+        checkName(name);
         Path candidate = ROOT.resolve("scalability").resolve(name.substring("scalability-".length()));
         if (Files.exists(candidate)) {
             return candidate;
         }
 
-        throw new IllegalArgumentException("Unknown SNGS folder: " + name);
+        throw new IllegalArgumentException("Unknown scalability instance: " + name);
     }
 
     public List<Result> search() {

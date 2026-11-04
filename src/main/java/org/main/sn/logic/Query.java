@@ -1378,7 +1378,7 @@ public class Query {
 
     /**
      * The members of a team event, slot by slot in the order of the query. A member known from the
-     * query, by a jersey number or as the roster of a side, is a constant: it never enters the
+     * query, by its ID or as the roster of a side, is a constant: it never enters the
      * identity map, so a team member may also be a player named elsewhere in the query. A wildcard
      * member that another event names too is an identity, shared with that event. A wildcard named
      * nowhere else is anonymous: only the set of players the team stands for matters, so it has no
@@ -1513,7 +1513,7 @@ public class Query {
     private static void checkCandidateCount(int count, String what) {
         if (count > MAX_TEAM_CANDIDATES) {
             throw new IllegalArgumentException("A team event has more than " + MAX_TEAM_CANDIDATES + " " + what
-                    + " to try. Give the jersey numbers of its members, or use fewer anonymous members.");
+                    + " to try. Give the IDs of its members, or use fewer anonymous members.");
         }
     }
 
@@ -1780,8 +1780,8 @@ public class Query {
     // ###############################
 
     /**
-     * The key of a player in the identity map: its jersey number when the query gives one, so that
-     * two names given the same number are one player, and its name otherwise.
+     * The key of a player in the identity map: its ID when the query gives one, so that
+     * two names given the same ID are one player, and its name otherwise.
      */
     private static String identityKey(Player player) {
         return player.id() != null ? "#" + player.id() : player.name();
@@ -1789,7 +1789,7 @@ public class Query {
 
     /**
      * The identity of the player of a POSITION or MOVE_TO event, shared with every event that names
-     * it, restricted to the given jersey number, or to the players of the given side.
+     * it, restricted to the given ID, or to the players of the given side.
      */
     private CPIntVar playerIdentity(CPSolver cp, Player player, int[] teams, Map<String, CPIntVar> IDENTIFIERS,
                                     CPIntervalVar eventInterval) {

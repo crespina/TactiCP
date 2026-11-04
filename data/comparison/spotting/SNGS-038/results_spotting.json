@@ -1,0 +1,75 @@
+{
+    "UrlLocal": "SNGS-038",
+    "predictions": [
+        {
+            "gameTime": "1 - 00:15",
+            "label": "DRIVE",
+            "position": "15240",
+            "half": "1",
+            "confidence": "0.20120631158351898"
+        },
+        {
+            "gameTime": "1 - 00:15",
+            "label": "PASS",
+            "position": "15720",
+            "half": "1",
+            "confidence": "0.38606590032577515"
+        },
+        {
+            "gameTime": "1 - 00:16",
+            "label": "DRIVE",
+            "position": "16560",
+            "half": "1",
+            "confidence": "0.34996339678764343"
+        },
+        {
+            "gameTime": "1 - 00:18",
+            "label": "PASS",
+            "position": "18080",
+            "half": "1",
+            "confidence": "0.5159185528755188"
+        },
+        {
+            "gameTime": "1 - 00:18",
+            "label": "DRIVE",
+            "position": "18720",
+            "half": "1",
+            "confidence": "0.4638347029685974"
+        },
+        {
+            "gameTime": "1 - 00:19",
+            "label": "PASS",
+            "position": "19800",
+            "half": "1",
+            "confidence": "0.9113667607307434"
+        },
+        {
+            "gameTime": "1 - 00:21",
+            "label": "DRIVE",
+            "position": "21760",
+            "half": "1",
+            "confidence": "0.8646434545516968"
+        },
+        {
+            "gameTime": "1 - 00:23",
+            "label": "PASS",
+            "position": "23000",
+            "half": "1",
+            "confidence": "0.625530481338501"
+        },
+        {
+            "gameTime": "1 - 00:24",
+            "label": "PASS",
+            "position": "24000",
+            "half": "1",
+            "confidence": "0.4171849191188812"
+        },
+        {
+            "gameTime": "1 - 00:25",
+            "label": "DRIVE",
+            "position": "25320",
+            "half": "1",
+            "confidence": "0.21830721199512482"
+        }
+    ]
+}

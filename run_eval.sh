@@ -3,9 +3,8 @@
 # Runs the natural-language -> DSL evaluation pipeline
 # (org.main.sn.eval.EvaluationPipeline).
 #
-# We invoke java directly rather than `mvn exec:java` because the POM hardcodes
-# the exec plugin's <mainClass> (the JavaFX launcher), which cannot be overridden
-# with -Dexec.mainClass.
+# Java is run directly, on a classpath resolved once by Maven, so that the JVM
+# flags below apply.
 #
 # Examples:
 #   ./run_eval.sh --input data/eval/query_pairs_sample.json

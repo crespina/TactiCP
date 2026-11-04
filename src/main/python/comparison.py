@@ -106,7 +106,7 @@ def extract_passes_for_all_sngs_folders(
 
 
 def run_experiment_jar(
-	jar_path: str | Path = "target/GeometricPatternMatching-1.0-exp-pass.jar",
+	jar_path: str | Path = "target/TactiCP-1.0-exp-pass.jar",
 	jar_args: List[str] | None = None,
 	working_dir: str | Path | None = None,
 ) -> subprocess.CompletedProcess[str]:
@@ -221,7 +221,7 @@ def parse_jar_pass_output_detailed(jar_stdout: str) -> Dict[str, List[Dict[str, 
 
 
 def run_experiment_jar_and_extract_passes(
-	jar_path: str | Path = "target/GeometricPatternMatching-1.0-exp-pass.jar",
+	jar_path: str | Path = "target/TactiCP-1.0-exp-pass.jar",
 	jar_args: List[str] | None = None,
 	working_dir: str | Path | None = None,
 ) -> Dict[str, List[int]]:
@@ -349,13 +349,8 @@ def print_comparison_summary(report: Dict[str, object]) -> None:
 
 if __name__ == "__main__":
 	  
-	default_comparison_root = (
-		Path(__file__).resolve().parents[3]
-		/ "data"
-		/ "SoccerNet"
-		/ "gamestate-2024"
-		/ "comparison"
-	)
+	# results_spotting.json of the action-spotting model, one folder per clip
+	default_comparison_root = Path(__file__).resolve().parents[3] / "data" / "comparison" / "spotting"
 
 	# output of PassPrediction, run on the VM (java -cp ... org.main.sn.experiments.PassPrediction > passes_vm.txt)
 	parser = argparse.ArgumentParser(description="Compare TactiCP's pass detections with the ML model's.")

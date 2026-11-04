@@ -5,6 +5,12 @@ import groovy.lang.GroovyShell;
 import org.main.sn.dsl.*;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Evaluates a query string written in the DSL (Java/Groovy syntax) and returns
@@ -82,6 +88,7 @@ public class QueryEvaluator {
      * (for normal search queries) or an {@link Integer} (for COUNT queries).
      */
     public static Object evaluate(String dslQuery) throws IOException {
+        checkTokens(dslQuery);
         // Import all static factory methods into scope
         String script = """
                 import static org.main.sn.dsl.Factory.*
@@ -96,6 +103,54 @@ public class QueryEvaluator {
         }
         throw new IllegalArgumentException("Query did not evaluate to a SelectExpr or COUNT. Got: "
                 + (result == null ? "null" : result.getClass().getName()));
+    }
+
+    /**
+     * The words of the DSL: the upper-case public methods of its classes ({@code SELECT}, {@code PLAYER},
+     * {@code PASSTO}, {@code WHERE}, {@code FROM}, ...).
+     */
+    private static final Set<String> WORDS = dslWords();
+
+    /**
+     * One token of a query: whitespace, a DSL word, a plain string literal (no {@code $}, which would
+     * start a Groovy interpolation, and no escapes), an integer or decimal number, or {@code ( ) , .}.
+     */
+    private static final Pattern TOKEN = Pattern.compile(
+            "\\s+|[A-Z][A-Z_]*|\"[^\"\\\\$\\r\\n]*\"|-?\\d+(?:\\.\\d+)?|[(),.]");
+
+    private static Set<String> dslWords() {
+        Set<String> words = new TreeSet<>();
+        for (Class<?> c : List.of(Factory.class, SelectExpr.class, Event.class, Player.class, Team.class, Ball.class)) {
+            for (Method m : c.getMethods()) {
+                if (m.getName().matches("[A-Z][A-Z_]*")) words.add(m.getName());
+            }
+        }
+        return words;
+    }
+
+    /**
+     * Refuses a query that contains anything but DSL tokens. The query is run by Groovy, which would
+     * otherwise execute any code it is given (a method call such as {@code "cmd".execute()}, an
+     * interpolated string, a closure, an import): restricted to these tokens, it can only call the DSL.
+     *
+     * @throws IllegalArgumentException naming the first character or word that is not allowed
+     */
+    static void checkTokens(String dslQuery) {
+        if (dslQuery == null) throw new IllegalArgumentException("Empty query.");
+        Matcher m = TOKEN.matcher(dslQuery);
+        int at = 0;
+        while (at < dslQuery.length()) {
+            m.region(at, dslQuery.length());
+            if (!m.lookingAt()) {
+                throw new IllegalArgumentException("Unexpected character '" + dslQuery.charAt(at)
+                        + "' at position " + at + " of the query.");
+            }
+            String token = m.group();
+            if (Character.isUpperCase(token.charAt(0)) && !WORDS.contains(token)) {
+                throw new IllegalArgumentException("Unknown word '" + token + "' at position " + at + " of the query.");
+            }
+            at = m.end();
+        }
     }
 }
 

@@ -1,0 +1,75 @@
+{
+    "UrlLocal": "SNGS-025",
+    "predictions": [
+        {
+            "gameTime": "1 - 00:06",
+            "label": "PASS",
+            "position": "6240",
+            "half": "1",
+            "confidence": "0.9144577383995056"
+        },
+        {
+            "gameTime": "1 - 00:08",
+            "label": "DRIVE",
+            "position": "8320",
+            "half": "1",
+            "confidence": "0.2627944052219391"
+        },
+        {
+            "gameTime": "1 - 00:09",
+            "label": "PASS",
+            "position": "9040",
+            "half": "1",
+            "confidence": "0.27456799149513245"
+        },
+        {
+            "gameTime": "1 - 00:11",
+            "label": "DRIVE",
+            "position": "11600",
+            "half": "1",
+            "confidence": "0.5234009027481079"
+        },
+        {
+            "gameTime": "1 - 00:18",
+            "label": "DRIVE",
+            "position": "18400",
+            "half": "1",
+            "confidence": "0.41116681694984436"
+        },
+        {
+            "gameTime": "1 - 00:19",
+            "label": "PASS",
+            "position": "19120",
+            "half": "1",
+            "confidence": "0.7776024341583252"
+        },
+        {
+            "gameTime": "1 - 00:19",
+            "label": "DRIVE",
+            "position": "19960",
+            "half": "1",
+            "confidence": "0.6633845567703247"
+        },
+        {
+            "gameTime": "1 - 00:23",
+            "label": "PASS",
+            "position": "23040",
+            "half": "1",
+            "confidence": "0.9530843496322632"
+        },
+        {
+            "gameTime": "1 - 00:26",
+            "label": "DRIVE",
+            "position": "26680",
+            "half": "1",
+            "confidence": "0.7887017130851746"
+        },
+        {
+            "gameTime": "1 - 00:27",
+            "label": "PASS",
+            "position": "27880",
+            "half": "1",
+            "confidence": "0.9050012826919556"
+        }
+    ]
+}

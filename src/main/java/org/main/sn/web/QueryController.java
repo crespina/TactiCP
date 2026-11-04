@@ -1,5 +1,6 @@
 package org.main.sn.web;
 
+import org.main.sn.dsl.DataRoot;
 import org.main.sn.dsl.LlmQuery;
 import org.main.sn.dsl.SelectExpr;
 import org.main.sn.logic.Result;
@@ -23,24 +24,13 @@ public class QueryController {
 
     private static final Logger log = Logger.getLogger(QueryController.class.getName());
 
-    /**
-     * Data root is configurable via:
-     *   -Ddata.root=/path/to/gamestate-2024
-     * or env var DATA_ROOT.
-     * Falls back to $HOME/GeometricPatternMatching/data/SoccerNet/gamestate-2024
-     */
-    private static final Path GAMESTATE_ROOT = resolveDataRoot();
-
-    private static Path resolveDataRoot() {
-        String prop = System.getProperty("data.root");
-        if (prop != null && !prop.isBlank()) return Paths.get(prop);
-        String env = System.getenv("DATA_ROOT");
-        if (env != null && !env.isBlank()) return Paths.get(env);
-        return Paths.get(System.getProperty("user.home"),
-                "GeometricPatternMatching", "data", "SoccerNet", "gamestate-2024");
-    }
+    /** The dataset folder, see {@link DataRoot}. */
+    private static final Path GAMESTATE_ROOT = DataRoot.PATH;
 
     private static final List<String> SPLITS = List.of("train", "test", "valid");
+
+    /** A clip folder name such as {@code SNGS-060}; anything else is refused before touching the disk. */
+    private static final java.util.regex.Pattern INSTANCE_NAME = java.util.regex.Pattern.compile("[A-Za-z0-9_-]+");
 
     /**
      * Lazily-built natural-language → DSL translator. Built on first use so that a
@@ -95,13 +85,15 @@ public class QueryController {
                          @PathVariable("instance") String instance,
                          HttpServletRequest request,
                          HttpServletResponse response) throws IOException {
+        if (!SPLITS.contains(split) || !INSTANCE_NAME.matcher(instance).matches()) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
         Path videoPath = GAMESTATE_ROOT.resolve(split).resolve(instance).resolve("vid.mp4");
-        Path absolute  = videoPath.toAbsolutePath();
-        log.info("Video requested: " + absolute);
 
         if (!Files.exists(videoPath)) {
-            log.warning("Video not found: " + absolute);
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Not found: " + absolute);
+            log.warning("Video not found: " + videoPath.toAbsolutePath());
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "No video for " + split + "/" + instance);
             return;
         }
 
@@ -158,21 +150,6 @@ public class QueryController {
                 }
             }
         }
-    }
-
-    /** Debug endpoint: returns the resolved path for a video */
-    @GetMapping("/video/{split}/{instance}/debug")
-    public void debugVideo(@PathVariable("split") String split,
-                           @PathVariable("instance") String instance,
-                           HttpServletResponse response) throws IOException {
-        Path videoPath = GAMESTATE_ROOT.resolve(split).resolve(instance).resolve("vid.mp4");
-        Path absolute  = videoPath.toAbsolutePath();
-        String msg = "exists=" + Files.exists(videoPath)
-                + "\nresolved=" + absolute
-                + "\nworkingDir=" + Paths.get("").toAbsolutePath()
-                + "\nGAMESTATE_ROOT=" + GAMESTATE_ROOT;
-        response.setContentType("text/plain");
-        response.getWriter().write(msg);
     }
 
     /** Run a query expressed in DSL syntax and return results as JSON */

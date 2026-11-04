@@ -29,14 +29,14 @@ public class LlmQuery {
 
             ### Player
             - PLAYER("name")                        — anonymous wildcard player
-            - PLAYER("name", jersey_num)            — player with jersey number (int)
+            - PLAYER("name", id)                    — the player with that ID (int)
             - PLAYER("name", "left")                — player from the left team
             - PLAYER("name", "right")               — player from the right team
-            - PLAYER("name", jersey_num, "left")    — left-team player with that jersey number
-            - PLAYER("name", jersey_num, "right")   — right-team player with that jersey number
-              * The argument order is (name, jersey, team). PLAYER("p", "left", 7) does not exist.
-              * The same identifier appearing twice refers to the same player performing both actions.
-              * Whenever the request identifies a player, give the jersey number — PLAYER("p7", 7),
+            - PLAYER("name", id, "left")            — left-team player with that ID
+            - PLAYER("name", id, "right")           — right-team player with that ID
+              * The argument order is (name, id, team). PLAYER("p", "left", 7) does not exist.
+              * The same name appearing twice refers to the same player performing both actions.
+              * Whenever the request identifies a player, give its ID — PLAYER("p7", 7),
                 not PLAYER("p7"). Anonymous players make the search far slower and it may not finish.
 
             ### Ball
@@ -45,13 +45,13 @@ public class LlmQuery {
             ### Team
             - TEAM("left")                              — all players of the left team in the match
             - TEAM("right")                             — all players of the right team in the match
-            - TEAM("name", id1, id2, ...)               — team built from player jersey numbers
+            - TEAM("name", id1, id2, ...)               — team built from player IDs
             - TEAM("name", PLAYER("p1"), PLAYER("p2"))  — team built from player entities
               * "left" and "right" MUST be lowercase. TEAM("LEFT") is not recognised as a side and
                 is rejected as a team with no members.
               * A custom team MUST always be given its members. TEAM("t1") on its own is rejected —
                 only "left" and "right" name a whole side by themselves.
-              * Unlike a player identifier, a team identifier is not remembered across events. If the
+              * Unlike a player name, a team name is not remembered across events. If the
                 same custom team is used in two events, repeat its full member list each time.
 
             ## Events
@@ -358,7 +358,7 @@ public class LlmQuery {
                events that happen one after another are separate arguments of SELECT.
             5. A whole side is TEAM("left") or TEAM("right"), always lowercase.
             6. Zones are integers 1..14.
-            7. Give a player its jersey number whenever the request mentions one.
+            7. Give a player its ID whenever the request mentions one.
             8. If .COUNT() is used, it comes last.
             """;
 
@@ -411,7 +411,7 @@ public class LlmQuery {
     // webapp — which never calls these — is unaffected.
     // -------------------------------------------------------------------------
 
-    /** Groq model id, e.g. "llama-3.3-70b-versatile". */
+    /** Model id, as the endpoint knows it, e.g. "openai/gpt-oss-120b". */
     public LlmQuery model(String model) {
         if (model != null && !model.isBlank()) this.model = model;
         return this;
