@@ -553,6 +553,39 @@ public class TeamEventsTest {
     }
 
     @Test
+    public void anonymousMembersLeftOutOfTwoMovesDoNotClash() throws IOException {
+        // two team moves, each of a fixed member a and an anonymous member: when both moves are made
+        // by a alone, neither anonymous member takes part, and nothing keeps them apart
+        String G = "SNGS-049";
+        GameStateReconstructionInstance g = game(G);
+        int[][] Z = zones(g);
+        List<Integer> everyone = new ArrayList<>(side(g, 0));
+        everyone.addAll(side(g, 1));
+        Collections.sort(everyone);
+        List<Integer> movers = everyone.stream().filter(p -> !groupMoves(Z, List.of(p), 1, 2, true, g.n).isEmpty()).toList();
+        assertTrue(movers.size() >= 2, "a fixed mover and another one for the anonymous members");
+        int a = movers.getFirst();
+        Set<Answer> movesOfA = groupMoves(Z, List.of(a), 1, 2, true, g.n);
+
+        Factory.reset();
+        List<Result> results = SELECT(AND(TEAM("t", PLAYER("a", a), PLAYER("x")).MOVETO(1, 2, 1).MINRANGE(),
+                TEAM("u", PLAYER("a", a), PLAYER("y")).MOVETO(1, 2, 1).MINRANGE())).FROM(G).search();
+        Set<Answer> bothByA = new HashSet<>();
+        for (Result r : results) {
+            Result.GroupEvent and = (Result.GroupEvent) r.events.getFirst();
+            Result.TeamMoveEvent t = (Result.TeamMoveEvent) and.children.get(0);
+            Result.TeamMoveEvent u = (Result.TeamMoveEvent) and.children.get(1);
+            // two anonymous members that both take part are two different players
+            assertFalse(t.playerIds.equals(u.playerIds) && !t.playerIds.equals(List.of(a)), "x = y = " + t.playerIds);
+            if (t.playerIds.equals(List.of(a)) && u.playerIds.equals(List.of(a)) && t.interval.start == u.interval.start
+                    && t.interval.end == u.interval.end) {
+                bothByA.add(new Answer(List.of(a), t.interval.start, t.interval.end));
+            }
+        }
+        assertEquals(movesOfA, bothByA);
+    }
+
+    @Test
     public void aMemberThatNeverMovesDoesNotStopTheOthers() throws IOException {
         // in SNGS-025 player 3 moves from zone 1 to zone 5, player 4 is never in zone 1
         GameStateReconstructionInstance g = game("SNGS-025");

@@ -830,15 +830,17 @@ public class Query {
             }
         }
 
-        // the answer reports the k members that move; an anonymous one (-1 where the slot is not
-        // anonymous) is still another player than every named one
+        // the answer reports the k members that move; an anonymous one is still another player than
+        // every named one. Where the slot is not anonymous, it takes a negative value of its own, so
+        // that two anonymous members that do not take part are never equal
         for (int j = 0; j < k; j++) {
             final int position = j;
             int[] mover = groups.stream().mapToInt(g -> g.players()[position]).toArray();
             extVars.add(new ExtendedCPVar(selected(cp, mover, chosen), counterVars.incrementAndGet(),
                     action.name + "_player_id", counterEvent.get(), false));
+            final int nobody = -1 - anonymousPlayers.size();
             int[] anonymous = groups.stream()
-                    .mapToInt(g -> members.isAnonymous(g.slots()[position]) ? g.players()[position] : -1).toArray();
+                    .mapToInt(g -> members.isAnonymous(g.slots()[position]) ? g.players()[position] : nobody).toArray();
             if (chosen != null && Arrays.stream(anonymous).anyMatch(v -> v >= 0)) {
                 anonymousPlayers.add(new AnonymousPlayer(element(anonymous, chosen), eventInterval));
             } else if (chosen == null && anonymous[0] >= 0) {
