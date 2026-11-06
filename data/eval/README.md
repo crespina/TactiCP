@@ -72,9 +72,11 @@ python3 data/eval/tools/check_contamination.py data/eval/query_pairs.json
 
 Every query in it has been checked two ways: it builds via
 `QueryEvaluator.parseStructure`, **and** it executes to completion on one game
-(`SNGS-060`) inside a 45 s budget: 185/185, in under 30 s for the whole sweep. That
-second check matters: `checkSyntax` alone accepts several constructs that only fail
-once the solver runs them.
+(`SNGS-060`) inside a 45 s budget: 185/185, in under 30 s for the whole sweep. The
+first check builds each query without loading a game or running the solver, and
+already refuses every construct the compiler cannot model whatever the data (a
+negated pass or move, a move to the same zone, `k < 1`). What only the second check
+can catch depends on the data: the solution and candidate caps, and the time budget.
 
 Both checks are reproducible with the two helpers in `tools/`. They take a file
 of one DSL query per line (no `FROM` — they inject it), so:

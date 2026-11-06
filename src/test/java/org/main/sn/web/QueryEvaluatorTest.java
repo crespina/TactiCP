@@ -3,6 +3,7 @@ package org.main.sn.web;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.main.sn.dsl.SelectExpr;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
@@ -60,5 +61,63 @@ class QueryEvaluatorTest {
                         + "  .WHERE(RECTANGLE(-60, 20, 65, 40), MAXDURATION(25)).FROM(\"SNGS-060, SNGS-061\").SEARCH(1)"));
         assertNotNull(QueryEvaluator.parseStructure(
                 "SELECT(POSITION(TEAM(\"left\"), K(3), 1, 2)).FROM(\"SNGS-060\").COUNT()"));
+    }
+
+    /** The syntax check builds the query as written, but loads no game and runs no search. */
+    @Test
+    void checkingLoadsNoGameAndRunsNoSearch() throws Exception {
+        SelectExpr se = QueryEvaluator.parseStructure(
+                "SELECT(POSITION(BALL(), 1, 2)).FROM(\"all\").COUNT()");
+        assertTrue(se.matches.isEmpty(), "no game is loaded");
+        assertTrue(se.isCount(), "COUNT() is recorded, not run");
+        assertEquals("all", se.dataset());
+    }
+
+    /** Rules that do not depend on the data are checked while the query is built. */
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "SELECT(NOT(PLAYER(\"a\").PASSTO(PLAYER(\"b\"))))",
+            "SELECT(NOT(BALL().MOVETO(1, 2)))",
+            "SELECT(NOT(PLAYER(\"a\").MOVETO(1, 2)))",
+            "SELECT(NOT(TEAM(\"left\").MOVETO(1, 2, 3)))",
+            "SELECT(NOT(AND(POSITION(BALL(), 1), PLAYER(\"a\").PASSTO(PLAYER(\"b\")))))",
+            "SELECT(BALL().MOVETO(3, 3))",
+            "SELECT(PLAYER(\"a\").MOVETO(3, 3))",
+            "SELECT(TEAM(\"left\").MOVETO(3, 3, 2))",
+            "SELECT(TEAM(\"left\").MOVETO(1, 2, 0))",
+            "SELECT(POSITION(TEAM(\"left\"), K(0), 1, 2))",
+            "SELECT(OR(POSITION(BALL(), 1)))",
+            "SELECT(AND(POSITION(BALL(), 1)))",
+    })
+    void refusesWhatTheCompilerCannotModel(String select) {
+        assertThrows(IllegalArgumentException.class,
+                () -> QueryEvaluator.checkSyntax(select + ".FROM(\"SNGS-060\")"));
+    }
+
+    @Test
+    void acceptsADoubleNegation() throws Exception {
+        assertNotNull(QueryEvaluator.parseStructure(
+                "SELECT(NOT(NOT(PLAYER(\"a\").PASSTO(PLAYER(\"b\"))))).FROM(\"SNGS-060\")"));
+    }
+
+    @Test
+    void refusesACallAfterCount() {
+        assertThrows(IllegalArgumentException.class, () -> QueryEvaluator.checkSyntax(
+                "SELECT(POSITION(BALL(), 1)).FROM(\"SNGS-060\").COUNT().SEARCH(1)"));
+    }
+
+    @Test
+    void refusesAMissingFromAndAnUnknownGame() {
+        assertThrows(IllegalArgumentException.class,
+                () -> QueryEvaluator.checkSyntax("SELECT(POSITION(BALL(), 1))"));
+        assertThrows(IllegalArgumentException.class,
+                () -> QueryEvaluator.checkSyntax("SELECT(POSITION(BALL(), 1)).FROM(\"SNGS-999\")"));
+    }
+
+    /** Running a COUNT query still answers a number. */
+    @Test
+    void evaluatesCountToANumber() throws Exception {
+        Object n = QueryEvaluator.evaluate("SELECT(BALL().MOVETO(1, 2)).FROM(\"SNGS-060\").COUNT()");
+        assertInstanceOf(Integer.class, n);
     }
 }

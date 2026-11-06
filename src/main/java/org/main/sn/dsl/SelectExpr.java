@@ -34,15 +34,63 @@ public final class SelectExpr {
     public int atLeast = -1;
     public int searchMode = -1; // 0: all, 1: first, other: count
 
+    /** The game folders named by FROM. They are loaded by {@link #games()}, on first use. */
+    private final Set<Path> sources = new HashSet<>();
+    /** The FROM argument, or null when the query has no FROM. */
+    private String dataset;
+    /** Whether the query ends with COUNT(): its answer is the number of matches. */
+    private boolean count;
+
     static final Path ROOT = DataRoot.PATH;
     static final List<String> SPLITS = List.of("train", "test", "valid");
 
+    /*
+     * Building a query never loads a game and never runs the solver: every method called in a query
+     * only records what it is given and checks it. The games are loaded, and the query is solved,
+     * only by search(), searchAndPrint() and count(). A syntax check can therefore build the query
+     * as it is written. Keep it that way: work on the data belongs in those three methods.
+     */
+
     public SelectExpr(Event... exprs) {
+        for (Event e : exprs) checkSupported(e);
         Collections.addAll(steps, exprs);
+    }
+
+    /**
+     * Refuses a negated pass or move, which the compiler cannot model whatever the data. This is
+     * checked here, not in NOT(), because NOT(NOT(e)) is e: only the final negation of an event
+     * counts, and it is final once the event is given to SELECT.
+     */
+    private static void checkSupported(Event e) {
+        if (e == null) throw new IllegalArgumentException("SELECT was given a null event.");
+        if (e instanceof AndEvent and) {
+            and.children().forEach(SelectExpr::checkSupported);
+        } else if (e instanceof OrEvent or) {
+            or.children().forEach(SelectExpr::checkSupported);
+        } else if (e.isNegated && e.action() != null) {
+            String word = switch (e.action().name) {
+                case "PASS_TO" -> "PASSTO";
+                case "BALL_MOVE_TO", "PLAYER_MOVE_TO", "TEAM_MOVE_TO" -> "MOVETO";
+                default -> null;
+            };
+            if (word != null) {
+                throw new IllegalArgumentException("NOT cannot apply to " + word
+                        + ": only POSITION and POSSESSION can be negated.");
+            }
+        }
+    }
+
+    /** COUNT() comes last: nothing may be called on the query after it. */
+    private void requireNotCounted(String call) {
+        if (count) {
+            throw new IllegalArgumentException(".COUNT() must be the last call of the query, but ."
+                    + call + "(...) comes after it.");
+        }
     }
 
 
     public SelectExpr WHERE(Where... parts) {
+        requireNotCounted("WHERE");
         if (parts != null) for (Where p : parts) if (p != null) whereParts.add(p);
         applyWhereParts();
         return this;
@@ -62,11 +110,13 @@ public final class SelectExpr {
     }
 
     public SelectExpr SEARCH(int mode){
+        requireNotCounted("SEARCH");
         this.searchMode = mode;
         return this;
     }
 
     public SelectExpr SEARCH(String mode){
+        requireNotCounted("SEARCH");
         if (mode.equalsIgnoreCase("all")) {
             this.searchMode = 0;
         } else if (mode.equalsIgnoreCase("first")) {
@@ -108,8 +158,16 @@ public final class SelectExpr {
         }
     }
 
+    /**
+     * Names the games to search: "all", a split ("train", "test", "valid"), single games
+     * ("SNGS-060", "scalability-…"), or a comma-separated list of these. Each name is checked
+     * against the dataset folders, but no game is loaded here: see {@link #games()}.
+     *
+     * @throws IllegalArgumentException for a game that has no folder in the dataset
+     */
     public SelectExpr FROM(String ids) throws IOException {
-        Set<Path> selected = new HashSet<>();
+        requireNotCounted("FROM");
+        Set<Path> selected = sources;
 
         Set<String> tokens = Arrays.stream(ids.split(","))
                 .map(String::trim)
@@ -140,12 +198,25 @@ public final class SelectExpr {
             }
         }
 
-        for (Path splitDir : selected) {
-            matches.add(new GameStateReconstructionInstance(splitDir.toString()));
-        }
-
+        dataset = dataset == null ? ids : dataset + "," + ids;
         return this;
+    }
 
+    /** The FROM argument as written, or null when the query has no FROM. */
+    public String dataset() {
+        return dataset;
+    }
+
+    /**
+     * The games the query runs on: those named by FROM, loaded here the first time they are
+     * needed, and any added to {@link #matches} directly.
+     */
+    public List<GameStateReconstructionInstance> games() {
+        for (Path dir : sources) {
+            matches.add(new GameStateReconstructionInstance(dir.toString()));
+        }
+        sources.clear();
+        return matches;
     }
 
     /**
@@ -221,7 +292,7 @@ public final class SelectExpr {
 
     public List<Result> search() {
         Query query = new Query();
-        if (!matches.isEmpty()) {
+        if (!games().isEmpty()) {
             return query.apply(this);
         } else {
             throw new IllegalStateException("No matches specified for sequence");
@@ -230,7 +301,7 @@ public final class SelectExpr {
 
     public void searchAndPrint() {
         Query query = new Query();
-        if (!matches.isEmpty()) {
+        if (!games().isEmpty()) {
             List<Result> r = query.apply(this);
             if (r.size() == 0) {
                 System.out.println("No matches found for the given query.");
@@ -245,14 +316,24 @@ public final class SelectExpr {
         }
     }
 
-    public int COUNT(){
-        Query query = new Query();
-        if (!matches.isEmpty()) {
-            List<Result> results = query.apply(this);
-            return results.size();
-        } else {
-            throw new IllegalStateException("No matches specified for sequence");
-        }
+    /**
+     * Asks for the number of matches instead of the matches. It only records the request:
+     * {@link #count()} runs the query. It must be the last call of the query.
+     */
+    public SelectExpr COUNT() {
+        requireNotCounted("COUNT");
+        count = true;
+        return this;
+    }
+
+    /** Whether the query ends with COUNT(). */
+    public boolean isCount() {
+        return count;
+    }
+
+    /** Runs the query and returns its number of matches. */
+    public int count() {
+        return search().size();
     }
 }
 

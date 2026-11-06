@@ -115,14 +115,14 @@ public class Factory {
     }
 
     public static Event OR(Event... events) {
-        if (events.length < 1)
-            throw new IllegalArgumentException("OR requires at least two events");
+        if (events.length < 2)
+            throw new IllegalArgumentException("OR requires at least two events, got " + events.length + ".");
         return new OrEvent(events);
     }
 
     public static Event AND(Event... events) {
-        if (events.length < 1)
-            throw new IllegalArgumentException("AND requires at least two events");
+        if (events.length < 2)
+            throw new IllegalArgumentException("AND requires at least two events, got " + events.length + ".");
         return new AndEvent(events);
     }
 
@@ -231,7 +231,11 @@ public class Factory {
         private K(int value) { this.value = value; }
     }
 
+    /** At least {@code k} members of a team, for POSITION. */
     public static K K(int k) {
+        if (k < 1) {
+            throw new IllegalArgumentException("K(k) needs k >= 1, got K(" + k + ").");
+        }
         return new K(k);
     }
 

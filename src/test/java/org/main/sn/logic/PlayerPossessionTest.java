@@ -25,7 +25,7 @@ public class PlayerPossessionTest {
 
     private static GameStateReconstructionInstance game() throws IOException {
         Factory.reset();
-        GameStateReconstructionInstance g = SELECT(POSSESSION(PLAYER("loader"))).FROM(GAME).matches.getFirst();
+        GameStateReconstructionInstance g = SELECT(POSSESSION(PLAYER("loader"))).FROM(GAME).games().getFirst();
         Factory.reset();
         return g;
     }
@@ -108,7 +108,7 @@ public class PlayerPossessionTest {
         // in SNGS-060 several players lose the ball for a few frames and touch it again before anyone else
         String G = "SNGS-060";
         Factory.reset();
-        GameStateReconstructionInstance g = SELECT(POSSESSION(PLAYER("loader"))).FROM(G).matches.getFirst();
+        GameStateReconstructionInstance g = SELECT(POSSESSION(PLAYER("loader"))).FROM(G).games().getFirst();
         int[] raw = new Possession(makeSolver(), g, true).result;
         int[] bridged = possession(g);
         Set<Integer> everyone = new HashSet<>(side(g, 0));

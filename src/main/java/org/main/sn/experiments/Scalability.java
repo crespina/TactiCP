@@ -132,7 +132,7 @@ public class Scalability {
     /** Builds the query on the given instances and solves it; a query that throws is recorded, not rethrown. */
     private static Run solve(String dsl, List<GameStateReconstructionInstance> instances) throws Exception {
         Factory.reset(); // player names must not carry over from the previous query
-        SelectExpr se = (SelectExpr) QueryEvaluator.evaluate(dsl);
+        SelectExpr se = QueryEvaluator.parse(dsl);
         se.matches.addAll(instances);
         Query query = new Query();
         long t = System.nanoTime();
