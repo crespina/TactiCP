@@ -4,7 +4,6 @@ import org.main.sn.dsl.*;
 import org.main.sn.web.QueryEvaluator;
 
 import java.util.*;
-import java.util.regex.Pattern;
 
 /**
  * Structural (AST-level) comparison of two DSL queries — the reference ("gold")
@@ -44,8 +43,6 @@ public final class AstAnalyzer {
     public record Diff(Category category, String detail) {
         public boolean isEqual() { return category == Category.EQUAL; }
     }
-
-    private static final Pattern COUNT = Pattern.compile("\\.COUNT\\s*\\(\\s*\\)");
 
     /**
      * Compares two DSL strings structurally and returns the first divergence.
@@ -99,7 +96,7 @@ public final class AstAnalyzer {
         List<NNode> steps = new ArrayList<>();
         for (Event e : se.steps) steps.add(node(e, coref));
 
-        String searchMode = searchMode(se, dsl);
+        String searchMode = searchMode(se);
         return new NQuery(steps, searchMode, selectWhere(se));
     }
 
@@ -160,8 +157,8 @@ public final class AstAnalyzer {
         return List.of();
     }
 
-    private static String searchMode(SelectExpr se, String dsl) {
-        if (COUNT.matcher(dsl).find()) return "COUNT";
+    private static String searchMode(SelectExpr se) {
+        if (se.isCount()) return "COUNT";
         return switch (se.searchMode) {
             case -1 -> "DEFAULT_ALL";
             case 0  -> "ALL";

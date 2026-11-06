@@ -26,7 +26,7 @@ public class DuringTest {
 
     private static GameStateReconstructionInstance game(String name) throws IOException {
         Factory.reset();
-        GameStateReconstructionInstance g = SELECT(BALL().MOVETO(1, 2)).FROM(name).matches.getFirst();
+        GameStateReconstructionInstance g = SELECT(BALL().MOVETO(1, 2)).FROM(name).games().getFirst();
         Factory.reset();
         return g;
     }

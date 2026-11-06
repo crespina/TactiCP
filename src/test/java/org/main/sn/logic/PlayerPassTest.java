@@ -26,7 +26,7 @@ public class PlayerPassTest {
 
     private static GameStateReconstructionInstance game() throws IOException {
         Factory.reset();
-        GameStateReconstructionInstance g = SELECT(POSSESSION(PLAYER("loader"))).FROM(GAME).matches.getFirst();
+        GameStateReconstructionInstance g = SELECT(POSSESSION(PLAYER("loader"))).FROM(GAME).games().getFirst();
         Factory.reset();
         return g;
     }
@@ -118,7 +118,7 @@ public class PlayerPassTest {
         // in SNGS-060 some passers lose the ball for a few frames and touch it again before passing
         String G = "SNGS-060";
         Factory.reset();
-        GameStateReconstructionInstance g = SELECT(POSSESSION(PLAYER("loader"))).FROM(G).matches.getFirst();
+        GameStateReconstructionInstance g = SELECT(POSSESSION(PLAYER("loader"))).FROM(G).games().getFirst();
         int[] raw = new Possession(makeSolver(), g, true).result;
         int[] bridged = possession(g);
         Set<Pass> expected = passes(bridged, g.teams, p -> true, p -> true, false);

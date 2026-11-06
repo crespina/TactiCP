@@ -74,7 +74,7 @@ public class Query {
         int timeouts = 0;
 
         final List<Event> steps = seq.steps;
-        final List<GameStateReconstructionInstance> matches = seq.matches;
+        final List<GameStateReconstructionInstance> matches = seq.games();
         int total_max_duration = seq.maxDuration;
         int total_min_duration = seq.minDuration;
         int total_start_min = seq.startMin;
@@ -588,13 +588,7 @@ public class Query {
 
         int zone_start = ((int[]) payload)[0];
         int zone_end = ((int[]) payload)[1];
-        if (zone_start == zone_end) {
-            throw new IllegalArgumentException("Cannot move from one zone to the same zone.");
-        }
-
-        if (isNegated) {
-            throw new IllegalArgumentException("Negation of BALL_MOVE_TO is not supported.");
-        }
+        // SELECT and MOVETO refuse a negated move and a move to the same zone
         // the ball moves as a group of one: 1 in zone_start, 2 in zone_end, 0 elsewhere
         postMove(cp, eventInterval, groupWord(new int[]{ball_idx}, zone_start, zone_end, positionZones, n), minrange, n);
 
@@ -730,20 +724,17 @@ public class Query {
         postWhenPresent(cp, eventInterval, isEq(passerIsLeft, receiverIsLeft));
 
 
-        if (isNegated) {
-            throw new IllegalArgumentException("Negation of PASS_TO is not supported.");
+        // SELECT refuses a negated pass
+        if (minrange) {
+            //cp.post(new SubstringRegular(possession, eventInterval, Automaton.A_0STAR_B(teams.length, passersIds, receiversIds)));
+            cp.post(new SubstringRegular(possession, eventInterval, Automaton.A_0PLUS_B(teams.length, passersIds, receiversIds)));
         } else {
-            if (minrange) {
-                //cp.post(new SubstringRegular(possession, eventInterval, Automaton.A_0STAR_B(teams.length, passersIds, receiversIds)));
-                cp.post(new SubstringRegular(possession, eventInterval, Automaton.A_0PLUS_B(teams.length, passersIds, receiversIds)));
-            } else {
-                // n + 2: a pass may run from the first frame to the last one, plus its two delimiters
-                CPIntervalVar paddedInterval = paddedFor(cp, eventInterval, n + 2);
-                int[] paddedArray = Automaton.pad(possession);
-                //cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADSTAR_BPLUS_PAD(teams.length, passersIds, receiversIds)));
-                cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_0PLUS_BPLUS_PAD(teams.length, passersIds, receiversIds)));
-                linkPadded(cp, eventInterval, paddedInterval);
-            }
+            // n + 2: a pass may run from the first frame to the last one, plus its two delimiters
+            CPIntervalVar paddedInterval = paddedFor(cp, eventInterval, n + 2);
+            int[] paddedArray = Automaton.pad(possession);
+            //cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADSTAR_BPLUS_PAD(teams.length, passersIds, receiversIds)));
+            cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_0PLUS_BPLUS_PAD(teams.length, passersIds, receiversIds)));
+            linkPadded(cp, eventInterval, paddedInterval);
         }
 
 
@@ -760,10 +751,7 @@ public class Query {
 
         int zone_start = ((int[]) payload)[0];
         int zone_end = ((int[]) payload)[1];
-
-        if (zone_start == zone_end) {
-            throw new IllegalArgumentException("Cannot move from one zone to the same zone.");
-        }
+        // SELECT and MOVETO refuse a negated move and a move to the same zone
 
         Player player = (Player) subject;
 
@@ -778,9 +766,6 @@ public class Query {
         );
         extVars.add(player_id_ext);
 
-        if (isNegated) {
-            throw new IllegalArgumentException("Negation of PLAYER_MOVE_TO is not supported.");
-        }
         // one candidate per player: the player moves as a group of one, and, under a WHERE, is
         // never seen outside the shapes and stays in the DURING window
         int[] candidates = candidatesOf(player_id);
@@ -806,16 +791,7 @@ public class Query {
         int zone_start = zonesAndK[0];
         int zone_end = zonesAndK[1];
         int k = zonesAndK[2];
-
-        if (zone_start == zone_end) {
-            throw new IllegalArgumentException("Cannot move from one zone to the same zone.");
-        }
-        if (k < 1) {
-            throw new IllegalArgumentException("TEAM MOVETO needs k >= 1, got " + k);
-        }
-        if (isNegated) {
-            throw new IllegalArgumentException("Negation of TEAM_MOVE_TO is not supported.");
-        }
+        // SELECT and MOVETO refuse a negated move, a move to the same zone and k < 1
 
         // A group of k members is in a zone when all of them are, and the team moves when such a
         // group does: a Player MOVE_TO read on the group word (1: all in zone_start, 2: all in
@@ -877,10 +853,7 @@ public class Query {
                                Map<String, CPIntVar> IDENTIFIERS, AtomicInteger counterVars, Action action, ArrayList<ExtendedCPVar> extVars, int ball_idx) {
 
         if (subject instanceof Player player) {
-            int[] zones = (int[]) payload;
-            if (zones.length == 0) {
-                throw new IllegalArgumentException("At least one zone must be specified for POSITION");
-            }
+            int[] zones = (int[]) payload;   // POSITION refuses an empty zone list
             Set<Integer> zoneSet = Arrays.stream(zones).boxed().collect(Collectors.toSet());
 
             CPIntVar player_id = playerIdentity(cp, player, teams, IDENTIFIERS, eventInterval);
@@ -908,14 +881,8 @@ public class Query {
         } else if (subject instanceof Team team) {
 
             int[] zonesAndK = (int[]) payload;
-            int[] zones = Arrays.copyOf(zonesAndK, zonesAndK.length - 1);
-            if (zones.length == 0) {
-                throw new IllegalArgumentException("At least one zone must be specified for POSITION");
-            }
-            int k = zonesAndK[zonesAndK.length - 1];
-            if (k < 1) {
-                throw new IllegalArgumentException("POSITION of a team needs K(k) with k >= 1, got " + k);
-            }
+            int[] zones = Arrays.copyOf(zonesAndK, zonesAndK.length - 1);   // POSITION refuses no zone
+            int k = zonesAndK[zonesAndK.length - 1];                           // and K refuses k < 1
             Set<Integer> zoneSet = Arrays.stream(zones).boxed().collect(Collectors.toSet());
 
             // The team is in the zones while at least k of its members are (negated: while fewer than
@@ -937,10 +904,7 @@ public class Query {
                     action, counterEvent);
 
         } else { //ball
-            int[] zones = (int[]) payload;
-            if (zones.length == 0) {
-                throw new IllegalArgumentException("At least one zone must be specified for POSITION of the ball");
-            }
+            int[] zones = (int[]) payload;   // POSITION refuses an empty zone list
             Set<Integer> zoneSet = Arrays.stream(zones).boxed().collect(Collectors.toSet());
             // one maximal stay of the ball in (negated: out of) the zones, on the frames the WHERE keeps
             int[] word = restrict(zoneWord(positionZones, ball_idx, zoneSet, isNegated, n),

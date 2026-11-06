@@ -23,71 +23,42 @@ import java.util.regex.Pattern;
 public class QueryEvaluator {
 
     /**
-     * Sentinel dataset used for syntax-only validation. It matches no split and no
-     * game id, so {@link SelectExpr#FROM} builds an empty match set without parsing
-     * any game-state JSON.
-     */
-    private static final String SYNTAX_CHECK_DATASET = "__syntaxcheck__";
-
-    /**
-     * Validates the <em>syntax</em> of a DSL query without executing it.
+     * Checks that a DSL query is a well-formed query of the language, without running it.
      * <p>
-     * The query is rewritten before evaluation so that neither of the two expensive
-     * operations runs:
-     * <ul>
-     *   <li>the dataset inside {@code .FROM("…")} is swapped for a sentinel that
-     *       matches no split or game, so no game-state JSON is loaded;</li>
-     *   <li>a trailing {@code .COUNT()} is dropped, since {@code COUNT()} would
-     *       otherwise run the full constraint search.</li>
-     * </ul>
-     * Everything else — the {@code SELECT} structure, entities, events,
-     * {@code WHERE} constraints and {@code SEARCH} mode — is still constructed, so
-     * genuine syntax errors are caught. This is intentionally cheap: it never loads
-     * data and never runs the solver, which matters most for {@code FROM("all")}.
+     * The query is built exactly as written: no game is loaded and the solver never runs, since
+     * building a query only records and checks what it is given (see {@link SelectExpr}). Every
+     * rule that does not depend on the data is checked while it is built.
      *
-     * @param dslQuery the query as produced by the LLM (unchanged on return)
-     * @throws IllegalArgumentException if the query has no FROM clause or does not
-     *                                  build into a valid {@link SelectExpr}
-     * @throws IOException              propagated from {@link #evaluate} (not expected,
-     *                                  as the sentinel dataset loads nothing)
+     * @param dslQuery the query as produced by the LLM
+     * @throws IllegalArgumentException if the query has no FROM clause, names a game that is not in
+     *                                  the dataset, or is not a well-formed query
+     * @throws IOException              if the folder of a split named in FROM cannot be listed
      */
     public static void checkSyntax(String dslQuery) throws IOException {
-        parseStructure(dslQuery);   // builds the SelectExpr; throws on malformed DSL — no data, no search
+        parseStructure(dslQuery);
     }
 
     /**
-     * Builds the {@link SelectExpr} for a DSL query <em>without</em> loading any
-     * game data or running the solver, and returns it for structural inspection.
-     * <p>
-     * The query is rewritten first so neither expensive operation runs: the
-     * {@code .FROM("…")} dataset is swapped for a sentinel that matches no split or
-     * game (so no game-state JSON is read), and a trailing {@code .COUNT()} is
-     * dropped (so the result is always a {@link SelectExpr}, never an
-     * {@link Integer}). Everything else — SELECT structure, entities, events,
-     * WHERE constraints and SEARCH mode — is still constructed, so this is what an
-     * AST-level comparison should parse.
+     * Builds the {@link SelectExpr} of a DSL query that must have a FROM clause, without running
+     * it (see {@link #checkSyntax}), and returns it for structural inspection.
      *
-     * @throws IllegalArgumentException if the query has no FROM clause or does not
-     *                                  build into a valid {@link SelectExpr}
+     * @throws IllegalArgumentException if the query has no FROM clause or is not well formed
      */
     public static SelectExpr parseStructure(String dslQuery) throws IOException {
-        if (dslQuery == null || !dslQuery.contains(".FROM(")) {
+        SelectExpr se = parse(dslQuery);
+        if (se.dataset() == null) {
             throw new IllegalArgumentException("Query must contain a .FROM(\"…\") clause.");
         }
-        String probe = dslQuery
-                .replaceAll("\\.FROM\\s*\\(\\s*\"[^\"]*\"\\s*\\)", ".FROM(\"" + SYNTAX_CHECK_DATASET + "\")")
-                .replaceAll("\\.COUNT\\s*\\(\\s*\\)\\s*$", "");
-        Object result = evaluate(probe);
-        if (result instanceof SelectExpr se) return se;
-        throw new IllegalArgumentException("Query did not build into a SelectExpr. Got: "
-                + (result == null ? "null" : result.getClass().getName()));
+        return se;
     }
 
     /**
-     * Evaluates the DSL query and returns either a {@link SelectExpr}
-     * (for normal search queries) or an {@link Integer} (for COUNT queries).
+     * Builds the {@link SelectExpr} of a DSL query, with or without a FROM clause, without
+     * running it: no game is loaded and the solver never runs.
+     *
+     * @throws IllegalArgumentException if the query is not well formed
      */
-    public static Object evaluate(String dslQuery) throws IOException {
+    public static SelectExpr parse(String dslQuery) throws IOException {
         checkTokens(dslQuery);
         // Import all static factory methods into scope
         String script = """
@@ -98,11 +69,19 @@ public class QueryEvaluator {
         Binding binding = new Binding();
         GroovyShell shell = new GroovyShell(QueryEvaluator.class.getClassLoader(), binding);
         Object result = shell.evaluate(script);
-        if (result instanceof SelectExpr || result instanceof Integer) {
-            return result;
-        }
-        throw new IllegalArgumentException("Query did not evaluate to a SelectExpr or COUNT. Got: "
+        if (result instanceof SelectExpr se) return se;
+        throw new IllegalArgumentException("Query did not build into a SelectExpr. Got: "
                 + (result == null ? "null" : result.getClass().getName()));
+    }
+
+    /**
+     * Builds and runs a DSL query. Returns the number of matches, as an {@link Integer}, for a
+     * query ending with COUNT(); otherwise the built {@link SelectExpr}, not yet searched: the
+     * caller runs it with {@link SelectExpr#search()}.
+     */
+    public static Object evaluate(String dslQuery) throws IOException {
+        SelectExpr se = parse(dslQuery);
+        return se.isCount() ? (Object) se.count() : se;
     }
 
     /**

@@ -27,7 +27,7 @@ public class PositionTest {
 
     private static GameStateReconstructionInstance game() throws IOException {
         Factory.reset();
-        GameStateReconstructionInstance g = SELECT(POSITION(BALL(), 1)).FROM(GAME).matches.getFirst();
+        GameStateReconstructionInstance g = SELECT(POSITION(BALL(), 1)).FROM(GAME).games().getFirst();
         Factory.reset();
         return g;
     }
