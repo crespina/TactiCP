@@ -519,7 +519,8 @@ public class TeamEventsTest {
 
     @Test
     public void aMemberNamedElsewhereKeepsItsRole() throws IOException {
-        // a is named by both events, so it is one of the two left players that move, and the one in zone 2
+        // a is named by both events, so it is one of the two left players that move, and the one
+        // whose stay in zones 1-2 holds the whole move (in an AND, a move lies inside its states)
         String G = "SNGS-049";
         GameStateReconstructionInstance g = game(G);
         int[][] Z = zones(g);
@@ -529,12 +530,12 @@ public class TeamEventsTest {
         for (List<Integer> pair : pairs) {
             for (Answer move : groupMoves(Z, pair, 1, 2, true, g.n)) {
                 for (int a : pair) {
-                    // the stays of a in zone 2 that overlap the move on at least one frame
+                    // the stays of a in zones 1-2 that contain the move
                     for (int s = 1, e; s <= g.n; s = e) {
                         e = s + 1;
-                        boolean in = Z[a][s] == 2;
-                        while (e <= g.n && (Z[a][e] == 2) == in) e++;
-                        if (in && Math.min(move.end, e) - Math.max(move.start, s) >= 1) expected++;
+                        boolean in = Z[a][s] == 1 || Z[a][s] == 2;
+                        while (e <= g.n && (Z[a][e] == 1 || Z[a][e] == 2) == in) e++;
+                        if (in && s <= move.start && move.end <= e) expected++;
                     }
                 }
             }
@@ -542,13 +543,15 @@ public class TeamEventsTest {
         assertTrue(expected > 0);
         Factory.reset();
         List<Result> results = SELECT(AND(TEAM("t", PLAYER("a", "left"), PLAYER("b", "left")).MOVETO(1, 2, 2).MINRANGE(),
-                POSITION(PLAYER("a", "left"), 2))).FROM(G).search();
+                POSITION(PLAYER("a", "left"), 1, 2))).FROM(G).search();
         assertEquals(expected, results.size());
         for (Result r : results) {
             Result.GroupEvent and = (Result.GroupEvent) r.events.getFirst();
             Result.TeamMoveEvent move = (Result.TeamMoveEvent) and.children.get(0);
             Result.PositionEvent position = (Result.PositionEvent) and.children.get(1);
             assertTrue(move.playerIds.contains(position.playerIds.getFirst()));
+            assertEquals(move.interval.start, and.interval.start);
+            assertEquals(move.interval.end, and.interval.end);
         }
     }
 
