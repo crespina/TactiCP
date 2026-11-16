@@ -15,7 +15,11 @@ For each `(natural-language query, gold DSL)` pair the pipeline:
    (any `FROM` a query does contain is replaced).
 3. **Compares outputs** with strict, order-independent match-set equality
    (each match's instance + every event's `[start,end,length]` interval +
-   player/ball ids). `COUNT()` queries are compared by their count.
+   player/ball ids). `COUNT()` queries are compared by their count. A match is
+   compared by the atomic events of each step of its sequence, in any order within
+   the step: AND/OR wrappers and untaken OR branches are not part of it, since a
+   group's interval follows from its members. So `AND(OR(a,b),c)` and
+   `OR(AND(a,c),AND(b,c))` agree when they report the same events.
 4. On any failure, **diffs the two ASTs** (`AstAnalyzer`) to localise where the
    generated query first diverges: `ENTITY`, `EVENT`, `COMBINATOR`, `MINRANGE`,
    `WHERE`, `SEARCHMODE`, `STRUCTURE`. AST analysis runs only on failing pairs.
