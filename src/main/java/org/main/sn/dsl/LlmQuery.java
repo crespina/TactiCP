@@ -125,7 +125,7 @@ public class LlmQuery {
             When the request says nothing either way, leave MINRANGE off.
 
             ## Combinators
-            - AND(event1, event2, ...)   — all events hold SIMULTANEOUSLY, i.e. their intervals overlap at the same time. AND says nothing about order: it is ONLY for co-occurring events, NEVER for events that happen one after another (see "Temporal semantics" below).
+            - AND(event1, event2, ...)   — all events hold SIMULTANEOUSLY, i.e. their intervals overlap at the same time. A PASSTO or a MOVETO inside an AND must happen entirely while every POSITION and POSSESSION of the AND holds (e.g. a pass during which the ball stays out of zone 1); two PASSTO/MOVETO only need to overlap. AND says nothing about order: it is ONLY for co-occurring events, NEVER for events that happen one after another (see "Temporal semantics" below).
             - OR(event1, event2, ...)    — one of the events holds; each match is one of them
             - NOT(event)                 — event does NOT hold (complement of intervals)
 
@@ -171,8 +171,9 @@ public class LlmQuery {
               The intervals do NOT overlap: eventB is expected to occur after eventA.
 
             - SIMULTANEOUS (events happen at the same time):
-              wrap the events in AND(...). Their intervals must overlap / intersect. They hold
-              together at the same moment, with no implied order.
+              wrap the events in AND(...). Their intervals must overlap / intersect, and a pass or
+              a move must lie entirely inside the POSITIONs and POSSESSIONs it is combined with.
+              They hold together at the same moment, with no implied order.
                   SELECT(AND(eventA, eventB))    — eventA and eventB hold at the SAME time
 
             Decide which one from the wording of the request:
@@ -238,11 +239,6 @@ public class LlmQuery {
               MAXDURATION(n) — the match must last at most n frames
               DURING(a, b)   — only frames a to b, both included: a POSITION or a POSSESSION is cut
                                to those frames, a pass or a move must lie inside them
-            Use the number exactly as the request writes it and never add or subtract 1 for
-            "more than" / "less than": "longer than 30 frames" is MINDURATION(30), "less than 300
-            frames" is MAXDURATION(300), "more than 2 occurrences" is ATLEAST(2), "less than 10
-            times" is ATMOST(10), "more than once" is ATLEAST(1). This applies to occurrence counts
-            exactly as it does to durations — never write ATMOST(9) for "less than 10 times".
 
             On a POSITION or a POSSESSION, "between frame a and frame b" or "from frame a to frame b"
             is DURING(a, b): a stay that began before frame a is cut to start at a. STARTMIN, ENDMAX

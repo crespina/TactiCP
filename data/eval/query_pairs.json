@@ -16,7 +16,7 @@
       "POSSESSION",
       "PLAYER"
     ],
-    "nl": "Find when anybody has the ball.",
+    "nl": "Find when anybody has the ball, one interval per player.",
     "dsl": "SELECT(POSSESSION(PLAYER(\"p1\")))"
   },
   {
@@ -36,7 +36,7 @@
       "POSSESSION",
       "PLAYER:team"
     ],
-    "nl": "Find all the moments when any player from the left team had the ball.",
+    "nl": "Find, one interval per player, when a player of the left team had the ball.",
     "dsl": "SELECT(POSSESSION(PLAYER(\"pl\",\"left\")))"
   },
   {
@@ -46,7 +46,7 @@
       "POSSESSION",
       "PLAYER:team"
     ],
-    "nl": "Find when a player from the right had the possession of the ball.",
+    "nl": "Find, one interval per player, when a player of the right team had the possession of the ball.",
     "dsl": "SELECT(POSSESSION(PLAYER(\"pr\",\"right\")))"
   },
   {
@@ -86,7 +86,7 @@
       "POSSESSION",
       "TEAM:ids"
     ],
-    "nl": "Find when any of players seven, nine, and eleven had the ball.",
+    "nl": "Find when the group made of players seven, nine and eleven had the ball, passes between them included.",
     "dsl": "SELECT(POSSESSION(TEAM(\"t1\",7,9,11)))"
   },
   {
@@ -157,7 +157,7 @@
       "POSITION",
       "PLAYER:team"
     ],
-    "nl": "Find the moments when a player from the left team was in zones five or eight.",
+    "nl": "Find, one interval per player, when a player of the left team was anywhere in zones five and eight.",
     "dsl": "SELECT(POSITION(PLAYER(\"pl\",\"left\"),5,8))"
   },
   {
@@ -177,7 +177,7 @@
       "POSITION",
       "BALL"
     ],
-    "nl": "Find when the ball was in zones one or four.",
+    "nl": "Find when the ball was anywhere in zones one and four.",
     "dsl": "SELECT(POSITION(BALL(),1,4))"
   },
   {
@@ -378,7 +378,7 @@
     "features": [
       "BALL.MOVETO"
     ],
-    "nl": "Find the intervals from the moment the ball enters zone 4 to the moment it leaves zone 1.",
+    "nl": "Find when the ball moves from zone 4 to zone 1, from the moment it enters zone 4 to the moment it leaves zone 1.",
     "dsl": "SELECT(BALL().MOVETO(4,1))"
   },
   {
@@ -422,8 +422,8 @@
       "TEAM:ids",
       "MINRANGE"
     ],
-    "nl": "Find the smallest intervals during which at least 3 players from the team comprising of players 8, 9, 10 and 11 move from zone 11 to zone 10.",
-    "dsl": "SELECT(TEAM(\"t1\",8,9,10,11).MOVETO(11,10,3).MINRANGE())"
+    "nl": "Find the smallest intervals during which at least 3 players from the team comprising of players 8, 9, 10 and 11 move from zone 11 to zone 12.",
+    "dsl": "SELECT(TEAM(\"t1\",8,9,10,11).MOVETO(11,12,3).MINRANGE())"
   },
   {
     "id": "team-move-players-k2",
@@ -443,8 +443,8 @@
       "TEAM.MOVETO",
       "TEAM:LEFT"
     ],
-    "nl": "Find the intervals during which at least 5 players from the left team move from zone 13 to zone 14.",
-    "dsl": "SELECT(TEAM(\"left\").MOVETO(13,14,5))"
+    "nl": "Find the intervals during which at least 5 players from the left team move from zone 13 to zone 5.",
+    "dsl": "SELECT(TEAM(\"left\").MOVETO(13,5,5))"
   },
   {
     "id": "team-move-k1",
@@ -507,7 +507,7 @@
       "NOT",
       "POSSESSION"
     ],
-    "nl": "Find the intervals where a player does not have the possession of the ball.",
+    "nl": "Find, for each player, the intervals during which that player does not have the possession of the ball.",
     "dsl": "SELECT(NOT(POSSESSION(PLAYER(\"p1\"))))"
   },
   {
@@ -540,7 +540,7 @@
       "POSITION",
       "PLAYER"
     ],
-    "nl": "Find the intervals during which a player is not in zones 6, 7.",
+    "nl": "Find, for each player, the intervals during which that player is not in zones 6 or 7.",
     "dsl": "SELECT(NOT(POSITION(PLAYER(\"p1\"),6,7)))"
   },
   {
@@ -586,7 +586,7 @@
       "POSITION",
       "PLAYER:team"
     ],
-    "nl": "Find the intervals during which a player from the left team is not in zone thirteen.",
+    "nl": "Find, for each player of the left team, the intervals during which that player is not in zone thirteen.",
     "dsl": "SELECT(NOT(POSITION(PLAYER(\"pl\",\"left\"),13)))"
   },
   {
@@ -620,7 +620,7 @@
       "POSITION",
       "identifier-reuse"
     ],
-    "nl": "Find the moments where player 7 has the ball in zone 6.",
+    "nl": "Find the moments where player 7 has the ball while standing in zone 6.",
     "dsl": "SELECT(AND(POSSESSION(PLAYER(\"p7\",7)),POSITION(PLAYER(\"p7\",7),6)))"
   },
   {
@@ -646,8 +646,8 @@
       "TEAM:RIGHT",
       "K"
     ],
-    "nl": "Find the intervals during which at least 4 members of the left team move from zone 3 to zone 7 and at the same time at least two players from the right team are in zone 7.",
-    "dsl": "SELECT(AND(TEAM(\"left\").MOVETO(3,7,4).MINRANGE(),POSITION(TEAM(\"right\"),K(2),7)))"
+    "nl": "Find the intervals during which at least 2 members of the left team move from zone 2 to zone 7 and at the same time at least two players from the right team are in zone 7.",
+    "dsl": "SELECT(AND(TEAM(\"left\").MOVETO(2,7,2).MINRANGE(),POSITION(TEAM(\"right\"),K(2),7)))"
   },
   {
     "id": "and-team-poss-ball-pos",
@@ -744,8 +744,8 @@
       "identifier-reuse",
       "MINRANGE"
     ],
-    "nl": "Find the moments when either player 7 passes to player 9 or the other way around (minimal interval in both cases).",
-    "dsl": "SELECT(OR(PLAYER(\"p7\",7).PASSTO(PLAYER(\"p9\",9)).MINRANGE(),PLAYER(\"p9\",9).PASSTO(PLAYER(\"p7\",7)).MINRANGE()))"
+    "nl": "Find the moments when either player 7 passes to player 8 or the other way around (minimal interval in both cases).",
+    "dsl": "SELECT(OR(PLAYER(\"p7\",7).PASSTO(PLAYER(\"p9\",8)).MINRANGE(),PLAYER(\"p9\",8).PASSTO(PLAYER(\"p7\",7)).MINRANGE()))"
   },
   {
     "id": "or-three-members",
@@ -841,7 +841,7 @@
       "POSITION",
       "BALL"
     ],
-    "nl": "Find the intervals during which the ball is either in zone 13 or 14 or 5 or 8 or 12, you can choose which one.",
+    "nl": "Find the intervals during which the ball is in zone 13, 14, 5, 8 or 12, one interval per zone.",
     "dsl": "SELECT(OR(POSITION(BALL(),13),POSITION(BALL(),14),POSITION(BALL(),5),POSITION(BALL(),8),POSITION(BALL(),12)))"
   },
   {
@@ -856,8 +856,8 @@
       "POSSESSION",
       "POSITION"
     ],
-    "nl": "Find the intervals during which all of those events (minimal intervals) are true: Player 10 makes a pass to player 11, Player 10 moves from zone two to zone three, the ball goes from zone 2 to 3, 3 or more people from team left go from zone 2 to 3, this team also has the ball and the ball is in any of zones 2 or 3.",
-    "dsl": "SELECT(AND(PLAYER(\"p10\",10).PASSTO(PLAYER(\"p11\",11)).MINRANGE(),PLAYER(\"p10\",10).MOVETO(2,3).MINRANGE(),BALL().MOVETO(2,3).MINRANGE(),TEAM(\"left\").MOVETO(2,3,3).MINRANGE(),POSSESSION(TEAM(\"left\")),POSITION(BALL(),2,3)))"
+    "nl": "Find the intervals during which all of those events (minimal intervals) are true: Player 7 makes a pass to player 6, Player 7 moves from zone one to zone three, the ball goes from zone 2 to 3, 1 or more people from team left go from zone 1 to 3, this team also has the ball and the ball is in any of zones 2 or 3.",
+    "dsl": "SELECT(AND(PLAYER(\"p10\",7).PASSTO(PLAYER(\"p11\",6)).MINRANGE(),PLAYER(\"p10\",7).MOVETO(1,3).MINRANGE(),BALL().MOVETO(2,3).MINRANGE(),TEAM(\"left\").MOVETO(1,3,1).MINRANGE(),POSSESSION(TEAM(\"left\")),POSITION(BALL(),2,3)))"
   },
   {
     "id": "or-two-labeled-kinds",
@@ -943,7 +943,7 @@
       "POSSESSION",
       "NOT"
     ],
-    "nl": "Find when all of those events happen together: the ball and Player 7 are in zone 4, three players or more from the left team are in zone 4, this team also has the possession of the ball but not player 9.",
+    "nl": "Find when all of those events happen together: the ball and Player 7 are in zone 4, three players or more from the left team are in zone 4, this team also has the possession of the ball, and player 9 is not the one holding it.",
     "dsl": "SELECT(AND(POSITION(BALL(),4),POSITION(PLAYER(\"p7\",7),4),POSITION(TEAM(\"left\"),K(3),4),POSSESSION(TEAM(\"left\")),NOT(POSSESSION(PLAYER(\"p9\",9)))))"
   },
   {
@@ -1019,8 +1019,8 @@
       "PASSTO",
       "identifier-reuse"
     ],
-    "nl": "Find the following succession of events: Player 7 has the ball, then passes to Player 9 (minimal) and then Player 9 has the ball.",
-    "dsl": "SELECT(POSSESSION(PLAYER(\"p7\",7)),PLAYER(\"p7\",7).PASSTO(PLAYER(\"p9\",9)).MINRANGE(),POSSESSION(PLAYER(\"p9\",9)))"
+    "nl": "Find the following succession of events: Player 7 has the ball, then passes to Player 6 (minimal) and then Player 6 has the ball.",
+    "dsl": "SELECT(POSSESSION(PLAYER(\"p7\",7)),PLAYER(\"p7\",7).PASSTO(PLAYER(\"p9\",6)).MINRANGE(),POSSESSION(PLAYER(\"p9\",6)))"
   },
   {
     "id": "seq-four-ball-events",
@@ -1031,7 +1031,7 @@
       "BALL.MOVETO",
       "BALL"
     ],
-    "nl": "Find the following succession of events: Ball is in zone 13, then it moves from there to zone 1, then from there to zone 2 then it is in zone 14.",
+    "nl": "Find the following succession of events: Ball is in zone 13, then it moves from there to zone 1, then from there to zone 2 (shortest interval for both moves), then it is in zone 14.",
     "dsl": "SELECT(POSITION(BALL(),13),BALL().MOVETO(13,1).MINRANGE(),BALL().MOVETO(1,2).MINRANGE(),POSITION(BALL(),14))"
   },
   {
@@ -1044,8 +1044,8 @@
       "PLAYER.MOVETO",
       "POSITION"
     ],
-    "nl": "Find when the left team has the possession of the ball, then one player from this team passes to a teammate (minimal) and then this receiver moves from zone 2 to 7, then passes to another teammate (not the same as the original passer) (minimal), then the ball is in zone 14.",
-    "dsl": "SELECT(POSSESSION(TEAM(\"left\")),PLAYER(\"p1\",\"left\").PASSTO(PLAYER(\"p2\",\"left\")).MINRANGE(),PLAYER(\"p2\",\"left\").MOVETO(2,7).MINRANGE(),PLAYER(\"p2\",\"left\").PASSTO(PLAYER(\"p3\",\"left\")).MINRANGE(),POSITION(BALL(),14))"
+    "nl": "Find when the left team has the possession of the ball, then one player from this team passes to a teammate (minimal) and then this receiver moves from zone 6 to 7, then passes to another teammate (not the same as the original passer) (minimal), then the ball is in zone 14.",
+    "dsl": "SELECT(POSSESSION(TEAM(\"left\")),PLAYER(\"p1\",\"left\").PASSTO(PLAYER(\"p2\",\"left\")).MINRANGE(),PLAYER(\"p2\",\"left\").MOVETO(6,7).MINRANGE(),PLAYER(\"p2\",\"left\").PASSTO(PLAYER(\"p3\",\"left\")).MINRANGE(),POSITION(BALL(),14))"
   },
   {
     "id": "seq-three-positions",
@@ -1068,8 +1068,8 @@
       "POSITION",
       "PASSTO"
     ],
-    "nl": "Find when Player 7 has the ball while being in zone 4, then passes to Player 8 (minimal).",
-    "dsl": "SELECT(AND(POSSESSION(PLAYER(\"p7\",7)),POSITION(PLAYER(\"p7\",7),4)),PLAYER(\"p7\",7).PASSTO(PLAYER(\"p8\",8)).MINRANGE())"
+    "nl": "Find when Player 7 has the ball while being in zone 6, then passes to Player 8 (minimal).",
+    "dsl": "SELECT(AND(POSSESSION(PLAYER(\"p7\",7)),POSITION(PLAYER(\"p7\",7),6)),PLAYER(\"p7\",7).PASSTO(PLAYER(\"p8\",8)).MINRANGE())"
   },
   {
     "id": "seq-with-or-member",
@@ -1081,7 +1081,7 @@
       "BALL.MOVETO",
       "WHERE:event"
     ],
-    "nl": "Find when the ball is either in zone 13 or zone 14 (you can choose) for at most 30 frames, then the ball moves from zone 2 to 3 (minimal interval).",
+    "nl": "Find when the ball is in zone 13 or in zone 14, one interval per zone, for at most 30 frames, then the ball moves from zone 2 to 3 (minimal interval).",
     "dsl": "SELECT(OR(POSITION(BALL(),13),POSITION(BALL(),14)).WHERE(MAXDURATION(30)),BALL().MOVETO(2,3).MINRANGE())"
   },
   {
@@ -1107,8 +1107,8 @@
       "K",
       "WHERE:event"
     ],
-    "nl": "Find the following sequence of events: first the right team doesn't have the ball for at most 100 frames, then the left team has the possession while the ball is in any of zones 1 or 2 for maximum 100 frames, then either the ball moves from 2 to 3 or from 2 to 7 (both minimal), then at least 3 players from the right team are in zone 13 for less than 100 frames.",
-    "dsl": "SELECT(NOT(POSSESSION(TEAM(\"right\"))).WHERE(MAXDURATION(100)),AND(POSSESSION(TEAM(\"left\")),POSITION(BALL(),1,2)).WHERE(MAXDURATION(100)),OR(BALL().MOVETO(2,3).MINRANGE(),BALL().MOVETO(2,7).MINRANGE()),POSITION(TEAM(\"right\"),K(3),13).WHERE(MAXDURATION(100)))"
+    "nl": "Find the following sequence of events: first the right team doesn't have the ball for at most 100 frames, then the left team has the possession while the ball is in any of zones 1 or 2 for maximum 100 frames, then either the ball moves from 2 to 3 or from 2 to 7 (both minimal), then at least 3 players from the right team are in zone 14 for at most 100 frames.",
+    "dsl": "SELECT(NOT(POSSESSION(TEAM(\"right\"))).WHERE(MAXDURATION(100)),AND(POSSESSION(TEAM(\"left\")),POSITION(BALL(),1,2)).WHERE(MAXDURATION(100)),OR(BALL().MOVETO(2,3).MINRANGE(),BALL().MOVETO(2,7).MINRANGE()),POSITION(TEAM(\"right\"),K(3),14).WHERE(MAXDURATION(100)))"
   },
   {
     "id": "seq-team-then-team",
@@ -1119,8 +1119,8 @@
       "TEAM:LEFT",
       "TEAM:RIGHT"
     ],
-    "nl": "Find when 4 or more players from the left team move from zone 3 to zone 7 and then 4 or more players from the right team move from 7 to 3 (both the smallest possible interval).",
-    "dsl": "SELECT(TEAM(\"left\").MOVETO(3,7,4).MINRANGE(),TEAM(\"right\").MOVETO(7,3,4).MINRANGE())"
+    "nl": "Find when 2 or more players from the left team move from zone 3 to zone 7 and then 1 or more players from the right team move from 7 to 1 (both the smallest possible interval).",
+    "dsl": "SELECT(TEAM(\"left\").MOVETO(3,7,2).MINRANGE(),TEAM(\"right\").MOVETO(7,1,1).MINRANGE())"
   },
   {
     "id": "seq-pass-move-pass",
@@ -1131,8 +1131,8 @@
       "PLAYER.MOVETO",
       "identifier-reuse"
     ],
-    "nl": "Find the following sequence: Player ten passes to player eleven, then this player moves to zone 3 from zone 2 (only the exact interval when this transition takes place), then they pass back to the original player, this interval must only encompass when the ball leaves the foot of the passer to when it arrives at the foot of the receiver.",
-    "dsl": "SELECT(PLAYER(\"p10\",10).PASSTO(PLAYER(\"p11\",11)).MINRANGE(),PLAYER(\"p11\",11).MOVETO(2,3).MINRANGE(),PLAYER(\"p11\",11).PASSTO(PLAYER(\"p10\",10)).MINRANGE())"
+    "nl": "Find the following sequence: Player thirteen passes to player fifteen, then this player moves to zone 3 from zone 4 (only the exact interval when this transition takes place), then they pass back to the original player, this interval must only encompass when the ball leaves the foot of the passer to when it arrives at the foot of the receiver.",
+    "dsl": "SELECT(PLAYER(\"p10\",13).PASSTO(PLAYER(\"p11\",15)).MINRANGE(),PLAYER(\"p11\",15).MOVETO(4,3).MINRANGE(),PLAYER(\"p11\",15).PASSTO(PLAYER(\"p10\",13)).MINRANGE())"
   },
   {
     "id": "seq-mixed-minrange",
@@ -1142,7 +1142,7 @@
       "MINRANGE:mixed",
       "BALL.MOVETO"
     ],
-    "nl": "First the ball moves from 4 to 6 then it moves from 6 to 7 but this time i want it from the moment it enters zone 6 to the moment it leaves zone 7.",
+    "nl": "First the ball moves from zone 4 to zone 6 (shortest interval), then it moves from zone 6 to zone 7, this time from the moment it enters zone 6 to the moment it leaves zone 7.",
     "dsl": "SELECT(BALL().MOVETO(4,6).MINRANGE(),BALL().MOVETO(6,7))"
   },
   {
@@ -1170,7 +1170,7 @@
       "STARTMIN",
       "PASSTO"
     ],
-    "nl": "The minimal interval during which a pass takes place after frame 100.",
+    "nl": "The minimal interval during which a pass takes place, starting at frame 100 or later.",
     "dsl": "SELECT(PLAYER(\"p1\").PASSTO(PLAYER(\"p2\")).MINRANGE().WHERE(STARTMIN(100)))"
   },
   {
@@ -1181,7 +1181,7 @@
       "STARTMAX",
       "PASSTO"
     ],
-    "nl": "A pass before frame 300.",
+    "nl": "A pass, including the whole possessions of the passer and the receiver, starting at frame 300 or earlier.",
     "dsl": "SELECT(PLAYER(\"p1\").PASSTO(PLAYER(\"p2\")).WHERE(STARTMAX(300)))"
   },
   {
@@ -1192,7 +1192,7 @@
       "ENDMIN",
       "BALL.MOVETO"
     ],
-    "nl": "The minimal interval of a ball movement (zone four to one) finished after frame 200.",
+    "nl": "The minimal interval of a ball movement (zone four to one) ending at frame 200 or later.",
     "dsl": "SELECT(BALL().MOVETO(4,1).MINRANGE().WHERE(ENDMIN(200)))"
   },
   {
@@ -1259,7 +1259,7 @@
       "ENDMAX",
       "PLAYER.MOVETO"
     ],
-    "nl": "Player 13 moves from zone 6 to 7 (smallest interval) but this event should be between frame 10 and frame 740.",
+    "nl": "Player 13 moves from zone 6 to 7 (smallest interval), starting at frame 10 or later and ending at frame 740 or earlier.",
     "dsl": "SELECT(PLAYER(\"p13\",13).MOVETO(6,7).MINRANGE().WHERE(STARTMIN(10),ENDMAX(740)))"
   },
   {
@@ -1288,8 +1288,8 @@
       "MAXDURATION",
       "MINDURATION"
     ],
-    "nl": "Find the intervals when Player four has the ball inside a rectangle with the top left corner in -5;5 and a width and length of ten. This possession should start earlier than frame 50 and end earlier than frame 200; and its duration should be between 15 and 50 frames.",
-    "dsl": "SELECT(POSSESSION(PLAYER(\"p4\",4)).WHERE(RECTANGLE(-5,5,10,10),STARTMAX(50),ENDMAX(200),MAXDURATION(50),MINDURATION(15)))"
+    "nl": "Find the intervals when Player five has the ball inside a rectangle with the top left corner in -5;5 and a width and length of ten. This possession should start at frame 50 or earlier and end at frame 200 or earlier; and its duration should be between 15 and 50 frames.",
+    "dsl": "SELECT(POSSESSION(PLAYER(\"p4\",5)).WHERE(RECTANGLE(-5,5,10,10),STARTMAX(50),ENDMAX(200),MAXDURATION(50),MINDURATION(15)))"
   },
   {
     "id": "ev-where-before-minrange",
@@ -1299,7 +1299,7 @@
       "MAXDURATION",
       "MINRANGE:order"
     ],
-    "nl": "A minimal pass interval lasting less than 25 frames.",
+    "nl": "A minimal pass interval lasting at most 25 frames.",
     "dsl": "SELECT(PLAYER(\"p1\").PASSTO(PLAYER(\"p2\")).WHERE(MAXDURATION(25)).MINRANGE())"
   },
   {
@@ -1310,7 +1310,7 @@
       "MAXDURATION",
       "MINRANGE:order"
     ],
-    "nl": "A minimal pass interval lasting less than 25 frames.",
+    "nl": "A minimal pass interval lasting at most 25 frames.",
     "dsl": "SELECT(PLAYER(\"p1\").PASSTO(PLAYER(\"p2\")).MINRANGE().WHERE(MAXDURATION(25)))"
   },
   {
@@ -1321,7 +1321,7 @@
       "AND",
       "MINDURATION"
     ],
-    "nl": "Find the intervals when Player 7 has the ball and the ball is in zone five. This should last longer than 30 frames.",
+    "nl": "Find the intervals when Player 7 has the ball and the ball is in zone five. This should last at least 30 frames.",
     "dsl": "SELECT(AND(POSSESSION(PLAYER(\"p7\",7)),POSITION(BALL(),5)).WHERE(MINDURATION(30)))"
   },
   {
@@ -1333,8 +1333,8 @@
       "MAXDURATION",
       "RADIUS"
     ],
-    "nl": "Find when the ball is either in zone 13 or 14 (choose which one) for maximum 30 frames at maximum 25 meters around the center of the pitch.",
-    "dsl": "SELECT(OR(POSITION(BALL(),13),POSITION(BALL(),14)).WHERE(MAXDURATION(30),RADIUS(0,0,25)))"
+    "nl": "Find when the ball is in zone 13 or in zone 14, one interval per zone, for at most 30 frames and at most 50 meters from the center of the pitch.",
+    "dsl": "SELECT(OR(POSITION(BALL(),13),POSITION(BALL(),14)).WHERE(MAXDURATION(30),RADIUS(0,0,50)))"
   },
   {
     "id": "ev-where-on-not",
@@ -1372,7 +1372,7 @@
       "MAXDURATION",
       "identifier-reuse"
     ],
-    "nl": "A player has the ball for more than 10 frames, then this player passes to another (minimal interval) and this pass lasts less than 30 frames, then the receiver has the ball for more than 10 frames.",
+    "nl": "A player has the ball for at least 10 frames, then this player passes to another (minimal interval) and this pass lasts at most 30 frames, then the receiver has the ball for at least 10 frames.",
     "dsl": "SELECT(POSSESSION(PLAYER(\"p1\")).WHERE(MINDURATION(10)),PLAYER(\"p1\").PASSTO(PLAYER(\"p2\")).MINRANGE().WHERE(MAXDURATION(30)),POSSESSION(PLAYER(\"p2\")).WHERE(MINDURATION(10)))"
   },
   {
@@ -1408,8 +1408,8 @@
       "TEAM:mixed-members",
       "RECTANGLE"
     ],
-    "nl": "Find the minimal intervals of 3 players of a team composed of one random player, one player from the left team and player with id 1 move from zone 11 to 10 in a rectangle which left top is in -20,20 and of width and height 40 and 20 respectively.",
-    "dsl": "SELECT(TEAM(\"t1\",PLAYER(\"pwc3\"),PLAYER(\"pleft\",\"left\"),PLAYER(\"p1\",1)).MOVETO(11,10,3).MINRANGE().WHERE(RECTANGLE(-20,20,40,20)))"
+    "nl": "Find the minimal intervals of 3 players of a team composed of one random player, one player from the left team and player with id 1 move from zone 11 to 10 in a rectangle which left top is in -20,-20 and of width and height 40 and 20 respectively.",
+    "dsl": "SELECT(TEAM(\"t1\",PLAYER(\"pwc3\"),PLAYER(\"pleft\",\"left\"),PLAYER(\"p1\",1)).MOVETO(11,10,3).MINRANGE().WHERE(RECTANGLE(-20,-20,40,20)))"
   },
   {
     "id": "ev-where-on-team-position",
@@ -1460,7 +1460,7 @@
       "WHERE:event",
       "RADIUS"
     ],
-    "nl": "Find the intervals during which simultaneously player with id 4 moves from zone one to zone two or from zone 4 to zone 3 and the left team has the ball in the centered circle of radius 30.",
+    "nl": "Find the shortest intervals during which player 4 moves from zone one to zone two or from zone 4 to zone 3 while the left team has the ball, all of it inside the centered circle of radius 30.",
     "dsl": "SELECT(AND(OR(PLAYER(\"p1\",4).MOVETO(1,2),PLAYER(\"p1\",4).MOVETO(4,3)),POSSESSION(TEAM(\"left\"))).MINRANGE().WHERE(RADIUS(0,0,30)))"
   },
   {
@@ -1472,7 +1472,7 @@
       "POSSESSION",
       "PLAYER:id"
     ],
-    "nl": "Player 10 has the ball between frame 200 and frame 400",
+    "nl": "Player 10 has the ball, counting only frames 200 to 400.",
     "dsl": "SELECT(POSSESSION(PLAYER(\"p10\",10)).WHERE(DURING(200,400)))"
   },
   {
@@ -1485,7 +1485,7 @@
       "TEAM:LEFT",
       "K"
     ],
-    "nl": "At least four players of the left team are in zones 2 or 3 from frame 100 to 300",
+    "nl": "At least four players of the left team are in zones 2 or 3, counting only frames 100 to 300.",
     "dsl": "SELECT(POSITION(TEAM(\"left\"),K(4),2,3).WHERE(DURING(100,300)))"
   },
   {
@@ -1497,7 +1497,7 @@
       "BALL.MOVETO",
       "MINRANGE"
     ],
-    "nl": "The ball moves from zone 3 to 4 within frame 50-500 (minimal interval)",
+    "nl": "The ball moves from zone 3 to 4 (minimal interval), counting only frames 50 to 500.",
     "dsl": "SELECT(BALL().MOVETO(3,4).MINRANGE().WHERE(DURING(50,500)))"
   },
   {
@@ -1512,7 +1512,7 @@
       "POSITION",
       "BALL"
     ],
-    "nl": "The left team has the ball while the ball is in zones 13 or 14; between frames 300 and 600.",
+    "nl": "The left team has the ball while the ball is in zones 13 or 14, counting only frames 300 to 600.",
     "dsl": "SELECT(AND(POSSESSION(TEAM(\"left\")),POSITION(BALL(),13,14)).WHERE(DURING(300,600)))"
   },
   {
@@ -1522,7 +1522,7 @@
       "WHERE:global",
       "STARTMIN"
     ],
-    "nl": "A pass between two players from the moment the ball leaves the passer, which should be after frame 100, to the moment it arrives at the receiver.",
+    "nl": "A pass between two players, from the moment the ball leaves the passer to the moment it reaches the receiver; the ball leaves the passer at frame 100 or later.",
     "dsl": "SELECT(PLAYER(\"p1\").PASSTO(PLAYER(\"p2\")).MINRANGE()).WHERE(STARTMIN(100))"
   },
   {
@@ -1532,7 +1532,7 @@
       "WHERE:global",
       "STARTMAX"
     ],
-    "nl": "A pass between two players from the moment the ball leaves the passer, which should be before frame 400, to the moment it arrives at the receiver.",
+    "nl": "A pass between two players, from the moment the ball leaves the passer to the moment it reaches the receiver; the ball leaves the passer at frame 400 or earlier.",
     "dsl": "SELECT(PLAYER(\"p1\").PASSTO(PLAYER(\"p2\")).MINRANGE()).WHERE(STARTMAX(400))"
   },
   {
@@ -1542,7 +1542,7 @@
       "WHERE:global",
       "ENDMIN"
     ],
-    "nl": "Find the smallest interval when the ball moves from zone 4 to 1 where the end is after frame 250.",
+    "nl": "Find the smallest interval when the ball moves from zone 4 to 1, ending at frame 250 or later.",
     "dsl": "SELECT(BALL().MOVETO(4,1).MINRANGE()).WHERE(ENDMIN(250))"
   },
   {
@@ -1564,7 +1564,7 @@
       "POSSESSION",
       "TEAM:LEFT"
     ],
-    "nl": "Find when the left team has the possession for less than 75 frames.",
+    "nl": "Find when the left team has the possession for at most 75 frames.",
     "dsl": "SELECT(POSSESSION(TEAM(\"left\"))).WHERE(MAXDURATION(75))"
   },
   {
@@ -1598,7 +1598,7 @@
       "ATMOST",
       "PASSTO"
     ],
-    "nl": "A minimal pass happening less than 10 times.",
+    "nl": "A minimal pass happening at most 10 times.",
     "dsl": "SELECT(PLAYER(\"p1\").PASSTO(PLAYER(\"p2\")).MINRANGE()).WHERE(ATMOST(10))"
   },
   {
@@ -1609,7 +1609,7 @@
       "ATLEAST",
       "ATMOST"
     ],
-    "nl": "Find the moments when player seven had the ball, show if that happens more than once and less than five times.",
+    "nl": "Find the moments when player seven had the ball, show them only if that happens at least once and at most five times.",
     "dsl": "SELECT(POSSESSION(PLAYER(\"p7\",7))).WHERE(ATLEAST(1),ATMOST(5))"
   },
   {
@@ -1635,7 +1635,7 @@
       "MINDURATION",
       "MAXDURATION"
     ],
-    "nl": "A minimal pass starting between 0 and 300, ending between 50 and 700, and lasting more than 5 but less than 60 frames.",
+    "nl": "A minimal pass starting between frames 0 and 300, ending between frames 50 and 700, and lasting between 5 and 60 frames.",
     "dsl": "SELECT(PLAYER(\"p1\").PASSTO(PLAYER(\"p2\")).MINRANGE()).WHERE(STARTMIN(0),STARTMAX(300),ENDMIN(50),ENDMAX(700),MINDURATION(5),MAXDURATION(60))"
   },
   {
@@ -1647,8 +1647,8 @@
       "STARTMIN",
       "ENDMAX"
     ],
-    "nl": "Find the minimal interval during which four or more members of the left team start from zone 3 and go to zone 7, but this should happen in a rectangle with the top left corner in (-62,39), a width of 125 and a height of 78, and the action should start no less than 100 and end no more than 650.",
-    "dsl": "SELECT(TEAM(\"left\").MOVETO(3,7,4).MINRANGE()).WHERE(RECTANGLE(-62,39,125,78),STARTMIN(100),ENDMAX(650))"
+    "nl": "Find the minimal interval during which four or more members of the left team start from zone 3 and go to zone 4, but this should happen in a rectangle with the top left corner in (-62,39), a width of 125 and a height of 78, and the action should start at frame 100 or later and end at frame 650 or earlier.",
+    "dsl": "SELECT(TEAM(\"left\").MOVETO(3,4,4).MINRANGE()).WHERE(RECTANGLE(-62,39,125,78),STARTMIN(100),ENDMAX(650))"
   },
   {
     "id": "g-radius-plus-duration",
@@ -1698,7 +1698,7 @@
       "STARTMIN",
       "ENDMAX"
     ],
-    "nl": "A player has the ball. This starts after frame 0 and ends before frame 700",
+    "nl": "A player has the ball. This starts at frame 0 or later and ends at frame 700 or earlier.",
     "dsl": "SELECT(POSSESSION(PLAYER(\"p1\"))).WHERE(STARTMIN(0)).WHERE(ENDMAX(700))"
   },
   {
@@ -1710,7 +1710,7 @@
       "MINDURATION",
       "MAXDURATION"
     ],
-    "nl": "First the ball moves from zone 4 to 1, then from 1 to 2. Both events should be the shortest interval. The sequence should last more than 20 frames but less than 300 frames.",
+    "nl": "First the ball moves from zone 4 to 1, then from 1 to 2. Both events should be the shortest interval. The sequence should last between 20 and 300 frames.",
     "dsl": "SELECT(BALL().MOVETO(4,1).MINRANGE(),BALL().MOVETO(1,2).MINRANGE()).WHERE(MINDURATION(20),MAXDURATION(300))"
   },
   {
@@ -1746,7 +1746,7 @@
       "STARTMIN",
       "MAXDURATION"
     ],
-    "nl": "A minimal pass during maximum 25 frames, starting after 50 and ending before 600.",
+    "nl": "A minimal pass during maximum 25 frames, starting at frame 50 or later and ending at frame 600 or earlier.",
     "dsl": "SELECT(PLAYER(\"p1\").PASSTO(PLAYER(\"p2\")).MINRANGE().WHERE(MAXDURATION(25))).WHERE(STARTMIN(50),ENDMAX(600))"
   },
   {
@@ -1783,7 +1783,7 @@
       "WHERE:global",
       "MAXDURATION"
     ],
-    "nl": "First, either player 2 or 3 has the ball, then, for minimum 10 frames, the ball is either in zone 6 alone or in zone 7 alone while the right team doesn't have the ball. The whole thing must be less than 250 frames",
+    "nl": "First, either player 2 or 3 has the ball, then, for minimum 10 frames, the ball is either in zone 6 alone or in zone 7 alone while the right team doesn't have the ball. The whole thing must last at most 250 frames",
     "dsl": "SELECT(OR(POSSESSION(PLAYER(\"p1\",2)),POSSESSION(PLAYER(\"p2\",3))),AND(OR(POSITION(BALL(),6),POSITION(BALL(),7)),NOT(POSSESSION(TEAM(\"right\")))).WHERE(MINDURATION(10))).WHERE(MAXDURATION(250))"
   },
   {
@@ -1798,7 +1798,7 @@
       "MINRANGE",
       "identifier-reuse"
     ],
-    "nl": "A player has the ball then passes to another (minimal interval); all between frame 200 and 500.",
+    "nl": "A player has the ball then passes to another (minimal interval), counting only frames 200 to 500 for both events.",
     "dsl": "SELECT(POSSESSION(PLAYER(\"p1\")),PLAYER(\"p1\").PASSTO(PLAYER(\"p2\")).MINRANGE()).WHERE(DURING(200,500))"
   },
   {
@@ -1811,7 +1811,7 @@
       "POSSESSION",
       "PLAYER:id"
     ],
-    "nl": "Player 3 has the possession of the ball between frames 100 and 400 for at least 20 frames.",
+    "nl": "Counting only frames 100 to 400, player 3 has the possession of the ball for at least 20 frames.",
     "dsl": "SELECT(POSSESSION(PLAYER(\"p3\",3))).WHERE(DURING(100,400),MINDURATION(20))"
   },
   {
@@ -1824,7 +1824,7 @@
       "POSSESSION",
       "TEAM:RIGHT"
     ],
-    "nl": "The right team has the possession of the ball inside the centered circle of radius 20 during frames 100 to 400.",
+    "nl": "The right team has the possession of the ball inside the centered circle of radius 20, counting only frames 100 to 400.",
     "dsl": "SELECT(POSSESSION(TEAM(\"right\"))).WHERE(RADIUS(0,0,20),DURING(100,400))"
   },
   {
@@ -1866,7 +1866,7 @@
       "STARTMIN",
       "ENDMAX"
     ],
-    "nl": "Count the number of times the ball went from zone 4 to 1 (minrange) starting from frame zero minimum to frame 700 maximum.",
+    "nl": "Count the number of times the ball went from zone 4 to 1 (minrange), starting at frame 0 or later and ending at frame 700 or earlier.",
     "dsl": "SELECT(BALL().MOVETO(4,1).MINRANGE()).WHERE(STARTMIN(0),ENDMAX(700)).COUNT()"
   },
   {
@@ -1877,7 +1877,7 @@
       "WHERE:global",
       "MINDURATION"
     ],
-    "nl": "Search for the first interval only where the right team has the ball for more than 50 frames.",
+    "nl": "Search for the first interval only where the right team has the ball for at least 50 frames.",
     "dsl": "SELECT(POSSESSION(TEAM(\"right\"))).WHERE(MINDURATION(50)).SEARCH(\"first\")"
   },
   {
@@ -1888,7 +1888,7 @@
       "WHERE:global",
       "ATLEAST"
     ],
-    "nl": "A minimal pass: search for 5 intervals. Only display if more than 2 are found.",
+    "nl": "A minimal pass: search for 5 intervals. Only display if at least 2 are found.",
     "dsl": "SELECT(PLAYER(\"p1\").PASSTO(PLAYER(\"p2\")).MINRANGE()).WHERE(ATLEAST(2)).SEARCH(5)"
   },
   {
@@ -1934,7 +1934,7 @@
       "WHERE:global",
       "order:variant"
     ],
-    "nl": "Find the first time a player has the ball for more than 10 frames.",
+    "nl": "Find the first time a player has the ball for at least 10 frames.",
     "dsl": "SELECT(POSSESSION(PLAYER(\"p1\"))).SEARCH(\"first\").WHERE(MINDURATION(10))"
   },
   {
@@ -1957,7 +1957,7 @@
       "WHERE:global",
       "COUNT"
     ],
-    "nl": "Count the number of intervals during which first Player eleven passes to player sixteen (shortest interval) for a duration of less than 25 frames, then the ball moves from zone three to four (minimal interval) in a circle of 30 meters around the center. This sequence should start after frame 50, end before frame 700 and lasts less than 200 frames.",
+    "nl": "Count the number of intervals during which first Player eleven passes to player sixteen (shortest interval) for a duration of at most 25 frames, then the ball moves from zone three to four (minimal interval) in a circle of 30 meters around the center. This sequence should start at frame 50 or later, end at frame 700 or earlier and last at most 200 frames.",
     "dsl": "SELECT(PLAYER(\"p11\",11).PASSTO(PLAYER(\"p16\",16)).MINRANGE().WHERE(MAXDURATION(25)),BALL().MOVETO(3,4).MINRANGE().WHERE(RADIUS(0,0,30))).WHERE(STARTMIN(50),ENDMAX(700),MAXDURATION(200)).COUNT()"
   },
   {
@@ -1971,8 +1971,8 @@
       "WHERE:global",
       "SEARCH:first"
     ],
-    "nl": "Find the first solution to the following sequence of events lasting maximum 250 frames if there is at least 2 valid solutions: Team left has the ball, then a pass between two players of this team happen (minimal) then the receiver passes to another player from the left team (minimal interval), then the ball is in zone 14.",
-    "dsl": "SELECT(POSSESSION(TEAM(\"left\")),PLAYER(\"p1\",\"left\").PASSTO(PLAYER(\"p2\",\"left\")).MINRANGE(),PLAYER(\"p2\",\"left\").PASSTO(PLAYER(\"p3\",\"left\")).MINRANGE(),POSITION(BALL(),14)).WHERE(MAXDURATION(250),ATLEAST(2)).SEARCH(\"first\")"
+    "nl": "Find the first solution to the following sequence of events lasting maximum 500 frames if there is at least 2 valid solutions: Team left has the ball, then a pass between two players of this team happen (minimal) then the receiver passes to another player from the left team (minimal interval), then the ball is in zone 14.",
+    "dsl": "SELECT(POSSESSION(TEAM(\"left\")),PLAYER(\"p1\",\"left\").PASSTO(PLAYER(\"p2\",\"left\")).MINRANGE(),PLAYER(\"p2\",\"left\").PASSTO(PLAYER(\"p3\",\"left\")).MINRANGE(),POSITION(BALL(),14)).WHERE(MAXDURATION(500),ATLEAST(2)).SEARCH(\"first\")"
   },
   {
     "id": "x-and-not-full-where",
@@ -1984,7 +1984,7 @@
       "WHERE:global",
       "SEARCH:k"
     ],
-    "nl": "A minimal pass lasting maximum 20 frames while the ball is in any of zones 3 or 4 and team right doesn't have the ball. This should be longer than 5 frames, start after frame 100, end before frame 650 and happen in a rectangle whose top left corner is in x=-62 and y=39, width= 125 and height = 78. Search only for the ten first matches.",
+    "nl": "A minimal pass lasting maximum 20 frames while the ball is in any of zones 3 or 4 and team right doesn't have the ball. The three conditions should hold together for at least 5 frames. The pattern should start at frame 100 or later, end at frame 650 or earlier and happen in a rectangle whose top left corner is in x=-62 and y=39, width= 125 and height = 78. Search only for the ten first matches.",
     "dsl": "SELECT(AND(PLAYER(\"p1\").PASSTO(PLAYER(\"p2\")).MINRANGE().WHERE(MAXDURATION(20)),POSITION(BALL(),3,4),NOT(POSSESSION(TEAM(\"right\")))).WHERE(MINDURATION(5))).WHERE(STARTMIN(100),ENDMAX(650),RECTANGLE(-62,39,125,78)).SEARCH(10)"
   },
   {
@@ -1999,8 +1999,8 @@
       "WHERE:global",
       "COUNT"
     ],
-    "nl": "Count the number of times 4 or more players from the right team were in any of zones 1,2,3 or 4 then 3 or more players from the right team left zone 4 to go to zone 3 for a maximum duration of 100 frames (minimal interval), then 5 or more players from the opposing team were in any of zones 9,10 or 11. The sequence must start after frame 10 and end before frame 740 for a minimum of 30 frames.",
-    "dsl": "SELECT(POSITION(TEAM(\"right\"),K(4),1,2,3,4),TEAM(\"right\").MOVETO(4,3,3).MINRANGE().WHERE(MAXDURATION(100)),POSITION(TEAM(\"left\"),K(5),9,10,11)).WHERE(STARTMIN(10),ENDMAX(740),MINDURATION(30)).COUNT()"
+    "nl": "Count the number of times 4 or more players from the right team were in any of zones 1,2,3 or 4 then 2 or more players from the right team left zone 4 to go to zone 3 for a maximum duration of 100 frames (minimal interval), then 5 or more players from the opposing team were in any of zones 9,10 or 11. The sequence must start at frame 10 or later, end at frame 740 or earlier and last at least 30 frames.",
+    "dsl": "SELECT(POSITION(TEAM(\"right\"),K(4),1,2,3,4),TEAM(\"right\").MOVETO(4,3,2).MINRANGE().WHERE(MAXDURATION(100)),POSITION(TEAM(\"left\"),K(5),9,10,11)).WHERE(STARTMIN(10),ENDMAX(740),MINDURATION(30)).COUNT()"
   },
   {
     "id": "x-counter-attack",
@@ -2014,8 +2014,8 @@
       "WHERE:global",
       "SEARCH:k"
     ],
-    "nl": "Find the first 3 times this pattern happens for less than 300 frames and it should happen 5 times or less: Team left does not have the ball, then has it, then Player 5 from team left does a pass to player 9 from the same team (smallest interval), then the ball moves from zone 4 to 3 (smallest interval), then the ball is in zone 14.",
-    "dsl": "SELECT(NOT(POSSESSION(TEAM(\"left\"))),POSSESSION(TEAM(\"left\")),PLAYER(\"p5\",5,\"left\").PASSTO(PLAYER(\"p9\",9,\"left\")).MINRANGE(),BALL().MOVETO(4,3).MINRANGE(),POSITION(BALL(),14)).WHERE(MAXDURATION(300),ATMOST(5)).SEARCH(3)"
+    "nl": "Find the first 3 times this pattern happens, lasting at most 300 frames, and only if it happens 5 times or less: Team left does not have the ball, then has it, then Player 7 from team left does a pass to player 5 from the same team (smallest interval), then the ball moves from zone 4 to 3 (smallest interval), then the ball is in zone 3.",
+    "dsl": "SELECT(NOT(POSSESSION(TEAM(\"left\"))),POSSESSION(TEAM(\"left\")),PLAYER(\"p5\",7,\"left\").PASSTO(PLAYER(\"p9\",5,\"left\")).MINRANGE(),BALL().MOVETO(4,3).MINRANGE(),POSITION(BALL(),3)).WHERE(MAXDURATION(300),ATMOST(5)).SEARCH(3)"
   },
   {
     "id": "x-two-and-steps-where",
@@ -2027,8 +2027,8 @@
       "WHERE:event:2",
       "WHERE:global"
     ],
-    "nl": "Player 1 has the ball while in zone 6 for more than 15 frames, then Player 2 has the ball while not being in zone 13 for more than 15 frames. These events should start after frame 25 be before frame 500 and last less than 150 frames. There should be more than 1 solution but less than 30.",
-    "dsl": "SELECT(AND(POSSESSION(PLAYER(\"p1\",1)),POSITION(PLAYER(\"p1\",1),6)).WHERE(MINDURATION(15)),AND(POSSESSION(PLAYER(\"p2\",2)),NOT(POSITION(PLAYER(\"p2\",2),13))).WHERE(MINDURATION(15))).WHERE(STARTMIN(25),STARTMAX(500),MAXDURATION(150),ATLEAST(1),ATMOST(30))"
+    "nl": "Player 1 has the ball while in zone 10 for at least 15 frames, then Player 2 has the ball while not being in zone 13 for at least 15 frames. This sequence should start between frame 25 and frame 500 and last at most 150 frames. There should be at least 1 and at most 30 solutions.",
+    "dsl": "SELECT(AND(POSSESSION(PLAYER(\"p1\",1)),POSITION(PLAYER(\"p1\",1),10)).WHERE(MINDURATION(15)),AND(POSSESSION(PLAYER(\"p2\",2)),NOT(POSITION(PLAYER(\"p2\",2),13))).WHERE(MINDURATION(15))).WHERE(STARTMIN(25),STARTMAX(500),MAXDURATION(150),ATLEAST(1),ATMOST(30))"
   },
   {
     "id": "x-two-teams-mirrored",
@@ -2040,8 +2040,8 @@
       "POSSESSION",
       "WHERE:global"
     ],
-    "nl": "Find the intervals when 4 or more people from the left team move from zone 4 to 3 (minimal) while the team has the ball; then 4 or more people from the right team go from zone 3 to 4 while they have the possession. This sequence should last more than 50 frames but less than 400.",
-    "dsl": "SELECT(AND(TEAM(\"left\").MOVETO(4,3,4).MINRANGE(),POSSESSION(TEAM(\"left\"))),AND(TEAM(\"right\").MOVETO(3,4,4).MINRANGE(),POSSESSION(TEAM(\"right\")))).WHERE(MINDURATION(50),MAXDURATION(400))"
+    "nl": "Find the intervals when 2 or more people from the left team move from zone 4 to 3 (minimal) while the team has the ball; then 1 or more people from the right team go from zone 3 to 4 while they have the possession. This sequence should last between 50 and 400 frames.",
+    "dsl": "SELECT(AND(TEAM(\"left\").MOVETO(4,3,2).MINRANGE(),POSSESSION(TEAM(\"left\"))),AND(TEAM(\"right\").MOVETO(3,4,1).MINRANGE(),POSSESSION(TEAM(\"right\")))).WHERE(MINDURATION(50),MAXDURATION(400))"
   },
   {
     "id": "x-custom-team-full",
@@ -2056,8 +2056,8 @@
       "WHERE:global",
       "SEARCH:first"
     ],
-    "nl": "Team t1 is composed of a random player, a player from the left team and player 1. Find the moment where the 3 players from the team move from zone 11 to 10 (minrange) in a rectangle with top left corner in (-20,20) of width 40 and height 20 while at least 2 players of the team are in zone 10. This should happen after frame 20 but before frame 700. Output only the first solution.",
-    "dsl": "SELECT(AND(TEAM(\"t1\",PLAYER(\"pwc3\"),PLAYER(\"pleft\",\"left\"),PLAYER(\"p1\",1)).MOVETO(11,10,3).MINRANGE().WHERE(RECTANGLE(-20,20,40,20)),POSITION(TEAM(\"t1\",PLAYER(\"pwc3\"),PLAYER(\"pleft\",\"left\"),PLAYER(\"p1\",1)),K(2),10))).WHERE(STARTMIN(20),ENDMAX(700)).SEARCH(\"first\")"
+    "nl": "Team t1 is composed of a random player, a player from the left team and player 1. Find the moment where 1 player from the team moves from zone 11 to 10 (minrange) in a rectangle with top left corner in (-20,-20) of width 40 and height 20 while at least 2 players of the team are in zone 10. This should start at frame 20 or later and end at frame 700 or earlier. Output only the first solution.",
+    "dsl": "SELECT(AND(TEAM(\"t1\",PLAYER(\"pwc3\"),PLAYER(\"pleft\",\"left\"),PLAYER(\"p1\",1)).MOVETO(11,10,1).MINRANGE().WHERE(RECTANGLE(-20,-20,40,20)),POSITION(TEAM(\"t1\",PLAYER(\"pwc3\"),PLAYER(\"pleft\",\"left\"),PLAYER(\"p1\",1)),K(2),10))).WHERE(STARTMIN(20),ENDMAX(700)).SEARCH(\"first\")"
   },
   {
     "id": "x-ball-tour",
@@ -2069,8 +2069,8 @@
       "WHERE:global",
       "COUNT"
     ],
-    "nl": "Count the times the ball moved to zone 1 from zone 13 for less than 50 frames, then it moves from zone 1 to 2 for a maximum of 50 frames, then from zone 2 to 3 for a max of 50 frames, then lastly it moves from there to zone 14. Every action is considered as the minimal interval during which it happens. The whole thing should be longer than 40 frames long.",
-    "dsl": "SELECT(BALL().MOVETO(13,1).MINRANGE().WHERE(MAXDURATION(50)),BALL().MOVETO(1,2).MINRANGE().WHERE(MAXDURATION(50)),BALL().MOVETO(2,3).MINRANGE().WHERE(MAXDURATION(50)),BALL().MOVETO(3,14).MINRANGE()).WHERE(MINDURATION(40)).COUNT()"
+    "nl": "Count the times the ball moved to zone 1 from zone 2 for at most 50 frames, then it moves from zone 1 to 2 for a maximum of 50 frames, then from zone 2 to 3 for a max of 50 frames, then lastly it moves from there to zone 14. Every action is considered as the minimal interval during which it happens. The whole thing should last at least 40 frames.",
+    "dsl": "SELECT(BALL().MOVETO(2,1).MINRANGE().WHERE(MAXDURATION(50)),BALL().MOVETO(1,2).MINRANGE().WHERE(MAXDURATION(50)),BALL().MOVETO(2,3).MINRANGE().WHERE(MAXDURATION(50)),BALL().MOVETO(3,14).MINRANGE()).WHERE(MINDURATION(40)).COUNT()"
   },
   {
     "id": "x-possession-duel",
@@ -2084,7 +2084,7 @@
       "WHERE:global",
       "SEARCH:k"
     ],
-    "nl": "Player seven from the left team has the ball while not being in zone 13, then either Player 3 from right team has the ball, or it is Player 4 from the right team. Then someone from the left team has the ball. The pattern should start after frame 10 and end before frame 740, and last a maximum of 200 frames. Search for 7 solutions.",
+    "nl": "Player seven from the left team has the ball while not being in zone 13, then either Player 3 from right team has the ball, or it is Player 4 from the right team. Then the left team has the ball. The pattern should start at frame 10 or later, end at frame 740 or earlier, and last a maximum of 200 frames. Search for 7 solutions.",
     "dsl": "SELECT(AND(POSSESSION(PLAYER(\"p7\",7,\"left\")),NOT(POSITION(PLAYER(\"p7\",7,\"left\"),13))),OR(POSSESSION(PLAYER(\"p3\",3,\"right\")),POSSESSION(PLAYER(\"p4\",4,\"right\"))),POSSESSION(TEAM(\"left\"))).WHERE(STARTMIN(10),ENDMAX(740),MAXDURATION(200)).SEARCH(7)"
   },
   {
@@ -2098,8 +2098,8 @@
       "identifier-reuse",
       "WHERE:global"
     ],
-    "nl": "Player seven from the left team moves from zone 6 to 7 (minimal interval) in a circle of radius 20 centered in (-20,20). After, this player passes to Player 9 from team left (minimal interval). This pass should last less than 30 frames. After, the receiver moves from zone 10 to 11 (minimal interval). The whole thing should last between 25 and 400 frames. It should also be contained into a rectangle (-62,39,125,78).",
-    "dsl": "SELECT(PLAYER(\"pw\",7,\"left\").MOVETO(6,7).MINRANGE().WHERE(RADIUS(-20,20,20)),PLAYER(\"pw\",7,\"left\").PASSTO(PLAYER(\"pt\",9,\"left\")).MINRANGE().WHERE(MAXDURATION(30)),PLAYER(\"pt\",9,\"left\").MOVETO(10,11).MINRANGE()).WHERE(MINDURATION(25),MAXDURATION(400),RECTANGLE(-62,39,125,78))"
+    "nl": "Player seven from the left team moves from zone 6 to 5 (minimal interval) in a circle of radius 20 centered in (-20,20). After, this player passes to Player 17 from team left (minimal interval). This pass should last at most 30 frames. After, the receiver moves from zone 6 to 7 (minimal interval). The whole thing should last between 25 and 400 frames. It should also be contained into a rectangle (-62,39,125,78).",
+    "dsl": "SELECT(PLAYER(\"pw\",7,\"left\").MOVETO(6,5).MINRANGE().WHERE(RADIUS(-20,20,20)),PLAYER(\"pw\",7,\"left\").PASSTO(PLAYER(\"pt\",17,\"left\")).MINRANGE().WHERE(MAXDURATION(30)),PLAYER(\"pt\",17,\"left\").MOVETO(6,7).MINRANGE()).WHERE(MINDURATION(25),MAXDURATION(400),RECTANGLE(-62,39,125,78))"
   },
   {
     "id": "x-all-constraint-kinds",
@@ -2128,8 +2128,8 @@
       "WHERE:event",
       "WHERE:global"
     ],
-    "nl": "Player 1 from left team is in zone 13 then has the ball for longer than 10 frames, then passes to player five from his team (minrange) then the ball is in any of zones 1 or 4. The whole succession should last maximum 200 frames. This should happen no more than 4 times.",
-    "dsl": "SELECT(POSITION(PLAYER(\"gk\",1,\"left\"),13),POSSESSION(PLAYER(\"gk\",1,\"left\")).WHERE(MINDURATION(10)),PLAYER(\"gk\",1,\"left\").PASSTO(PLAYER(\"pd\",5,\"left\")).MINRANGE(),POSITION(BALL(),1,4)).WHERE(MAXDURATION(200),ATMOST(4))"
+    "nl": "Player 16 from left team is in zone 4 then has the ball for at least 10 frames, then passes to player eighteen from his team (minrange) then the ball is in any of zones 1 or 4. The whole succession should last maximum 200 frames. This should happen no more than 4 times.",
+    "dsl": "SELECT(POSITION(PLAYER(\"gk\",16,\"left\"),4),POSSESSION(PLAYER(\"gk\",16,\"left\")).WHERE(MINDURATION(10)),PLAYER(\"gk\",16,\"left\").PASSTO(PLAYER(\"pd\",18,\"left\")).MINRANGE(),POSITION(BALL(),1,4)).WHERE(MAXDURATION(200),ATMOST(4))"
   },
   {
     "id": "x-triangle-with-not",
@@ -2143,8 +2143,8 @@
       "WHERE:global",
       "COUNT"
     ],
-    "nl": "Count the number of times player 8 passes to player 9 for a maximum of 25 frames, then Player 9 passes to player 10 while player 8 doesn't have the ball; then Player 10 passes back to player 8. The whole sequence should last between 20 and 250 frames. There should be at least one solution. All passes should be considered from the moment the ball leaves the foot of that passer to the moment it arrives at the foot of the receiver.",
-    "dsl": "SELECT(PLAYER(\"a\",8).PASSTO(PLAYER(\"b\",9)).MINRANGE().WHERE(MAXDURATION(25)),AND(PLAYER(\"b\",9).PASSTO(PLAYER(\"c\",10)).MINRANGE(),NOT(POSSESSION(PLAYER(\"a\",8)))),PLAYER(\"c\",10).PASSTO(PLAYER(\"a\",8)).MINRANGE()).WHERE(MINDURATION(20),MAXDURATION(250),ATLEAST(1)).COUNT()"
+    "nl": "Count the number of times player 6 passes to player 4 for a maximum of 25 frames, then Player 4 passes to player 10 while player 6 doesn't have the ball; then Player 10 passes back to player 6. The whole sequence should last between 20 and 250 frames. There should be at least one solution. All passes should be considered from the moment the ball leaves the foot of that passer to the moment it arrives at the foot of the receiver.",
+    "dsl": "SELECT(PLAYER(\"a\",6).PASSTO(PLAYER(\"b\",4)).MINRANGE().WHERE(MAXDURATION(25)),AND(PLAYER(\"b\",4).PASSTO(PLAYER(\"c\",10)).MINRANGE(),NOT(POSSESSION(PLAYER(\"a\",6)))),PLAYER(\"c\",10).PASSTO(PLAYER(\"a\",6)).MINRANGE()).WHERE(MINDURATION(20),MAXDURATION(250),ATLEAST(1)).COUNT()"
   },
   {
     "id": "x-team-shape-sequence",
@@ -2158,8 +2158,8 @@
       "WHERE:global",
       "SEARCH:first"
     ],
-    "nl": "At least 8 members of the left team are in zones 1,2,3,4 during more than 25 frames, then at least 8 members of the left team are in zones 2,3,7,10 during more than 25 frames, then at least 4 players of the left team are in zone 14 for more than 25 frames. The whole thing should last less than 600 frames. There should be at least one solution and you should only display the first.",
-    "dsl": "SELECT(POSITION(TEAM(\"left\"),K(8),1,2,3,4).WHERE(MINDURATION(25)),POSITION(TEAM(\"left\"),K(8),2,3,7,10).WHERE(MINDURATION(25)),POSITION(TEAM(\"left\"),K(4),14).WHERE(MINDURATION(25))).WHERE(MAXDURATION(600),ATLEAST(1)).SEARCH(\"first\")"
+    "nl": "At least 8 members of the left team are in zones 1,2,3,4 for at least 25 frames, then at least 8 members of the left team are in zones 2,3,7,10 for at least 25 frames, then at least 4 players of the left team are in zone 8 for at least 25 frames. The whole thing should last at most 600 frames. There should be at least one solution and you should only display the first.",
+    "dsl": "SELECT(POSITION(TEAM(\"left\"),K(8),1,2,3,4).WHERE(MINDURATION(25)),POSITION(TEAM(\"left\"),K(8),2,3,7,10).WHERE(MINDURATION(25)),POSITION(TEAM(\"left\"),K(4),8).WHERE(MINDURATION(25))).WHERE(MAXDURATION(600),ATLEAST(1)).SEARCH(\"first\")"
   },
   {
     "id": "x-wide-and-then-or",
@@ -2174,7 +2174,7 @@
       "WHERE:global",
       "SEARCH:all"
     ],
-    "nl": "Player 1 has the ball while being in zone 13 and the right team doesn't have the ball and fewer than 5 of its players are in zones 1,2,3,4. this should last more than 10 frames but less than 400 and it should be contained in a rectangle which top left corner is in (-62,39) and of width 125 and length 78. Then either the ball is in zone 13, or 14, or 5 (choose) for maximum 60 frames. The succession of both events should start after 0 and end before 750. There should be at least one solution but search for all.",
+    "nl": "Player 1 has the ball while being in zone 13 and the right team doesn't have the ball and fewer than 5 of its players are in zones 1,2,3,4. this should last between 10 and 400 frames and it should be contained in a rectangle which top left corner is in (-62,39) and of width 125 and length 78. Then the ball is in zone 13, 14 or 5, one interval per zone, for maximum 60 frames. The succession of both events should start at frame 0 or later and end at frame 750 or earlier. There should be at least one solution but search for all.",
     "dsl": "SELECT(AND(POSSESSION(PLAYER(\"p1\",1)),POSITION(PLAYER(\"p1\",1),13),NOT(POSSESSION(TEAM(\"right\"))),NOT(POSITION(TEAM(\"right\"),K(5),1,2,3,4))).WHERE(MINDURATION(10),MAXDURATION(400),RECTANGLE(-62,39,125,78)),OR(POSITION(BALL(),13),POSITION(BALL(),14),POSITION(BALL(),5)).WHERE(MAXDURATION(60))).WHERE(STARTMIN(0),ENDMAX(750),ATLEAST(1)).SEARCH(\"all\")"
   },
   {
@@ -2187,8 +2187,8 @@
       "WHERE:global",
       "COUNT"
     ],
-    "nl": "Count the number of intervals during which player 6 has the ball, then passes to player seven (minimal interval), then the receiver has the ball for 15 frames at least, then they move from zone 2 to 3. Consider the larger interval for this last one. This pattern should start no earlier than 0 and no later than 600, for a duration of maximum 350.",
-    "dsl": "SELECT(POSSESSION(PLAYER(\"p1\",6)),PLAYER(\"p1\",6).PASSTO(PLAYER(\"p2\",7)).MINRANGE(),POSSESSION(PLAYER(\"p2\",7)).WHERE(MINDURATION(15)),PLAYER(\"p2\",7).MOVETO(2,3)).WHERE(STARTMIN(0),STARTMAX(600),MAXDURATION(350)).COUNT()"
+    "nl": "Count the number of intervals during which player 3 has the ball, then passes to player five (minimal interval), then the receiver has the ball for 15 frames at least, then they move from zone 2 to 3. Consider the larger interval for this last one. This pattern should start no earlier than 0 and no later than 600, for a duration of maximum 350.",
+    "dsl": "SELECT(POSSESSION(PLAYER(\"p1\",3)),PLAYER(\"p1\",3).PASSTO(PLAYER(\"p2\",5)).MINRANGE(),POSSESSION(PLAYER(\"p2\",5)).WHERE(MINDURATION(15)),PLAYER(\"p2\",5).MOVETO(2,3)).WHERE(STARTMIN(0),STARTMAX(600),MAXDURATION(350)).COUNT()"
   },
   {
     "id": "x-everything-at-once",
@@ -2209,8 +2209,8 @@
       "WHERE:global",
       "SEARCH:k"
     ],
-    "nl": "Find the intervals during which the following pattern happens. 1) The right team does not have the possession of the ball. 2) Player 10 from left team has the possession of the ball while the ball is in any of zones 4 or 3. This should last longer than 10 frames. 3) Either player 10 of left team passes to player 11 of the same team (minrange), or player 10 of left team passes to player 9 of left team (minrange). 4) The ball moves from zone 3 to 2 (minrange) while 4 or more player of the left team move from zone 3 to 2 (minrange). This should last less than 120 frames and be no further than 50 meters of the center. 5) 3 or more players from the left teams are in zone 14 for more than 20 frames. The whole pattern should start between frame 0 and 500, end between 100 and 750, last between 50 and 600 frames, be in a rectangle whose top left corner is in (-62,39) of width 125 and height 78. There should be between 1 and 25 solutions. Search for the first 6 occurrences.",
-    "dsl": "SELECT(NOT(POSSESSION(TEAM(\"right\"))),AND(POSSESSION(PLAYER(\"p10\",10,\"left\")),POSITION(BALL(),4,3)).WHERE(MINDURATION(10)),OR(PLAYER(\"p10\",10,\"left\").PASSTO(PLAYER(\"p11\",11,\"left\")).MINRANGE(),PLAYER(\"p10\",10,\"left\").PASSTO(PLAYER(\"p9\",9,\"left\")).MINRANGE()),AND(BALL().MOVETO(3,2).MINRANGE(),TEAM(\"left\").MOVETO(3,2,4).MINRANGE()).WHERE(MAXDURATION(120),RADIUS(0,0,50)),POSITION(TEAM(\"left\"),K(3),14).WHERE(MINDURATION(20))).WHERE(STARTMIN(0),STARTMAX(500),ENDMIN(100),ENDMAX(750),MINDURATION(50),MAXDURATION(600),RECTANGLE(-62,39,125,78),ATLEAST(1),ATMOST(25)).SEARCH(6)"
+    "nl": "Find the intervals during which the following pattern happens. 1) The right team does not have the possession of the ball. 2) Player 23 from left team has the possession of the ball while the ball is in any of zones 4 or 3. This should last at least 10 frames. 3) Either player 23 of left team passes to player 24 of the same team (minrange), or player 23 of left team passes to player 9 of left team (minrange). 4) The ball moves from zone 4 to 2 (minrange) while 2 or more player of the left team move from zone 3 to 2 (minrange). This should last at most 120 frames and be no further than 50 meters of the center. 5) 3 or more players from the left teams are in zone 2 for at least 20 frames. The whole pattern should start between frame 0 and 500, end between 100 and 750, last between 50 and 600 frames, be in a rectangle whose top left corner is in (-62,39) of width 125 and height 78. There should be between 1 and 25 solutions. Search for the first 6 occurrences.",
+    "dsl": "SELECT(NOT(POSSESSION(TEAM(\"right\"))),AND(POSSESSION(PLAYER(\"p10\",23,\"left\")),POSITION(BALL(),4,3)).WHERE(MINDURATION(10)),OR(PLAYER(\"p10\",23,\"left\").PASSTO(PLAYER(\"p11\",24,\"left\")).MINRANGE(),PLAYER(\"p10\",23,\"left\").PASSTO(PLAYER(\"p9\",9,\"left\")).MINRANGE()),AND(BALL().MOVETO(4,2).MINRANGE(),TEAM(\"left\").MOVETO(3,2,2).MINRANGE()).WHERE(MAXDURATION(120),RADIUS(0,0,50)),POSITION(TEAM(\"left\"),K(3),2).WHERE(MINDURATION(20))).WHERE(STARTMIN(0),STARTMAX(500),ENDMIN(100),ENDMAX(750),MINDURATION(50),MAXDURATION(600),RECTANGLE(-62,39,125,78),ATLEAST(1),ATMOST(25)).SEARCH(6)"
   },
   {
     "id": "x-during-nested",
@@ -2226,7 +2226,7 @@
       "BALL.MOVETO",
       "MINRANGE"
     ],
-    "nl": "The left team has the possession of the ball between frame 100 and frame 500, then the ball moves from zone 4 to zone 1 (minimal interval). The whole thing should be from frame 300 to 700.",
+    "nl": "Counting only frames 300 to 700: the left team has the possession of the ball, counting only frames 100 to 500, then the ball moves from zone 4 to zone 1 (minimal interval).",
     "dsl": "SELECT(POSSESSION(TEAM(\"left\")).WHERE(DURING(100,500)),BALL().MOVETO(4,1).MINRANGE()).WHERE(DURING(300,700))"
   }
 ]

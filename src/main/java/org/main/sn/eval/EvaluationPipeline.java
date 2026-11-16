@@ -611,32 +611,44 @@ public final class EvaluationPipeline {
     }
 
     // ------------------------------------------------------------------ //
-    // Canonical signature of one match (instance + event tree + intervals + ids)
+    // Canonical signature of one match (instance + atomic events of each step)
     // ------------------------------------------------------------------ //
 
-    private static String signature(Result r) {
+    /**
+     * The instance, then, for each step of the sequence in order, the sorted signatures of the
+     * atomic events that happen in it. Groups are flattened: the interval of an AND or an OR is
+     * derived from its members, so the atomic events say everything a match shows. Hence
+     * AND(A, B) and AND(B, A), or AND(OR(a, b), c) and OR(AND(a, c), AND(b, c)), give the same
+     * signature when they report the same events. An OR branch that is not taken reports nothing.
+     */
+    static String signature(Result r) {
         StringBuilder sb = new StringBuilder(r.instance).append("||");
-        for (Result.ResultEvent e : r.events) appendEventSig(sb, e);
+        for (Result.ResultEvent step : r.events) {
+            List<String> atoms = new ArrayList<>();
+            appendAtoms(atoms, step);
+            Collections.sort(atoms);
+            sb.append('[');
+            for (String a : atoms) sb.append(a);
+            sb.append(']');
+        }
         return sb.toString();
+    }
+
+    private static void appendAtoms(List<String> atoms, Result.ResultEvent e) {
+        if (e == null) return;                                      // a branch dropped while building
+        if (e instanceof Result.GroupEvent ge) {
+            for (Result.ResultEvent c : ge.children) appendAtoms(atoms, c);
+            return;
+        }
+        if (e.interval != null && !e.interval.present) return;     // a branch not taken
+        StringBuilder sb = new StringBuilder();
+        appendEventSig(sb, e);
+        atoms.add(sb.toString());
     }
 
     private static void appendEventSig(StringBuilder sb, Result.ResultEvent e) {
         String neg = e.negated ? "!" : "";
-        if (e instanceof Result.GroupEvent ge) {
-            // AND/OR are commutative: sort the operands' signatures, otherwise AND(A,B)
-            // and AND(B,A) would compare unequal despite matching the same intervals.
-            // Top-level sequence steps (Result.events) keep their order.
-            List<String> kids = new ArrayList<>();
-            for (Result.ResultEvent c : ge.children) {
-                StringBuilder k = new StringBuilder();
-                appendEventSig(k, c);
-                kids.add(k.toString());
-            }
-            Collections.sort(kids);
-            sb.append(ge.groupKind).append('(');
-            for (String k : kids) sb.append(k);
-            sb.append(')').append(itv(e)).append(';');
-        } else if (e instanceof Result.PassEvent pe) {
+        if (e instanceof Result.PassEvent pe) {
             sb.append("PASS").append(neg).append(pe.passerId).append('>').append(pe.receiverId).append(itv(e)).append(';');
         } else if (e instanceof Result.PossessionEvent ps) {
             sb.append("POSS").append(neg).append(sorted(ps.playerIds)).append(itv(e)).append(';');
