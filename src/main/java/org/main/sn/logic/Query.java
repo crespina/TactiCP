@@ -339,8 +339,10 @@ public class Query {
      * may be groups themselves. {@code groups} are the ANDs and ORs holding the event, outermost
      * first. A member of an AND happens exactly when the AND does; exactly one branch of an OR
      * happens when the OR does. So everything under an OR branch is optional.
+     *
+     * @return the atomic events of {@code event} with their intervals, through every nested group
      */
-    private void modelEvent(Event event, List<Event> groups, CPSolver cp, AtomicInteger counterEvent, CPIntervalVar event_interval,
+    private List<Leaf> modelEvent(Event event, List<Event> groups, CPSolver cp, AtomicInteger counterEvent, CPIntervalVar event_interval,
                             int ball_idx, int n, int[][] positionZones, int[][] positionBox_x,
                             int[][] positionBox_y, boolean total_circle, ArrayList<ExtendedCPVar> extVars, ArrayList<CPIntervalVar> intervals,
                             boolean total_rectangle, AtomicInteger counterVars, int[] teams,
@@ -368,6 +370,7 @@ public class Query {
 
             CPIntVar[] childrenStarts = new CPIntVar[andEvent.children().size()];
             CPIntVar[] childrenEnds = new CPIntVar[andEvent.children().size()];
+            List<List<Leaf>> childrenLeaves = new ArrayList<>();
 
             int childIdx = 0;
 
@@ -386,11 +389,11 @@ public class Query {
                 childrenEnds[childIdx] = endOf(childInterval);
                 childrenEnds[childIdx].removeAbove(n + 1);
 
-                modelEvent(children, inner, cp, counterEvent, childInterval, ball_idx, n,
+                childrenLeaves.add(modelEvent(children, inner, cp, counterEvent, childInterval, ball_idx, n,
                         positionZones, positionBox_x, positionBox_y, total_circle, extVars, intervals, total_rectangle,
                         counterVars, teams, IDENTIFIERS, total_xcenter, possession, total_ycenter,
                         total_radius, total_xtop, total_ytop, total_w, total_h, nbZones, total_during_from,
-                        total_during_to);
+                        total_during_to));
 
                 childIdx++;
             }
@@ -399,6 +402,24 @@ public class Query {
             // every bound is the same ABSENT value
             cp.post(eq(startOf(event_interval), max(childrenStarts)));
             cp.post(eq(endOf(event_interval), minimum(childrenEnds)));
+
+            // States are cut, transitions stay whole: a pass or a move happens inside every state
+            // of the AND, so the intersection is the transition itself, never a piece of it. The
+            // rule reads the atomic events through nested groups, so that AND stays associative
+            // and distributes over OR; two events of one member are left to that member (an inner
+            // AND posts its own pairs, the branches of an OR never hold together).
+            for (int i = 0; i < childrenLeaves.size(); i++) {
+                for (int j = 0; j < childrenLeaves.size(); j++) {
+                    if (i == j) continue;
+                    for (Leaf transition : childrenLeaves.get(i)) {
+                        if (!transition.transition()) continue;
+                        for (Leaf state : childrenLeaves.get(j)) {
+                            if (!state.transition()) postInside(cp, transition.interval(), state.interval(), n);
+                        }
+                    }
+                }
+            }
+            return childrenLeaves.stream().flatMap(List::stream).toList();
 
         } else if (event instanceof OrEvent orEvent) {
 
@@ -421,6 +442,7 @@ public class Query {
 
             int childIdx = 0;
             CPBoolVar[] statuses = new CPBoolVar[orEvent.children().size()];
+            List<Leaf> leaves = new ArrayList<>();
             for (Event children : orEvent.children()) {
                 CPIntervalVar childInterval = makeOptionalInterval(cp, 0, n + 1);
                 intervals.add(childInterval);
@@ -436,11 +458,12 @@ public class Query {
                 int firstExtVar = extVars.size();
                 int firstInterval = intervals.size() - 1;
                 try {
-                    modelEvent(children, inner, cp, counterEvent, childInterval, ball_idx, n,
+                    // a dropped branch has no event left for an enclosing AND to place
+                    leaves.addAll(modelEvent(children, inner, cp, counterEvent, childInterval, ball_idx, n,
                             positionZones, positionBox_x, positionBox_y, total_circle, extVars, intervals, total_rectangle,
                             counterVars, teams, IDENTIFIERS, total_xcenter, possession, total_ycenter,
                             total_radius, total_xtop, total_ytop, total_w, total_h, nbZones, total_during_from,
-                            total_during_to);
+                            total_during_to));
                 } catch (InconsistencyException e) {
                     extVars.subList(firstExtVar, extVars.size()).clear();
                     extVars.add(new ExtendedCPVar(childInterval, counterVars.incrementAndGet(), "ABSENT_BRANCH", firstEvent, false));
@@ -462,13 +485,40 @@ public class Query {
                 cp.post(eq(startOf(event_interval), minimum(childrenStarts)));
                 cp.post(eq(endOf(event_interval), max(childrenEnds)));
             }
+            return leaves;
 
         } else {
             executeStep(event, groups, cp, counterEvent, event_interval, ball_idx, n,
                     positionZones, positionBox_x, positionBox_y, total_circle, extVars, intervals, total_rectangle,
                     counterVars, teams, IDENTIFIERS, total_xcenter, possession, total_ycenter,
                     total_radius, total_xtop, total_ytop, total_w, total_h, nbZones, total_during_from, total_during_to);
+            return List.of(new Leaf(event_interval, isTransition(event)));
         }
+    }
+
+    /** An atomic event of a group, on its interval: a transition (a pass or a move) or a state. */
+    private record Leaf(CPIntervalVar interval, boolean transition) {}
+
+    private static boolean isTransition(Event event) {
+        String name = event.action().name;
+        return name.equals("PASS_TO") || name.endsWith("_MOVE_TO");
+    }
+
+    /**
+     * Posts {@code transition} inside {@code state}: start(state) <= start(transition) and
+     * end(transition) <= end(state). Either may be an optional interval; an absent one reads as
+     * a bound that every interval of the game satisfies (0 or n + 1), so the pair only constrains
+     * the solutions in which both happen.
+     */
+    private void postInside(CPSolver cp, CPIntervalVar transition, CPIntervalVar state, int n) {
+        boolean transitionMayBeAbsent = mayBeAbsent.contains(transition);
+        boolean stateMayBeAbsent = mayBeAbsent.contains(state);
+        CPIntVar stateStart = stateMayBeAbsent ? startOr(state, 0) : start(state);
+        CPIntVar stateEnd = stateMayBeAbsent ? endOr(state, n + 1) : end(state);
+        CPIntVar transitionStart = transitionMayBeAbsent ? startOr(transition, n + 1) : start(transition);
+        CPIntVar transitionEnd = transitionMayBeAbsent ? endOr(transition, 0) : end(transition);
+        cp.post(le(stateStart, transitionStart));
+        cp.post(le(transitionEnd, stateEnd));
     }
 
     /** {@code groups} followed by {@code group}. */
