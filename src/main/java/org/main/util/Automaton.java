@@ -60,80 +60,6 @@ public class Automaton {
         return new Automaton(0, List.of(accept), res);
     }
 
-    //inverse
-    public static Automaton NOT_contains_A_0STAR_B(int nPlayers, Set<Integer> As, Set<Integer> Bs) {
-        // inputs: 0..nPlayers (0 is zero-token), states as described in explanation
-        for (int x : As) {
-            if (x < 1 || x > nPlayers) throw new IllegalArgumentException("As contains out-of-range value: " + x);
-        }
-        for (int x : Bs) {
-            if (x < 1 || x > nPlayers) throw new IllegalArgumentException("Bs contains out-of-range value: " + x);
-        }
-
-        int inputs = nPlayers + 1;
-        int start = 0;
-        int seen = nPlayers + 1;      // we have consumed >=1 token and are not inside an A...0* run
-        int found = nPlayers + 2;     // trap state: forbidden substring was observed
-        int states = nPlayers + 3;
-
-        int[][] res = new int[states][inputs];
-        for (int i = 0; i < states; i++) {
-            Arrays.fill(res[i], -1);
-        }
-
-        // --- transitions from start (no token consumed yet) ---
-        // on 0 -> seen (consumed a token, no A started)
-        res[start][0] = seen;
-        // on non-zero x:
-        for (int x = 1; x <= nPlayers; x++) {
-            if (As.contains(x)) {
-                // start potential A = x
-                res[start][x] = x;        // state x means "we saw A = x (and possibly zeros later)"
-            } else {
-                res[start][x] = seen;     // generic seen state
-            }
-        }
-
-        // --- transitions for the "seen" state (we have consumed >=1, no active A-run) ---
-        res[seen][0] = seen; // zeros keep us in seen
-        for (int x = 1; x <= nPlayers; x++) {
-            if (As.contains(x)) {
-                res[seen][x] = x;    // a new A starts
-            } else {
-                res[seen][x] = seen; // stay in seen
-            }
-        }
-
-        // --- transitions for states a = 1..nPlayers (these are "we saw A=a and maybe zeros") ---
-        for (int a = 1; a <= nPlayers; a++) {
-            // if 'a' is not actually an A, this state will be unreachable but harmless.
-            // on 0 -> remain in the same a-state (A 0* ...)
-            res[a][0] = a;
-
-            for (int x = 1; x <= nPlayers; x++) {
-                // If x is a B and x != a -> forbidden pattern A ... B found => go to trap
-                if (Bs.contains(x) && x != a) {
-                    res[a][x] = found;
-                } else if (As.contains(x)) {
-                    // start a new A = x (note: B-check took precedence above)
-                    res[a][x] = x;
-                } else {
-                    // neither B (that would complete) nor an A -> fall back to 'seen'
-                    res[a][x] = seen;
-                }
-            }
-        }
-
-        // --- trap state loops to itself on any input ---
-        for (int x = 0; x < inputs; x++) res[found][x] = found;
-
-        // --- accepting states: all states except start and found (ensures empty string rejected) ---
-        List<Integer> accepting = new ArrayList<>();
-        for (int i = 1; i < found; i++) accepting.add(i); // 1 .. nPlayers and 'seen'
-
-        return new Automaton(start, accepting, res);
-    }
-
     //minimal pass
     public static Automaton A_0STAR_B(int nPlayers, Set<Integer> As, Set<Integer> Bs) {
         //n is the number of possible inputs excluding 0 (i.e. the number of players)
@@ -172,6 +98,55 @@ public class Automaton {
             for (int b = 1; b <= nPlayers; b++) {
                 if (Bs.contains(b) && b != a) {
                     res[a][b] = accept;
+                }
+            }
+        }
+
+        return new Automaton(0, List.of(accept), res);
+    }
+
+    // A 0+ B  (one or more zeros required between A and B)
+    public static Automaton A_0PLUS_B(int nPlayers, Set<Integer> As, Set<Integer> Bs) {
+        for (int x : As) {
+            if (x < 1 || x > nPlayers) throw new IllegalArgumentException("As contains out-of-range value: " + x);
+        }
+        for (int x : Bs) {
+            if (x < 1 || x > nPlayers) throw new IllegalArgumentException("Bs contains out-of-range value: " + x);
+        }
+
+        int inputs = nPlayers + 1;
+        // States:
+        //   0               → start
+        //   1..nPlayers     → read A=a, no zeros seen yet  (layer 1)
+        //   nPlayers+1..2*nPlayers → read A=a, ≥1 zero seen (layer 2)
+        //   2*nPlayers+1    → accept
+        int states = 2 * nPlayers + 2;
+        int accept = 2 * nPlayers + 1;
+
+        int[][] res = new int[states][inputs];
+        for (int i = 0; i < states; i++) Arrays.fill(res[i], -1);
+
+        // From start: only valid A symbols
+        for (int a = 1; a <= nPlayers; a++) {
+            if (As.contains(a)) {
+                res[0][a] = a; // → layer-1 state for 'a'
+            }
+        }
+
+        for (int a = 1; a <= nPlayers; a++) {
+            if (!As.contains(a)) continue;
+
+            int layer1 = a;               // waiting for first 0
+            int layer2 = nPlayers + a;    // ≥1 zero seen
+
+            // Layer 1: only 0 advances us; anything else is a dead end
+            res[layer1][0] = layer2;
+
+            // Layer 2: 0 loops; valid B (≠ a) goes to accept
+            res[layer2][0] = layer2;
+            for (int b = 1; b <= nPlayers; b++) {
+                if (Bs.contains(b) && b != a) {
+                    res[layer2][b] = accept;
                 }
             }
         }
@@ -229,13 +204,13 @@ public class Automaton {
         // from start: only A can begin
         res[start][A] = 1;
 
-        // not b : loop
+        // not a, not b : loop, including 0 (not detected), as in PAD_APLUS_NOTABSTAR_BPLUS_PAD
         // b : accept
-        // 0 or S : invalid
+        // a : invalid
         for (int i = 0; i <= nPlayers; i++) {
             if (i == B) {
                 res[1][i] = accept;
-            } else if (i != A && i != 0) { //loop
+            } else if (i != A) { //loop
                 res[1][i] = 1;
             }
         }
@@ -279,7 +254,7 @@ public class Automaton {
         return new Automaton(0, List.of(accept), res);
     }
 
-    public static Automaton PAD_APLUS_PADSTAR_BPLUS_PAD(int nPlayers, int A, int B) {
+    public static Automaton PAD_APLUS_NOTABSTAR_BPLUS_PAD(int nPlayers, int A, int B) {
         int inputs = nPlayers + 1; // symbols 0...nPlayers
         int states = 6;
         int[][] res = new int[states][inputs];
@@ -317,7 +292,7 @@ public class Automaton {
         return new Automaton(start, List.of(accept), res);
     }
 
-    public static Automaton PAD_APLUS_PADSTAR_BPLUS_PAD(int nPlayers, Set<Integer> As, Set<Integer> Bs) {
+    public static Automaton PAD_APLUS_NOTABSTAR_BPLUS_PAD(int nPlayers, Set<Integer> As, Set<Integer> Bs) {
         int inputs = nPlayers + 1; // symbols 0...nPlayers
         int states = 6;
         int[][] res = new int[states][inputs];
@@ -352,6 +327,114 @@ public class Automaton {
         for (int x = 0; x <= nPlayers; x++) {
             if (Bs.contains(x)) res[Bstate][x] = Bstate;
             else                res[Bstate][x] = accept;
+        }
+
+        return new Automaton(start, List.of(accept), res);
+    }
+
+    public static Automaton PAD_APLUS_PADPLUS_BPLUS_PAD(int nPlayers, Set<Integer> As, Set<Integer> Bs) {
+        int inputs = nPlayers + 1;
+        int states = 6;
+        int[][] res = new int[states][inputs];
+        for (int i = 0; i < states; i++) Arrays.fill(res[i], -1);
+
+        int start = 0, afterLead = 1, Astate = 2, midPad = 3, Bstate = 4, accept = 5;
+
+        // from start: any not in As (including 0) -> afterLead
+        for (int x = 0; x <= nPlayers; x++) {
+            if (!As.contains(x)) res[start][x] = afterLead;
+        }
+
+        // afterLead: must see any A in As to begin A+
+        for (int x = 0; x <= nPlayers; x++) {
+            if (As.contains(x)) res[afterLead][x] = Astate;
+        }
+
+        // Astate: A -> stay; not-A and not-B -> midPad; B -> INVALID (-1)
+        // (B is no longer a direct transition — at least one PAD is now required)
+        for (int x = 0; x <= nPlayers; x++) {
+            if (As.contains(x))                            res[Astate][x] = Astate;
+            else if (!Bs.contains(x))                      res[Astate][x] = midPad;
+            // Bs.contains(x): stays -1 — must go through midPad first
+        }
+
+        // midPad: loop on not-A not-B; on any B -> Bstate; A is invalid
+        for (int x = 0; x <= nPlayers; x++) {
+            if (Bs.contains(x))                              res[midPad][x] = Bstate;
+            else if (!As.contains(x) && !Bs.contains(x))    res[midPad][x] = midPad;
+        }
+
+        // Bstate: any B -> stay; not-B -> accept
+        for (int x = 0; x <= nPlayers; x++) {
+            if (Bs.contains(x)) res[Bstate][x] = Bstate;
+            else                res[Bstate][x] = accept;
+        }
+
+        return new Automaton(start, List.of(accept), res);
+    }
+
+    //extended pass, one single passer and one single receiver
+    public static Automaton PAD_APLUS_0PLUS_BPLUS_PAD(int nPlayers, Set<Integer> As, Set<Integer> Bs) {
+        for (int x : As) {
+            if (x < 1 || x > nPlayers) throw new IllegalArgumentException("As contains out-of-range value: " + x);
+        }
+        for (int x : Bs) {
+            if (x < 1 || x > nPlayers) throw new IllegalArgumentException("Bs contains out-of-range value: " + x);
+        }
+
+        int inputs = nPlayers + 1;
+        // States:
+        //   0                          → start (reads the leading delimiter)
+        //   1                          → the delimiter is outside As: any passer may follow
+        //   1+d                        → the delimiter is d in As: the passer is another player
+        //   1+nPlayers+a               → A+ : passer 'a' holds the ball
+        //   1+2*nPlayers+a             → 0+ : ball in flight, passer was 'a'
+        //   1+3*nPlayers+b             → B+ : receiver 'b' holds the ball
+        //   4*nPlayers+2               → accept (the trailing delimiter)
+        // Unlike PAD_APLUS_PADPLUS_BPLUS_PAD the states remember *which* player, so
+        // the A+ and B+ blocks cannot absorb a run of several different players, and
+        // the middle block is strictly ball-free instead of "any symbol outside As ∪ Bs".
+        // The delimiter only has to differ from the passer: a passer who got the ball
+        // straight from another member of As still starts a maximal A+ block.
+        int states = 4 * nPlayers + 3;
+        int start = 0, afterOther = 1, accept = states - 1;
+
+        int[][] res = new int[states][inputs];
+        for (int i = 0; i < states; i++) Arrays.fill(res[i], -1);
+
+        // from start: any symbol is the leading delimiter; remember it when it is in As
+        for (int x = 0; x <= nPlayers; x++) {
+            res[start][x] = As.contains(x) ? 1 + x : afterOther;
+        }
+
+        // the passer takes the ball: any member of As, but not the delimiter itself
+        for (int a : As) {
+            res[afterOther][a] = 1 + nPlayers + a;
+            for (int d : As) {
+                if (d != a) res[1 + d][a] = 1 + nPlayers + a;
+            }
+        }
+
+        // A+ : only the same passer keeps the ball; 0 opens the flight
+        // (any other player stays -1: the ball changed hands, this is not that pass)
+        for (int a : As) {
+            res[1 + nPlayers + a][a] = 1 + nPlayers + a;
+            res[1 + nPlayers + a][0] = 1 + 2 * nPlayers + a;
+        }
+
+        // 0+ : ball-free frames loop; a receiver != a ends the flight
+        for (int a : As) {
+            res[1 + 2 * nPlayers + a][0] = 1 + 2 * nPlayers + a;
+            for (int b : Bs) {
+                if (b != a) res[1 + 2 * nPlayers + a][b] = 1 + 3 * nPlayers + b;
+            }
+        }
+
+        // B+ : only the same receiver keeps the ball; anything else is the trailing delimiter
+        for (int b : Bs) {
+            for (int x = 0; x <= nPlayers; x++) {
+                res[1 + 3 * nPlayers + b][x] = (x == b) ? 1 + 3 * nPlayers + b : accept;
+            }
         }
 
         return new Automaton(start, List.of(accept), res);
@@ -608,57 +691,6 @@ public class Automaton {
         return new Automaton(0, acceptingStates, res);
     }
 
-//    public static Automaton NOTA_APLUS_NOTA(int nPlayers, Set<Integer> As) {
-//
-//        int inputs = nPlayers + 1; // symbols 0..nPlayers
-//        int states = nPlayers + 3;
-//        int[][] res = new int[states][inputs];
-//        for (int i = 0; i < states; i++) Arrays.fill(res[i], -1);
-//
-//        int start = 0;
-//        int preA = nPlayers + 1;
-//        int post = nPlayers + 2;
-//
-//        // from start: any notA (including 0) → preA
-//        for (int x = 0; x <= nPlayers; x++) {
-//            if (!As.contains(x)) {
-//                res[start][x] = preA;
-//            }
-//        }
-//
-//        // from preA: first A of the A+ block
-//        for (int a : As) {
-//            if (a >= 1 && a <= nPlayers) {
-//                res[preA][a] = a;
-//            }
-//        }
-//
-//        // A+ part
-//        for (int a : As) {
-//            if (a >= 1 && a <= nPlayers) {
-//
-//                // Allow transitioning to any valid A (including itself)
-//                for (int otherA : As) {
-//                    if (otherA >= 1 && otherA <= nPlayers) {
-//                        res[a][otherA] = otherA;
-//                    }
-//                }
-//
-//                // Any non-A symbol ends the A+ block
-//                for (int x = 0; x <= nPlayers; x++) {
-//                    if (!As.contains(x)) {
-//                        res[a][x] = post; // trailing notA (including 0)
-//                    }
-//                }
-//            }
-//        }
-//
-//        List<Integer> acceptingStates = new ArrayList<>();
-//        acceptingStates.add(post);
-//
-//        return new Automaton(start, acceptingStates, res);
-//    }
-
     public static Automaton NOTA_APLUS_NOTA(int nPlayers, Set<Integer> As) {
 
         int inputs = nPlayers + 1;
@@ -687,6 +719,57 @@ public class Automaton {
         // post: accept, no further transitions
 
         return new Automaton(start, List.of(post), res);
+    }
+
+    /**
+     * (notx) x+ (notx) for some x in As: one maximal run of a single member of As, with exactly
+     * one delimiter on each side. Unlike NOTA_APLUS_NOTA(nPlayers, As), the run ends as soon as
+     * the symbol changes, even to another member of As, so it never spans two players.
+     */
+    public static Automaton NOTX_XPLUS_NOTX(int nPlayers, Set<Integer> As) {
+        for (int x : As) {
+            if (x < 0 || x > nPlayers) throw new IllegalArgumentException("As contains out-of-range value: " + x);
+        }
+        // a single member can only be followed by a non-member: the same language, with fewer states
+        if (As.size() <= 1) return NOTA_APLUS_NOTA(nPlayers, As);
+
+        int inputs = nPlayers + 1;
+        int k = As.size();
+        int[] members = As.stream().mapToInt(Integer::intValue).sorted().toArray();
+        int[] index = new int[inputs]; // symbol -> position in members, -1 outside As
+        Arrays.fill(index, -1);
+        for (int i = 0; i < k; i++) index[members[i]] = i;
+
+        // States:
+        //   0          → start
+        //   1          → read a leading delimiter outside As: the run may be of any member
+        //   2 + i      → read members[i] as leading delimiter: the run must be of another member
+        //   2 + k + i  → inside the run of members[i]
+        //   2 + 2k     → accept (read the trailing delimiter)
+        int states = 2 * k + 3;
+        int start = 0, afterOther = 1, accept = states - 1;
+        int[][] res = new int[states][inputs];
+        for (int i = 0; i < states; i++) Arrays.fill(res[i], -1);
+
+        // start: any symbol is the leading delimiter; remember it when it is a member
+        for (int x = 0; x <= nPlayers; x++) {
+            res[start][x] = index[x] < 0 ? afterOther : 2 + index[x];
+        }
+
+        for (int i = 0; i < k; i++) {
+            int inRun = 2 + k + i;
+            // the run of members[i] starts after any delimiter but members[i] itself
+            res[afterOther][members[i]] = inRun;
+            for (int d = 0; d < k; d++) {
+                if (d != i) res[2 + d][members[i]] = inRun;
+            }
+            // members[i] extends the run; any other symbol is the trailing delimiter
+            for (int x = 0; x <= nPlayers; x++) {
+                res[inRun][x] = (x == members[i]) ? inRun : accept;
+            }
+        }
+
+        return new Automaton(start, List.of(accept), res);
     }
 
     public static Automaton AS_PLUS(int nPlayers, Set<Integer> As) {

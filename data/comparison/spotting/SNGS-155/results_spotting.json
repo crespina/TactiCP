@@ -1,0 +1,68 @@
+{
+    "UrlLocal": "SNGS-155",
+    "predictions": [
+        {
+            "gameTime": "1 - 00:03",
+            "label": "PASS",
+            "position": "3040",
+            "half": "1",
+            "confidence": "0.8214019536972046"
+        },
+        {
+            "gameTime": "1 - 00:04",
+            "label": "PASS",
+            "position": "4000",
+            "half": "1",
+            "confidence": "0.6592496037483215"
+        },
+        {
+            "gameTime": "1 - 00:06",
+            "label": "DRIVE",
+            "position": "6920",
+            "half": "1",
+            "confidence": "0.6615925431251526"
+        },
+        {
+            "gameTime": "1 - 00:08",
+            "label": "PASS",
+            "position": "8400",
+            "half": "1",
+            "confidence": "0.897405207157135"
+        },
+        {
+            "gameTime": "1 - 00:09",
+            "label": "DRIVE",
+            "position": "9800",
+            "half": "1",
+            "confidence": "0.861467182636261"
+        },
+        {
+            "gameTime": "1 - 00:10",
+            "label": "PASS",
+            "position": "10840",
+            "half": "1",
+            "confidence": "0.8907301425933838"
+        },
+        {
+            "gameTime": "1 - 00:11",
+            "label": "DRIVE",
+            "position": "11640",
+            "half": "1",
+            "confidence": "0.3203524351119995"
+        },
+        {
+            "gameTime": "1 - 00:13",
+            "label": "PASS",
+            "position": "13720",
+            "half": "1",
+            "confidence": "0.7535215020179749"
+        },
+        {
+            "gameTime": "1 - 00:15",
+            "label": "PASS",
+            "position": "15560",
+            "half": "1",
+            "confidence": "0.4806395471096039"
+        }
+    ]
+}

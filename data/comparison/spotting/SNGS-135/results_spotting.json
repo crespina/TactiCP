@@ -1,0 +1,75 @@
+{
+    "UrlLocal": "SNGS-135",
+    "predictions": [
+        {
+            "gameTime": "1 - 00:06",
+            "label": "PASS",
+            "position": "6800",
+            "half": "1",
+            "confidence": "0.6258484721183777"
+        },
+        {
+            "gameTime": "1 - 00:08",
+            "label": "PASS",
+            "position": "8320",
+            "half": "1",
+            "confidence": "0.3548632860183716"
+        },
+        {
+            "gameTime": "1 - 00:10",
+            "label": "DRIVE",
+            "position": "10240",
+            "half": "1",
+            "confidence": "0.3643687963485718"
+        },
+        {
+            "gameTime": "1 - 00:17",
+            "label": "DRIVE",
+            "position": "17560",
+            "half": "1",
+            "confidence": "0.225871279835701"
+        },
+        {
+            "gameTime": "1 - 00:18",
+            "label": "PASS",
+            "position": "18840",
+            "half": "1",
+            "confidence": "0.8308727145195007"
+        },
+        {
+            "gameTime": "1 - 00:22",
+            "label": "PASS",
+            "position": "22200",
+            "half": "1",
+            "confidence": "0.8450853228569031"
+        },
+        {
+            "gameTime": "1 - 00:23",
+            "label": "DRIVE",
+            "position": "23120",
+            "half": "1",
+            "confidence": "0.2944152355194092"
+        },
+        {
+            "gameTime": "1 - 00:23",
+            "label": "PASS",
+            "position": "23840",
+            "half": "1",
+            "confidence": "0.7416648268699646"
+        },
+        {
+            "gameTime": "1 - 00:24",
+            "label": "DRIVE",
+            "position": "24680",
+            "half": "1",
+            "confidence": "0.8080590963363647"
+        },
+        {
+            "gameTime": "1 - 00:26",
+            "label": "PASS",
+            "position": "26000",
+            "half": "1",
+            "confidence": "0.9486706852912903"
+        }
+    ]
+}

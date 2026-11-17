@@ -1,0 +1,26 @@
+{
+    "UrlLocal": "SNGS-030",
+    "predictions": [
+        {
+            "gameTime": "1 - 00:06",
+            "label": "PASS",
+            "position": "6560",
+            "half": "1",
+            "confidence": "0.8030925393104553"
+        },
+        {
+            "gameTime": "1 - 00:07",
+            "label": "DRIVE",
+            "position": "7360",
+            "half": "1",
+            "confidence": "0.32009536027908325"
+        },
+        {
+            "gameTime": "1 - 00:08",
+            "label": "PASS",
+            "position": "8160",
+            "half": "1",
+            "confidence": "0.44498980045318604"
+        }
+    ]
+}

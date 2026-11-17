@@ -55,8 +55,8 @@ public class GameStateReconstructionInstance implements Instance {
             Position pos = new Position(bp.x, -bp.y, bi.x_center, bi.y_center, bi.w, bi.h); //we inverse the y axis here
 
             if (ann.categoryId != null && (ann.categoryId == 1 || ann.categoryId == 2 || ann.categoryId == 4)) {
-                if (ann.trackId != null) {
-                    int pid = ann.trackId;
+                if (ann.entityId != null) {
+                    int pid = ann.entityId;
                     if (ann.categoryId == 2) { // Goalkeepers
                         if (Objects.equals(ann.attributes.team, "left")){
                             GK_ids[0] = pid;
@@ -64,7 +64,6 @@ public class GameStateReconstructionInstance implements Instance {
                             GK_ids[1] = pid;
                         }
                     }
-                    if (pid > maxPlayerId) maxPlayerId = pid;
                     String team = (ann.attributes.team != null) ? ann.attributes.team : "ball";
                     if (!tmpTeams.containsKey(pid)) {
                         switch (team) {
@@ -81,6 +80,9 @@ public class GameStateReconstructionInstance implements Instance {
                             }
                         }
                     }
+                    // count the id only once it is final: a duplicate ball track is remapped
+                    // onto ball_idx above and never stored, so it must not grow the teams array
+                    if (pid > maxPlayerId) maxPlayerId = pid;
                     frame.players.put(
                             pid,
                             new PlayerInfo(pid, team, pos)
@@ -181,7 +183,7 @@ public class GameStateReconstructionInstance implements Instance {
         @JsonProperty("image_id")
         public String imageId; //frame num
         @JsonProperty("track_id")
-        public Integer trackId; //id to track the players
+        public Integer entityId; // the ID of the player or ball, the same in every frame of the clip
         @JsonProperty("category_id")
         public Integer categoryId; //1 = players, 2 = GK, 3 = referee, 4 = ball
         public Attributes attributes;
@@ -219,7 +221,7 @@ public class GameStateReconstructionInstance implements Instance {
     public record Position(double x, double y, double x_center, double y_center, double w, double h) {
     }
 
-    public record PlayerInfo(int trackId, String team, Position pos) {
+    public record PlayerInfo(int id, String team, Position pos) {
     }
 
     public static class FrameData {

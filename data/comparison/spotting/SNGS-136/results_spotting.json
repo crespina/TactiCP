@@ -1,0 +1,75 @@
+{
+    "UrlLocal": "SNGS-136",
+    "predictions": [
+        {
+            "gameTime": "1 - 00:06",
+            "label": "PASS",
+            "position": "6760",
+            "half": "1",
+            "confidence": "0.23326867818832397"
+        },
+        {
+            "gameTime": "1 - 00:07",
+            "label": "DRIVE",
+            "position": "7000",
+            "half": "1",
+            "confidence": "0.4278142750263214"
+        },
+        {
+            "gameTime": "1 - 00:07",
+            "label": "PASS",
+            "position": "7840",
+            "half": "1",
+            "confidence": "0.5093626379966736"
+        },
+        {
+            "gameTime": "1 - 00:08",
+            "label": "DRIVE",
+            "position": "8400",
+            "half": "1",
+            "confidence": "0.48998111486434937"
+        },
+        {
+            "gameTime": "1 - 00:09",
+            "label": "PASS",
+            "position": "9920",
+            "half": "1",
+            "confidence": "0.7948673367500305"
+        },
+        {
+            "gameTime": "1 - 00:11",
+            "label": "DRIVE",
+            "position": "11560",
+            "half": "1",
+            "confidence": "0.6308754682540894"
+        },
+        {
+            "gameTime": "1 - 00:13",
+            "label": "DRIVE",
+            "position": "13000",
+            "half": "1",
+            "confidence": "0.3444303870201111"
+        },
+        {
+            "gameTime": "1 - 00:14",
+            "label": "PASS",
+            "position": "14320",
+            "half": "1",
+            "confidence": "0.8262601494789124"
+        },
+        {
+            "gameTime": "1 - 00:15",
+            "label": "DRIVE",
+            "position": "15160",
+            "half": "1",
+            "confidence": "0.22209039330482483"
+        },
+        {
+            "gameTime": "1 - 00:15",
+            "label": "PASS",
+            "position": "15560",
+            "half": "1",
+            "confidence": "0.22013691067695618"
+        }
+    ]
+}

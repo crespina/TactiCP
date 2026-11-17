@@ -9,11 +9,6 @@ public class OrEvent extends Event {
     public OrEvent(Event... events) {
         super(null,null);
         this.children = Arrays.asList(events);
-        if (this.isNegated){
-            for (Event e : children) {
-                e.isNegated = !e.isNegated;
-            }
-        }
     }
 
     public List<Event> children() {

@@ -35,5 +35,21 @@ build/
 ### Mac OS ###
 .DS_Store
 
+### Environment / secrets ###
+.env
+
 ### Data ###
-#data/SoccerNet/*
+data/SoccerNet/*
+### Python ###
+__pycache__/
+*.pyc
+
+### Build and run outputs ###
+dependency-reduced-pom.xml
+claude_shim_log.jsonl
+out/
+
+### Local scripts, kept out of the repository ###
+src/main/python/possession.py
+src/main/python/trackingVisualizer.py
+src/main/python/gsrVisualizer.py

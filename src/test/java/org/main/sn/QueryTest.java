@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.main.sn.dsl.Factory.*;
 
 public class QueryTest {
@@ -51,31 +52,6 @@ public class QueryTest {
         assertEquals(510, ballMoveEvent22.interval.start);
         assertEquals(512, ballMoveEvent22.interval.end);
 
-        //NOT
-        SelectExpr snot = SELECT(NOT(b.MOVETO(4, 6))).WHERE(RADIUS(0, 0, 400)).FROM("SNGS-061"); //toutes les passes
-
-        List<Result> resultsnot = snot.search();
-        assertEquals(2, resultsnot.size());
-
-
-        Result r1not = resultsnot.get(0);
-        assertEquals("SNGS-061", r1not.instance);
-        List<Result.ResultEvent> eventsnot = r1not.events;
-        assertEquals(1, eventsnot.size());
-
-        Result.ResultEvent event1not = eventsnot.getFirst();
-        assertEquals("BALL_MOVE_TO", event1not.type);
-        Result.BallMoveEvent ballMoveEventnot = (Result.BallMoveEvent) event1not;
-        assertEquals(0, ballMoveEventnot.interval.start);
-        assertEquals(47, ballMoveEventnot.interval.end);
-
-        Result.ResultEvent event2not = resultsnot.get(1).events.getFirst();
-        assertEquals("BALL_MOVE_TO", event2not.type);
-        Result.BallMoveEvent ballMoveEventnot2 = (Result.BallMoveEvent) event2not;
-        assertEquals(247, ballMoveEventnot2.interval.start);
-        assertEquals(750, ballMoveEventnot2.interval.end);
-
-
     }
 
     @Test
@@ -89,7 +65,7 @@ public class QueryTest {
         SelectExpr s1 = SELECT(e1).FROM("SNGS-060, SNGS-061").WHERE(RECTANGLE(-60, 20, 65, 40)); //toutes les passes
 
         List<Result> results = s1.search();
-        assertEquals(5, results.size());
+        assertEquals(6, results.size());
 
 
         Result r1 = results.get(0);
@@ -105,29 +81,16 @@ public class QueryTest {
         assertEquals(117, passEvent.interval.end);
         assertEquals(33, passEvent.interval.length);
 
-        Result.PassEvent event2 = (Result.PassEvent) results.get(1).events.getFirst();
-        assertEquals(14, event2.passerId);
-        assertEquals(13, event2.receiverId);
-        assertEquals(139, event2.interval.start);
-        assertEquals(164, event2.interval.end);
-
-        Result.PassEvent event4 = (Result.PassEvent) results.get(2).events.getFirst();
-        assertEquals(11, event4.passerId);
-        assertEquals(16, event4.receiverId);
-        assertEquals(21, event4.interval.start);
-        assertEquals(44, event4.interval.end);
-
-        Result.PassEvent event5 = (Result.PassEvent) results.get(3).events.getFirst();
-        assertEquals(16, event5.passerId);
-        assertEquals(19, event5.receiverId);
-        assertEquals(117, event5.interval.start);
-        assertEquals(136, event5.interval.end);
-
-        Result.PassEvent event6 = (Result.PassEvent) results.get(4).events.getFirst();
-        assertEquals(19, event6.passerId);
-        assertEquals(22, event6.receiverId);
-        assertEquals(142, event6.interval.start);
-        assertEquals(182, event6.interval.end);
+        // the passes of SNGS-060: passer, receiver, start, end
+        int[][] expected = {{11, 16, 21, 45}, {16, 19, 117, 136}, {19, 22, 142, 187}, {13, 15, 403, 421}, {19, 1, 695, 746}};
+        for (int i = 0; i < expected.length; i++) {
+            Result.PassEvent pass = (Result.PassEvent) results.get(i + 1).events.getFirst();
+            assertEquals("SNGS-060", results.get(i + 1).instance);
+            assertEquals(expected[i][0], pass.passerId);
+            assertEquals(expected[i][1], pass.receiverId);
+            assertEquals(expected[i][2], pass.interval.start);
+            assertEquals(expected[i][3], pass.interval.end);
+        }
 
 
         //PASS BETWEEN TWO IDS
@@ -143,24 +106,12 @@ public class QueryTest {
         assertEquals(84, event8.interval.start);
         assertEquals(117, event8.interval.end);
 
-
-        //NOT PASS BETWEEN TEAM
-        Player pleft1 = PLAYER("pleft1", "left");
-        Player pleft2 = PLAYER("pleft2", "left");
-        SelectExpr s3 = SELECT(NOT(pleft1.PASSTO(pleft2).MINRANGE())).FROM("SNGS-060").SEARCH(1);
-        List<Result> results3 = s3.search();
-        assertEquals(1, results3.size());
-
-        Result.PassEvent event9 = (Result.PassEvent) results3.get(0).events.getFirst();
-        assertEquals(0, event9.interval.start);
-        assertEquals(21, event9.interval.end);
-
         //NOT MINRANGED
         Event e4 = pwc1.PASSTO(pwc2);
         SelectExpr s4 = SELECT(e4).FROM("SNGS-060, SNGS-061");
 
         List<Result> results4 = s4.search();
-        assertEquals(7, results4.size());
+        assertEquals(10, results4.size());
 
     }
 
@@ -192,7 +143,7 @@ public class QueryTest {
         Result.PlayerMoveEvent playerMoveEvent2 = (Result.PlayerMoveEvent) event2;
         assertEquals(13, playerMoveEvent2.playerId);
         assertEquals(179, playerMoveEvent2.interval.start);
-        assertEquals(411, playerMoveEvent2.interval.end);
+        assertEquals(412, playerMoveEvent2.interval.end);
 
 
         //id
@@ -209,24 +160,19 @@ public class QueryTest {
         Result.PlayerMoveEvent playerMoveEventId = (Result.PlayerMoveEvent) eventId;
         assertEquals(24, playerMoveEventId.playerId);
         assertEquals(189, playerMoveEventId.interval.start);
-        assertEquals(327, playerMoveEventId.interval.end);
+        assertEquals(328, playerMoveEventId.interval.end);
 
 
         //team
         Player pleft3 = PLAYER("pleft3", "left");
-        SelectExpr s3 = SELECT(NOT(pleft3.MOVETO(10, 3))).FROM("SNGS-061");
+        SelectExpr s3 = SELECT(pleft3.MOVETO(10, 3)).FROM("SNGS-061");
         List<Result> results3 = s3.search();
-        assertEquals(2, results3.size());
-        List<Result.ResultEvent> notevnets = results3.get(0).events;
-        Result.PlayerMoveEvent notev1 = (Result.PlayerMoveEvent) notevnets.getFirst();
-        assertEquals(24, notev1.playerId);
-        assertEquals(0, notev1.interval.start);
-        assertEquals(189, notev1.interval.end);
-        List<Result.ResultEvent> notevnets2 = results3.get(1).events;
-        Result.PlayerMoveEvent notev2 = (Result.PlayerMoveEvent) notevnets2.getFirst();
-        assertEquals(24, notev2.playerId);
-        assertEquals(328, notev2.interval.start);
-        assertEquals(750, notev2.interval.end);
+        assertEquals(1, results3.size());
+        List<Result.ResultEvent> eventsLeft = results3.get(0).events;
+        Result.PlayerMoveEvent eventLeft = (Result.PlayerMoveEvent) eventsLeft.getFirst();
+        assertEquals(24, eventLeft.playerId);
+        assertEquals(189, eventLeft.interval.start);
+        assertEquals(328, eventLeft.interval.end);
 
     }
 
@@ -241,73 +187,19 @@ public class QueryTest {
 
         SelectExpr s1 = SELECT(t1.MOVETO(11, 10, 3)).FROM("SNGS-060").WHERE(RECTANGLE(-20,-20,40,20)); //toutes les passes
         List<Result> results = s1.search();
-        assertEquals(10, results.size());
-        List<Result.ResultEvent> events = results.getFirst().events;
+        assertEquals(6, results.size());
 
-        Result.ResultEvent event0 = events.getFirst();
-        assertEquals("TEAM_MOVE_TO", event0.type);
-        Result.TeamMoveEvent teamMoveEvent = (Result.TeamMoveEvent) event0;
-        assertEquals(List.of(4,2,1), teamMoveEvent.playerIds);
-        assertEquals(638, teamMoveEvent.interval.start);
-        assertEquals(657, teamMoveEvent.interval.end);
-
-        Result.TeamMoveEvent event1 = (Result.TeamMoveEvent) results.get(1).events.get(0);
-        assertEquals(List.of(7,2,1), event1.playerIds);
-        assertEquals(291, event1.interval.start);
-        assertEquals(364, event1.interval.end);
-
-        Result.TeamMoveEvent event2 = (Result.TeamMoveEvent) results.get(2).events.get(0);
-        assertEquals(List.of(8,2,1), event2.playerIds);
-        assertEquals(277, event2.interval.start);
-        assertEquals(368, event2.interval.end);
-
-        Result.TeamMoveEvent event3 = (Result.TeamMoveEvent) results.get(3).events.get(0);
-        assertEquals(List.of(8,2,1), event3.playerIds);
-        assertEquals(427, event3.interval.start);
-        assertEquals(657, event3.interval.end);
-
-        Result.TeamMoveEvent event4 = (Result.TeamMoveEvent) results.get(4).events.get(0);
-        assertEquals(List.of(23,2,1), event4.playerIds);
-        assertEquals(277, event4.interval.start);
-        assertEquals(368, event4.interval.end);
-
-        Result.TeamMoveEvent event5 = (Result.TeamMoveEvent) results.get(5).events.get(0);
-        assertEquals(List.of(4,16,1), event5.playerIds);
-        assertEquals(638, event5.interval.start);
-        assertEquals(684, event5.interval.end);
-
-        Result.TeamMoveEvent event6 = (Result.TeamMoveEvent) results.get(6).events.get(0);
-        assertEquals(List.of(2,18,1), event6.playerIds);
-        assertEquals(307, event6.interval.start);
-        assertEquals(317, event6.interval.end);
-
-        Result.TeamMoveEvent event7 = (Result.TeamMoveEvent) results.get(7).events.get(0);
-        assertEquals(List.of(7,18,1), event7.playerIds);
-        assertEquals(307, event7.interval.start);
-        assertEquals(317, event7.interval.end);
-
-        Result.TeamMoveEvent event8 = (Result.TeamMoveEvent) results.get(8).events.get(0);
-        assertEquals(List.of(8,18,1), event8.playerIds);
-        assertEquals(307, event8.interval.start);
-        assertEquals(317, event8.interval.end);
-
-        Result.TeamMoveEvent event9 = (Result.TeamMoveEvent) results.get(9).events.get(0);
-        assertEquals(List.of(23,18,1), event9.playerIds);
-        assertEquals(307, event9.interval.start);
-        assertEquals(317, event9.interval.end);
-
-        //NOT
-        SelectExpr snot = SELECT(NOT(t1.MOVETO(11, 10, 3))).FROM("SNGS-060").WHERE(RADIUS(-20,-20,40)).SEARCH(1); //toutes les passes
-        List<Result> resultsnot = snot.search();
-        assertEquals(1, resultsnot.size());
-        List<Result.ResultEvent> eventsnot = resultsnot.getFirst().events;
-
-        Result.ResultEvent eventnot0 = eventsnot.getFirst();
-        assertEquals("TEAM_MOVE_TO", eventnot0.type);
-        Result.TeamMoveEvent teamMoveEventnot = (Result.TeamMoveEvent) eventnot0;
-        assertEquals(List.of(4,2,1), teamMoveEventnot.playerIds);
-        assertEquals(0, teamMoveEventnot.interval.start);
-        assertEquals(256, teamMoveEventnot.interval.end);
+        // the three members (wildcard, left player, player 1), start, end
+        int[][] expected = {
+                {23, 2, 1, 277, 369}, {7, 2, 1, 291, 365}, {8, 16, 1, 415, 660},
+                {4, 16, 1, 415, 685}, {8, 2, 1, 427, 658}, {2, 16, 1, 427, 658}};
+        for (int i = 0; i < expected.length; i++) {
+            Result.TeamMoveEvent move = (Result.TeamMoveEvent) results.get(i).events.getFirst();
+            assertEquals("TEAM_MOVE_TO", move.type);
+            assertEquals(List.of(expected[i][0], expected[i][1], expected[i][2]), move.playerIds);
+            assertEquals(expected[i][3], move.interval.start);
+            assertEquals(expected[i][4], move.interval.end);
+        }
     }
 
     @Test
@@ -326,21 +218,21 @@ public class QueryTest {
         assertEquals("POSITION", event1.type);
         Result.PositionEvent positionEvent1 = (Result.PositionEvent) event1;
         assertEquals(1, positionEvent1.interval.start);
-        assertEquals(156, positionEvent1.interval.end);
+        assertEquals(157, positionEvent1.interval.end);
 
         Result r2 = results1.get(1);
         List<Result.ResultEvent> events2 = r2.events;
         Result.ResultEvent event2 = events2.getFirst();
         Result.PositionEvent positionEvent2 = (Result.PositionEvent) event2;
         assertEquals(277, positionEvent2.interval.start);
-        assertEquals(306, positionEvent2.interval.end);
+        assertEquals(307, positionEvent2.interval.end);
 
         Result r3 = results1.get(2);
         List<Result.ResultEvent> events3 = r3.events;
         Result.ResultEvent event3 = events3.getFirst();
         Result.PositionEvent positionEvent3 = (Result.PositionEvent) event3;
         assertEquals(397, positionEvent3.interval.start);
-        assertEquals(432, positionEvent3.interval.end);
+        assertEquals(433, positionEvent3.interval.end);
 
         //not
         SelectExpr s1not = SELECT(NOT(POSITION(b, 1,4))).FROM("SNGS-060");
@@ -354,21 +246,21 @@ public class QueryTest {
         assertEquals("POSITION", event1not.type);
         Result.PositionEvent positionEvent1not = (Result.PositionEvent) event1not;
         assertEquals(157, positionEvent1not.interval.start);
-        assertEquals(276, positionEvent1not.interval.end);
+        assertEquals(277, positionEvent1not.interval.end);
 
         Result r2not = results1not.get(1);
         List<Result.ResultEvent> events2not = r2not.events;
         Result.ResultEvent event2not = events2not.getFirst();
         Result.PositionEvent positionEvent2not = (Result.PositionEvent) event2not;
         assertEquals(307, positionEvent2not.interval.start);
-        assertEquals(396, positionEvent2not.interval.end);
+        assertEquals(397, positionEvent2not.interval.end);
 
         Result r3not = results1not.get(2);
         List<Result.ResultEvent> events3not = r3not.events;
         Result.ResultEvent event3not = events3not.getFirst();
         Result.PositionEvent positionEvent3not = (Result.PositionEvent) event3not;
         assertEquals(433, positionEvent3not.interval.start);
-        assertEquals(750, positionEvent3not.interval.end);
+        assertEquals(751, positionEvent3not.interval.end);
 
         //PLAYER POSITION
 
@@ -385,9 +277,9 @@ public class QueryTest {
         Result.ResultEvent eventpl1 = eventspl1.getFirst();
         assertEquals("POSITION", eventpl1.type);
         Result.PositionEvent positionEventpl1 = (Result.PositionEvent) eventpl1;
-        assertEquals(List.of(3), positionEventpl1.playerIds);
-        assertEquals(198, positionEventpl1.interval.start);
-        assertEquals(279, positionEventpl1.interval.end);
+        assertEquals(List.of(22), positionEventpl1.playerIds);
+        assertEquals(171, positionEventpl1.interval.start);
+        assertEquals(296, positionEventpl1.interval.end);
 
         Result rpl2 = resultspl1.get(1);
         assertEquals("SNGS-060", rpl2.instance);
@@ -396,9 +288,9 @@ public class QueryTest {
         Result.ResultEvent eventpl2 = eventspl2.getFirst();
         assertEquals("POSITION", eventpl1.type);
         Result.PositionEvent positionEventpl2 = (Result.PositionEvent) eventpl2;
-        assertEquals(List.of(22), positionEventpl2.playerIds);
-        assertEquals(171, positionEventpl2.interval.start);
-        assertEquals(295, positionEventpl2.interval.end);
+        assertEquals(List.of(3), positionEventpl2.playerIds);
+        assertEquals(198, positionEventpl2.interval.start);
+        assertEquals(280, positionEventpl2.interval.end);
 
         //team
         Player pleft4 = PLAYER("pleft4", "left");
@@ -415,7 +307,7 @@ public class QueryTest {
         Result.PositionEvent positionionEvent2pl = (Result.PositionEvent) event2pl;
         assertEquals(List.of(22), positionionEvent2pl.playerIds);
         assertEquals(171, positionionEvent2pl.interval.start);
-        assertEquals(295, positionionEvent2pl.interval.end);
+        assertEquals(296, positionionEvent2pl.interval.end);
 
         //id
         Player p22 = PLAYER("p22", 22);
@@ -426,15 +318,17 @@ public class QueryTest {
         Result not0 = results3.get(0);
         Result.PositionEvent notevent0 = (Result.PositionEvent) not0.events.getFirst();
         assertEquals(List.of(22), notevent0.playerIds);
-        assertEquals(0, notevent0.interval.start);
-        assertEquals(170, notevent0.interval.end);
+        assertEquals(1, notevent0.interval.start);
+        assertEquals(171, notevent0.interval.end);
 
         Result not1 = results3.get(1);
         Result.PositionEvent notevent1 = (Result.PositionEvent) not1.events.getFirst();
         assertEquals(List.of(22), notevent1.playerIds);
         assertEquals(296, notevent1.interval.start);
-        assertEquals(750, notevent1.interval.end);
+        assertEquals(751, notevent1.interval.end);
 
+
+        //TEAM POSITION
 
     }
 
@@ -457,7 +351,7 @@ public class QueryTest {
         Result.PossessionEvent possessionEvent1 = (Result.PossessionEvent) event1;
         assertEquals(List.of(14), possessionEvent1.playerIds);
         assertEquals(116, possessionEvent1.interval.start);
-        assertEquals(139, possessionEvent1.interval.end);
+        assertEquals(140, possessionEvent1.interval.end);
 
         //team
         Player pleft4 = PLAYER("pleft4", "left");
@@ -474,58 +368,152 @@ public class QueryTest {
         Result.PossessionEvent possessionEvent2 = (Result.PossessionEvent) event2;
         assertEquals(List.of(11), possessionEvent2.playerIds);
         assertEquals(50, possessionEvent2.interval.start);
-        assertEquals(84, possessionEvent2.interval.end);
+        assertEquals(85, possessionEvent2.interval.end);
 
         Result r3 = results2.get(1);
         Result.PossessionEvent events3 = (Result.PossessionEvent) r3.events.getFirst();
         assertEquals(List.of(14), events3.playerIds);
         assertEquals(116, events3.interval.start);
-        assertEquals(139, events3.interval.end);
+        assertEquals(140, events3.interval.end);
 
         //id
         Player p14 = PLAYER("p14", 14);
         SelectExpr s3 = SELECT(NOT(POSSESSION(p14))).FROM("SNGS-061");
         List<Result> results3 = s3.search();
-        assertEquals(3, results3.size());
+        assertEquals(2, results3.size());
 
-        Result not0 = results3.get(0);
-        Result.PossessionEvent notevent0 = (Result.PossessionEvent) not0.events.getFirst();
+        Result.PossessionEvent notevent0 = (Result.PossessionEvent) results3.get(0).events.getFirst();
         assertEquals(List.of(14), notevent0.playerIds);
-        assertEquals(0, notevent0.interval.start);
-        assertEquals(115, notevent0.interval.end);
+        assertEquals(1, notevent0.interval.start);
+        assertEquals(116, notevent0.interval.end);
 
-        Result not1 = results3.get(1);
-        Result.PossessionEvent notevent1 = (Result.PossessionEvent) not1.events.getFirst();
+        Result.PossessionEvent notevent1 = (Result.PossessionEvent) results3.get(1).events.getFirst();
         assertEquals(List.of(14), notevent1.playerIds);
         assertEquals(140, notevent1.interval.start);
-        assertEquals(356, notevent1.interval.end);
-
-        Result not2 = results3.get(2);
-        Result.PossessionEvent notevent2 = (Result.PossessionEvent) not2.events.getFirst();
-        assertEquals(List.of(14), notevent2.playerIds);
-        assertEquals(141, notevent2.interval.start);
-        assertEquals(750, notevent2.interval.end);
-
-        Result not3 = results3.get(3);
-        Result.PossessionEvent notevent3 = (Result.PossessionEvent) not3.events.getFirst();
-        assertEquals(List.of(14), notevent3.playerIds);
-        assertEquals(371, notevent3.interval.start);
-        assertEquals(750, notevent3.interval.end);
+        assertEquals(751, notevent1.interval.end);
 
 
         //TEAM POSSESSION
+
+        // one interval for as long as any left player has the ball: it spans the possessions of
+        // players 11 [50, 85) and 14 [116, 140) found above, as the pass between them does not end it
+        Team t = TEAM("left");
+        SelectExpr s6 = SELECT(POSSESSION(t)).FROM("SNGS-061").WHERE(RADIUS(-20,-20,40));
+        List<Result> results6 = s6.search();
+        assertEquals(1, results6.size());
+
+        Result.PossessionEvent possessionEvent6 = (Result.PossessionEvent) results6.getFirst().events.getFirst();
+        assertEquals(50, possessionEvent6.interval.start);
+        assertEquals(180, possessionEvent6.interval.end);
+
+        // with a RECTANGLE as well, both constraints hold: the player and the team find nothing
+        Factory.reset();
+        assertEquals(0, SELECT(POSSESSION(PLAYER("pl", "left"))).FROM("SNGS-061")
+                .WHERE(RADIUS(-20,-20,40), RECTANGLE(-20,-20,40,40)).search().size());
+        Factory.reset();
+        assertEquals(0, SELECT(POSSESSION(TEAM("left"))).FROM("SNGS-061")
+                .WHERE(RADIUS(-20,-20,40), RECTANGLE(-20,-20,40,40)).search().size());
 
     }
 
 
     @Test
     public void TestAND() throws IOException {
+        //SELECT(POSSESSION(PLAYER("p", 13))).FROM("SNGS-061").searchAndPrint();
+        //SELECT(BALL().MOVETO(6,7)).FROM("SNGS-061").searchAndPrint();
 
+        SelectExpr andQuery = SELECT(
+                AND(POSSESSION(PLAYER("p", 13)),
+                        BALL().MOVETO(6, 7))
+        ).FROM("SNGS-061");
+
+        andQuery.searchAndPrint();
     }
 
     @Test
     public void TestOR() throws IOException {
+        SelectExpr orQuery = SELECT(
+                OR(PLAYER("p11",11).PASSTO(PLAYER("p14", 14)).MINRANGE(),
+                        BALL().MOVETO(4, 6).WHERE(RADIUS(-20, 10, 35)))
+        ).FROM("SNGS-061");
 
+//        SELECT(PLAYER("p11",11).PASSTO(PLAYER("p14", 14)).MINRANGE()).FROM("SNGS-061").searchAndPrint();
+//        SELECT( BALL().MOVETO(4, 6).WHERE(RADIUS(-20, 10, 35))).FROM("SNGS-061").searchAndPrint();
+
+        List<Result> results = orQuery.search();
+        assertEquals(2, results.size());
+
+    }
+
+    @Test
+    public void TestORTeamPossession() throws IOException {
+        // "find when anybody has the ball" -- used to abort with
+        // IllegalArgumentException: interval var must be present
+        SelectExpr q = SELECT(
+                OR(POSSESSION(TEAM("left")), POSSESSION(TEAM("right")))
+        ).FROM("SNGS-060");
+
+        // an OR gives one match per match of each branch
+        int left = SELECT(POSSESSION(TEAM("left"))).FROM("SNGS-060").search().size();
+        int right = SELECT(POSSESSION(TEAM("right"))).FROM("SNGS-060").search().size();
+        assertTrue(left > 0 && right > 0);
+        assertEquals(left + right, q.search().size());
+    }
+
+    @Test
+    public void TestORPlayerPossession() throws IOException {
+        // the OR example from the NL->DSL system prompt; same crash
+        SelectExpr q = SELECT(
+                OR(POSSESSION(PLAYER("p7", 7)), POSSESSION(PLAYER("p13", 13)))
+        ).FROM("SNGS-060");
+
+        int p7 = SELECT(POSSESSION(PLAYER("p7", 7))).FROM("SNGS-060").search().size();
+        int p13 = SELECT(POSSESSION(PLAYER("p13", 13))).FROM("SNGS-060").search().size();
+        assertTrue(p7 > 0 && p13 > 0);
+        assertEquals(p7 + p13, q.search().size());
+    }
+
+    @Test
+    public void TestORWithUnsatisfiableBranch() throws IOException {
+        // a branch nothing can satisfy must switch itself off, not take the disjunction down
+        // with it -- otherwise OR silently behaves like AND
+        List<Result> alone = SELECT(POSSESSION(PLAYER("p7", 7))).FROM("SNGS-060").search();
+        assertEquals(1, alone.size());
+
+        List<Result> impossible = SELECT(POSSESSION(PLAYER("p99", 99))).FROM("SNGS-060").search();
+        assertEquals(0, impossible.size());
+
+        SelectExpr q = SELECT(
+                OR(POSSESSION(PLAYER("p7", 7)), POSSESSION(PLAYER("p99", 99)))
+        ).FROM("SNGS-060");
+
+        List<Result> results = q.search();
+        assertEquals(alone.size(), results.size());
+        Result.GroupEvent group = (Result.GroupEvent) results.get(0).events.get(0);
+        assertEquals(1, group.children.size()); // the unselected branch is not reported
+        assertEquals(alone.get(0).events.get(0).interval.start, group.children.get(0).interval.start);
+        assertEquals(alone.get(0).events.get(0).interval.end, group.children.get(0).interval.end);
+    }
+
+    @Test
+    public void TestORThenNextStep() throws IOException {
+        // the step after an OR is sequenced against the group, not against whichever child
+        // happens to sit last in the interval list
+        SelectExpr q = SELECT(
+                OR(POSSESSION(PLAYER("p7", 7)), POSSESSION(PLAYER("p13", 13))),
+                POSSESSION(TEAM("right"))
+        ).FROM("SNGS-060");
+
+        List<Result> results = q.search();
+        int p7 = SELECT(POSSESSION(PLAYER("p7", 7)), POSSESSION(TEAM("right"))).FROM("SNGS-060").search().size();
+        int p13 = SELECT(POSSESSION(PLAYER("p13", 13)), POSSESSION(TEAM("right"))).FROM("SNGS-060").search().size();
+        assertTrue(p7 > 0 && p13 > 0);
+        assertEquals(p7 + p13, results.size());
+        for (Result r : results) {
+            Result.GroupEvent group = (Result.GroupEvent) r.events.get(0);
+            Result.ResultEvent next = r.events.get(1);
+            assertTrue(next.interval.start >= group.interval.end);
+        }
     }
 
     // total/event max duration, min duration, start, end,

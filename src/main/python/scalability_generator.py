@@ -1,185 +1,165 @@
 """
 Scalability benchmark data generator.
 
-Takes Labels-GameState.json files from one or more match folders and creates
-merged copies in a scalability output directory, each containing an
-incrementally larger number of frames (50, 100, 150, … up to --max).
+Builds long instances from SoccerNet Game State clips: the frames of the --inputs clips, in
+order, repeated --repeat times and renumbered 1..n. Each requested size n is written to
+<output>/<n>/Labels-GameState.json (the first n frames of that sequence).
 
-For sizes beyond a single match (750 frames), frames from additional
-matches are appended with remapped image_ids so that the Java parser
-(which uses imageId % 10000) sees sequential frame numbers.
+Repeat a single clip. IDs are kept as they are, and the engine identifies players and the ball
+by their ID. IDs restart in every clip, so gluing DIFFERENT clips puts different players under
+one ID, fixes their team from the first clip, and loses the ball wherever its ID was a player's
+in an earlier clip.
 
-Usage:
-    python scalability_generator.py \
-        --inputs data/SoccerNet/gamestate-2024/train/SNGS-060 \
-                 data/SoccerNet/gamestate-2024/train/SNGS-064 \
-        --output data/SoccerNet/gamestate-2024/scalability \
-        --step 50 --max 1500
+Usage (the instances of the paper):
+    python src/main/python/scalability_generator.py \
+        --inputs data/SoccerNet/gamestate-2024/train/SNGS-061 --repeat 90 \
+        --output data/SoccerNet/gamestate-2024/scalability --clean
 
-The output folder will be:
-    data/SoccerNet/gamestate-2024/scalability/
-        50/Labels-GameState.json    (first  50 frames)
-        100/Labels-GameState.json   (first 100 frames)
-        ...
-        1500/Labels-GameState.json  (first 1500 frames, merged)
+--sizes takes sizes and start:stop:step ranges (stop included), by default 750 1500
+2250:67500:2250: whole copies of a 750-frame clip, up to a 45-minute half. Only the fields the
+Java parser reads are written, unless --keep-all-fields is given (a 67,500-frame instance is
+then about four times larger). Scalability.java runs every size folder of the output directory:
+--clean first removes the size folders already there.
 """
 
 import argparse
-import copy
 import json
 import os
+import shutil
 import sys
+
+DEFAULT_SIZES = ["750", "1500", "2250:67500:2250"]
+
+# what GameStateReconstructionInstance reads, field by field
+KEPT = {
+    "track_id": None,
+    "category_id": None,
+    "attributes": ("role", "team"),
+    "bbox_pitch": ("x_bottom_middle", "y_bottom_middle"),
+    "bbox_image": ("x_center", "y_center", "w", "h"),
+}
 
 
 def load_match(match_folder):
-    """Load images and annotations from a match folder, sorted by image_id."""
+    """The frames of a clip, in order: a list of (image, annotations)."""
     json_path = os.path.join(match_folder, "Labels-GameState.json")
     if not os.path.isfile(json_path):
-        print(f"ERROR: {json_path} not found.", file=sys.stderr)
-        sys.exit(1)
-
+        sys.exit(f"ERROR: {json_path} not found.")
     with open(json_path, "r") as f:
         data = json.load(f)
 
-    images = data.get("images", [])
-    annotations = data.get("annotations", [])
-    info = data.get("info", {})
-    categories = data.get("categories", [])
-
-    images.sort(key=lambda img: img.get("image_id", ""))
-
     ann_by_image = {}
-    for ann in annotations:
-        img_id = ann.get("image_id")
-        if img_id is not None:
-            ann_by_image.setdefault(img_id, []).append(ann)
+    for ann in data.get("annotations", []):
+        if ann.get("image_id") is not None:
+            ann_by_image.setdefault(ann["image_id"], []).append(ann)
 
-    return images, ann_by_image, info, categories
+    images = sorted(data.get("images", []), key=lambda img: int(img["image_id"]))
+    frames = [(img, ann_by_image.get(img["image_id"], [])) for img in images]
+    return frames, data.get("info", {}), data.get("categories", [])
 
 
-def remap_frame(image, anns, new_frame_number):
-    """
-    Create copies of an image and its annotations with a remapped image_id
-    set to the plain sequential frame number (as a string).
+def parse_sizes(specs):
+    sizes = set()
+    for spec in specs:
+        if ":" in spec:
+            start, stop, step = (int(x) for x in spec.split(":"))
+            sizes.update(range(start, stop + 1, step))
+        else:
+            sizes.add(int(spec))
+    return sorted(sizes)
 
-    The Java parser handles ids <= 99999 directly and extracts the frame
-    number from longer SoccerNet ids via % 1000000.
-    """
-    new_image_id = str(new_frame_number)
 
-    new_image = copy.deepcopy(image)
-    new_image["image_id"] = new_image_id
+def stripped(ann):
+    out = {}
+    for key, fields in KEPT.items():
+        value = ann.get(key)
+        if fields is not None and isinstance(value, dict):
+            value = {k: value[k] for k in fields if k in value}
+        out[key] = value
+    return out
 
-    new_anns = []
-    for ann in anns:
-        new_ann = copy.deepcopy(ann)
-        new_ann["image_id"] = new_image_id
-        new_ann["id"] = f"{new_frame_number}_{ann.get('track_id', 0)}"
-        new_anns.append(new_ann)
 
-    return new_image, new_anns
+def write_instance(path, frames, info, categories, keep_all_fields):
+    """Streams the first len(frames) frames to path, renumbered 1..n."""
+    with open(path, "w") as f:
+        f.write('{"info": ' + json.dumps(dict(info, seq_length=len(frames))))
+        f.write(', "categories": ' + json.dumps(categories))
+
+        f.write(', "images": [')
+        for number, (image, _) in enumerate(frames, start=1):
+            new_image = dict(image) if keep_all_fields else {"file_name": image.get("file_name")}
+            new_image["image_id"] = str(number)
+            f.write(("," if number > 1 else "") + json.dumps(new_image))
+
+        f.write('], "annotations": [')
+        first = True
+        for number, (_, anns) in enumerate(frames, start=1):
+            for ann in anns:
+                new_ann = dict(ann) if keep_all_fields else stripped(ann)
+                new_ann["image_id"] = str(number)
+                new_ann["id"] = f"{number}_{ann.get('track_id', 0)}"
+                f.write(("" if first else ",") + json.dumps(new_ann))
+                first = False
+        f.write("]}")
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Generate incrementally larger JSON files for scalability benchmarking."
-    )
-    parser.add_argument(
-        "--inputs", "-i",
-        nargs="+",
-        required=True,
-        help="Paths to match folders containing Labels-GameState.json, in order. "
-             "Frames from the second match onward are appended after the first.",
-    )
-    parser.add_argument(
-        "--output", "-o",
-        required=True,
-        help="Output directory for scalability folders "
-             "(e.g. data/SoccerNet/gamestate-2024/scalability)",
-    )
-    parser.add_argument(
-        "--step", "-s",
-        type=int,
-        default=50,
-        help="Number of frames to add at each step (default: 50)",
-    )
-    parser.add_argument(
-        "--max", "-m",
-        type=int,
-        default=1500,
-        help="Maximum number of total frames (default: 1500)",
-    )
+    parser = argparse.ArgumentParser(description="Generate long instances for the scalability benchmark.")
+    parser.add_argument("--inputs", "-i", nargs="+", required=True,
+                        help="Clip folders containing Labels-GameState.json, concatenated in this order.")
+    parser.add_argument("--repeat", "-r", type=int, default=1,
+                        help="How many times the concatenated clips are repeated (default: 1).")
+    parser.add_argument("--output", "-o", required=True,
+                        help="Output directory, e.g. data/SoccerNet/gamestate-2024/scalability")
+    parser.add_argument("--sizes", "-s", nargs="+", default=DEFAULT_SIZES,
+                        help="Sizes in frames, or start:stop:step ranges (default: %(default)s).")
+    parser.add_argument("--keep-all-fields", action="store_true",
+                        help="Copy every annotation field, not only those the Java parser reads.")
+    parser.add_argument("--clean", action="store_true",
+                        help="Remove the size folders already in the output directory before writing.")
     args = parser.parse_args()
 
-    # ── Load all matches and build a combined frame pool ─────────────
-    all_frames = []  # list of (image_dict, [annotation_dicts])
-    info = {}
-    categories = []
+    if len(set(args.inputs)) > 1:
+        print("WARNING: different clips reuse the same IDs for different players and the ball; "
+              "see the module docstring.", file=sys.stderr)
 
-    frame_counter = 0
+    clips = []
+    info, categories = {}, []
     for idx, match_folder in enumerate(args.inputs):
-        print(f"Loading match {idx + 1}: {match_folder}")
-        images, ann_by_image, m_info, m_categories = load_match(match_folder)
-
+        print(f"Loading clip {idx + 1}: {match_folder}")
+        frames, m_info, m_categories = load_match(match_folder)
+        clips.append(frames)
         if idx == 0:
-            info = m_info
-            categories = m_categories
+            info, categories = m_info, m_categories
 
-        for image in images:
-            frame_counter += 1
-            original_image_id = image["image_id"]
-            anns = ann_by_image.get(original_image_id, [])
+    sequence = [frame for _ in range(args.repeat) for frames in clips for frame in frames]
+    print(f"{len(sequence)} frames available ({len(args.inputs)} clip(s) x {args.repeat})")
 
-            if idx == 0:
-                # First match: keep original image_ids
-                all_frames.append((image, anns))
-            else:
-                # Subsequent matches: remap so % 10000 gives sequential numbers
-                new_image, new_anns = remap_frame(image, anns, frame_counter)
-                all_frames.append((new_image, new_anns))
-
-    total_available = len(all_frames)
-    print(f"Total frames available across {len(args.inputs)} match(es): {total_available}")
-
-    if args.max > total_available:
-        print(f"WARNING: requested max={args.max} but only {total_available} frames available. "
-              f"Will stop at {total_available}.", file=sys.stderr)
-        args.max = total_available
-
-    # ── Output folder ────────────────────────────────────────────────
     os.makedirs(args.output, exist_ok=True)
-
-    # ── Generate truncated copies ────────────────────────────────────
-    step = args.step
-    sizes = list(range(step, args.max + 1, step))
-    if sizes and sizes[-1] != args.max:
-        sizes.append(args.max)
-
+    sizes = parse_sizes(args.sizes)
+    existing = [d for d in os.listdir(args.output)
+                if d.isdigit() and os.path.isdir(os.path.join(args.output, d))]
+    if args.clean:
+        for d in existing:
+            shutil.rmtree(os.path.join(args.output, d))
+        print(f"Removed {len(existing)} size folder(s) from {args.output}")
+    else:
+        others = sorted((int(d) for d in existing if int(d) not in sizes))
+        if others:
+            print(f"WARNING: {args.output} also holds sizes {others}, which Scalability.java will run too; "
+                  f"use --clean to remove them.", file=sys.stderr)
     for n in sizes:
-        subset_frames = all_frames[:n]
-        subset_images = [img for img, _ in subset_frames]
-        subset_annotations = []
-        for _, anns in subset_frames:
-            subset_annotations.extend(anns)
-
-        out_data = {
-            "info": info,
-            "images": subset_images,
-            "annotations": subset_annotations,
-            "categories": categories,
-        }
-
+        if n > len(sequence):
+            print(f"  skipping {n}: only {len(sequence)} frames available", file=sys.stderr)
+            continue
         size_dir = os.path.join(args.output, str(n))
         os.makedirs(size_dir, exist_ok=True)
-        out_path = os.path.join(size_dir, "Labels-GameState.json")
-        with open(out_path, "w") as f:
-            json.dump(out_data, f)
+        write_instance(os.path.join(size_dir, "Labels-GameState.json"), sequence[:n], info, categories,
+                       args.keep_all_fields)
+        print(f"  {n:>6} frames -> {size_dir}/")
 
-        print(f"  {n:>5} frames, {len(subset_annotations):>6} annotations  ->  {size_dir}/")
-
-    print(f"\nDone. {len(sizes)} folders written to {args.output}/")
+    print(f"\nDone. Instances written to {args.output}/")
 
 
 if __name__ == "__main__":
     main()
-

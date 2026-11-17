@@ -1,5 +1,7 @@
 package org.main.sn.web;
 
+import org.main.sn.dsl.DataRoot;
+import org.main.sn.dsl.LlmQuery;
 import org.main.sn.dsl.SelectExpr;
 import org.main.sn.logic.Result;
 import org.springframework.http.*;
@@ -22,24 +24,33 @@ public class QueryController {
 
     private static final Logger log = Logger.getLogger(QueryController.class.getName());
 
-    /**
-     * Data root is configurable via:
-     *   -Ddata.root=/path/to/gamestate-2024
-     * or env var DATA_ROOT.
-     * Falls back to $HOME/GeometricPatternMatching/data/SoccerNet/gamestate-2024
-     */
-    private static final Path GAMESTATE_ROOT = resolveDataRoot();
-
-    private static Path resolveDataRoot() {
-        String prop = System.getProperty("data.root");
-        if (prop != null && !prop.isBlank()) return Paths.get(prop);
-        String env = System.getenv("DATA_ROOT");
-        if (env != null && !env.isBlank()) return Paths.get(env);
-        return Paths.get(System.getProperty("user.home"),
-                "GeometricPatternMatching", "data", "SoccerNet", "gamestate-2024");
-    }
+    /** The dataset folder, see {@link DataRoot}. */
+    private static final Path GAMESTATE_ROOT = DataRoot.PATH;
 
     private static final List<String> SPLITS = List.of("train", "test", "valid");
+
+    /** A clip folder name such as {@code SNGS-060}; anything else is refused before touching the disk. */
+    private static final java.util.regex.Pattern INSTANCE_NAME = java.util.regex.Pattern.compile("[A-Za-z0-9_-]+");
+
+    /**
+     * Lazily-built natural-language → DSL translator. Built on first use so that a
+     * missing GROQ_API_KEY only breaks the /translate endpoint, not the whole app.
+     */
+    private volatile LlmQuery llmQuery;
+
+    private LlmQuery llm() {
+        LlmQuery local = llmQuery;
+        if (local == null) {
+            synchronized (this) {
+                local = llmQuery;
+                if (local == null) {
+                    local = new LlmQuery();   // throws IllegalStateException if no API key
+                    llmQuery = local;
+                }
+            }
+        }
+        return local;
+    }
 
     /** List all available instances that have a video file */
     @GetMapping("/instances")
@@ -74,13 +85,15 @@ public class QueryController {
                          @PathVariable("instance") String instance,
                          HttpServletRequest request,
                          HttpServletResponse response) throws IOException {
+        if (!SPLITS.contains(split) || !INSTANCE_NAME.matcher(instance).matches()) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
         Path videoPath = GAMESTATE_ROOT.resolve(split).resolve(instance).resolve("vid.mp4");
-        Path absolute  = videoPath.toAbsolutePath();
-        log.info("Video requested: " + absolute);
 
         if (!Files.exists(videoPath)) {
-            log.warning("Video not found: " + absolute);
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Not found: " + absolute);
+            log.warning("Video not found: " + videoPath.toAbsolutePath());
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "No video for " + split + "/" + instance);
             return;
         }
 
@@ -139,21 +152,6 @@ public class QueryController {
         }
     }
 
-    /** Debug endpoint: returns the resolved path for a video */
-    @GetMapping("/video/{split}/{instance}/debug")
-    public void debugVideo(@PathVariable("split") String split,
-                           @PathVariable("instance") String instance,
-                           HttpServletResponse response) throws IOException {
-        Path videoPath = GAMESTATE_ROOT.resolve(split).resolve(instance).resolve("vid.mp4");
-        Path absolute  = videoPath.toAbsolutePath();
-        String msg = "exists=" + Files.exists(videoPath)
-                + "\nresolved=" + absolute
-                + "\nworkingDir=" + Paths.get("").toAbsolutePath()
-                + "\nGAMESTATE_ROOT=" + GAMESTATE_ROOT;
-        response.setContentType("text/plain");
-        response.getWriter().write(msg);
-    }
-
     /** Run a query expressed in DSL syntax and return results as JSON */
     @PostMapping("/query")
     public ResponseEntity<QueryResponse> runQuery(@RequestBody QueryRequest request) {
@@ -172,6 +170,33 @@ public class QueryController {
             return ResponseEntity.ok(new QueryResponse(true, null, jsonResults, fullText, null));
         } catch (Exception e) {
             return ResponseEntity.ok(new QueryResponse(false, e.getMessage(), List.of(), "", null));
+        }
+    }
+
+    /**
+     * Translate a natural-language description into a DSL query string using the
+     * LLM. The dataset is supplied by the caller (the web UI collects it up front),
+     * so the interactive "which dataset?" prompt used by the CLI is never reached.
+     */
+    @PostMapping("/translate")
+    public ResponseEntity<TranslateResponse> translateQuery(@RequestBody TranslateRequest request) {
+        String description = request.description() == null ? "" : request.description().trim();
+        if (description.isEmpty()) {
+            return ResponseEntity.ok(new TranslateResponse(false, null,
+                    "Please describe the query you want in plain English."));
+        }
+        String dataset = (request.dataset() == null || request.dataset().isBlank())
+                ? "all"
+                : request.dataset().trim();
+        try {
+            String dsl = llm().translate(description, dataset);
+            return ResponseEntity.ok(new TranslateResponse(true, dsl, null));
+        } catch (IllegalStateException e) {
+            // GROQ_API_KEY missing / not resolvable
+            return ResponseEntity.ok(new TranslateResponse(false, null, e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.ok(new TranslateResponse(false, null,
+                    "Translation failed: " + e.getMessage()));
         }
     }
 
@@ -228,5 +253,7 @@ public class QueryController {
     // DTO records
     public record QueryRequest(String query) {}
     public record QueryResponse(boolean success, String error, List<Map<String, Object>> results, String fullText, Integer count) {}
+    public record TranslateRequest(String description, String dataset) {}
+    public record TranslateResponse(boolean success, String query, String error) {}
 }
 

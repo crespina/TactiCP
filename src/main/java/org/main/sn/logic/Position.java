@@ -20,10 +20,7 @@ public class Position implements ConstraintPattern {
 
     @Override
     public void apply(CPSolver cp, Instance instance) {
-        if (instance instanceof TrackingInstance soccer) {
-            //TODO: implement position logic for TrackingInstance
-
-        } else if (instance instanceof GameStateReconstructionInstance soccer) {
+        if (instance instanceof GameStateReconstructionInstance soccer) {
 
             int n = soccer.n;
             int maxId = soccer.maxId;

@@ -1,0 +1,62 @@
+[
+  {
+    "id": "pass-any",
+    "nl": "Find all passes from any player to any other player.",
+    "dsl": "SELECT(PLAYER(\"p1\").PASSTO(PLAYER(\"p2\")).MINRANGE())"
+  },
+  {
+    "id": "ball-move-atleast",
+    "nl": "Find every time the ball moves from zone 4 to zone 1 but only if there are at least 2 occurrences.",
+    "dsl": "SELECT(BALL().MOVETO(4, 1).MINRANGE()).WHERE(ATLEAST(2))"
+  },
+  {
+    "id": "pass-and-not-possession",
+    "nl": "Find moments where player 11 passes to any player while player 3 does not have possession.",
+    "dsl": "SELECT(AND(PLAYER(\"p11\",11).PASSTO(PLAYER(\"p2\")).MINRANGE(), NOT(POSSESSION(PLAYER(\"p3\",3)))))"
+  },
+  {
+    "id": "not-possession",
+    "nl": "Find all moments where player 7 does not have the ball.",
+    "dsl": "SELECT(NOT(POSSESSION(PLAYER(\"p7\",7))))"
+  },
+  {
+    "id": "player-move-window",
+    "nl": "Find player 13 moving from zone 6 to zone 7 but only between frame 10 and frame 740.",
+    "dsl": "SELECT(PLAYER(\"p13\",13).MOVETO(6,7).MINRANGE()).WHERE(STARTMIN(10),ENDMAX(740))"
+  },
+  {
+    "id": "count-passes",
+    "nl": "How many times does player 1 pass to player 2?",
+    "dsl": "SELECT(PLAYER(\"p1\",1).PASSTO(PLAYER(\"p2\",2)).MINRANGE()).COUNT()"
+  },
+  {
+    "id": "position-zones",
+    "nl": "Find all moments where player 1 is in zone 6 or zone 7.",
+    "dsl": "SELECT(POSITION(PLAYER(\"p1\"),6,7))"
+  },
+  {
+    "id": "two-players-move-simultaneously",
+    "nl": "Find moments where player 13 moves from zone 6 to zone 7 at the same time as player 15 moves from zone 1 to zone 2.",
+    "dsl": "SELECT(AND(PLAYER(\"p13\",13).MOVETO(6,7).MINRANGE(), PLAYER(\"p15\",15).MOVETO(1,2).MINRANGE()))"
+  },
+  {
+    "id": "ball-sequence",
+    "nl": "Find the ball moving from zone 4 to zone 1, then from zone 14 to zone 9.",
+    "dsl": "SELECT(BALL().MOVETO(4,1).MINRANGE(), BALL().MOVETO(14,9).MINRANGE())"
+  },
+  {
+    "id": "pass-then-ball-move",
+    "nl": "Find all the times where player 11 passed to player 16 and then the ball moved from zone 3 to zone 4.",
+    "dsl": "SELECT(PLAYER(\"p11\",11).PASSTO(PLAYER(\"p16\",16)).MINRANGE(), BALL().MOVETO(3, 4).MINRANGE())"
+  },
+  {
+    "id": "or-possession",
+    "nl": "Find all moments where either player 7 has the ball or player 13 has the ball.",
+    "dsl": "SELECT(OR(POSSESSION(PLAYER(\"p7\",7)), POSSESSION(PLAYER(\"p13\",13))))"
+  },
+  {
+    "id": "possession-team-duration",
+    "nl": "Find moments where the right team has possession for at least 50 frames.",
+    "dsl": "SELECT(POSSESSION(TEAM(\"RIGHT\"))).WHERE(MINDURATION(50))"
+  }
+]
