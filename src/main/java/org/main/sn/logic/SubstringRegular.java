@@ -71,7 +71,6 @@ public class SubstringRegular extends AbstractCPConstraint {
         alphabetSize = maxVal + 1;
         transitionFct = new int[nbStates][maxVal + 1];
         for (int i = 0; i < nbStates; i++) {
-            //assert (A[i].length == maxVal + 1);
             for (int j = 0; j < maxVal + 1; j++) {
                 transitionFct[i][j] = A[i][j];
             }

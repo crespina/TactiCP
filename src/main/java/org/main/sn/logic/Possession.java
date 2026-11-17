@@ -32,7 +32,6 @@ public class Possession implements ConstraintPattern {
             int[] result = new int[n + 1];
             result[0] = 0;
             double threshold = 0.058;
-            //double threshold = 0.075;
 
             for (Map.Entry<Integer, GameStateReconstructionInstance.FrameData> e : positions.entrySet()) {
                 int frameID = e.getKey();
@@ -125,29 +124,6 @@ public class Possession implements ConstraintPattern {
 
             }
 
-            //if possession less than 3 frames, not really possession :
-
-//            int i = 0;
-//            while (i < result.length) {
-//                int currentPlayer = result[i];
-//                int j = i;
-//
-//                while (j < result.length && result[j] == currentPlayer) {
-//                    j++;
-//                }
-//
-//                int possessionLength = j - i;
-//
-//                // If the streak is too short, overwrite it with the previous player's ID
-//                if (possessionLength <= 4) {
-//                    int previousPlayer = (i > 0) ? result[i - 1] : result[j]; // fallback to next if at start
-//                    for (int k = i; k < j; k++) {
-//                        result[k] = previousPlayer;
-//                    }
-//                }
-//
-//                i = j;
-//            }
             this.result = result;
         }
     }

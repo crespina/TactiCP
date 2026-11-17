@@ -256,6 +256,6 @@ included and is subject to its own terms.
   booktitle={32nd International Conference on Principles and Practice of Constraint Programming (CP 2026)},
   pages={16--1},
   year={2026},
-  organization={Schloss Dagstuhl--Leibniz-Zentrum fur Informatik}
+  organization={Schloss Dagstuhl--Leibniz-Zentrum f{\"u}r Informatik}
 }
 ```
