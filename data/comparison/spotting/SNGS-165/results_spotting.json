@@ -1,0 +1,75 @@
+{
+    "UrlLocal": "SNGS-165",
+    "predictions": [
+        {
+            "gameTime": "1 - 00:12",
+            "label": "PASS",
+            "position": "12680",
+            "half": "1",
+            "confidence": "0.8392334580421448"
+        },
+        {
+            "gameTime": "1 - 00:14",
+            "label": "DRIVE",
+            "position": "14600",
+            "half": "1",
+            "confidence": "0.44761526584625244"
+        },
+        {
+            "gameTime": "1 - 00:15",
+            "label": "PASS",
+            "position": "15720",
+            "half": "1",
+            "confidence": "0.6489505171775818"
+        },
+        {
+            "gameTime": "1 - 00:17",
+            "label": "DRIVE",
+            "position": "17160",
+            "half": "1",
+            "confidence": "0.6178763508796692"
+        },
+        {
+            "gameTime": "1 - 00:18",
+            "label": "DRIVE",
+            "position": "18360",
+            "half": "1",
+            "confidence": "0.34957534074783325"
+        },
+        {
+            "gameTime": "1 - 00:19",
+            "label": "PASS",
+            "position": "19600",
+            "half": "1",
+            "confidence": "0.9022334218025208"
+        },
+        {
+            "gameTime": "1 - 00:20",
+            "label": "DRIVE",
+            "position": "20320",
+            "half": "1",
+            "confidence": "0.3203457295894623"
+        },
+        {
+            "gameTime": "1 - 00:21",
+            "label": "PASS",
+            "position": "21200",
+            "half": "1",
+            "confidence": "0.2025516778230667"
+        },
+        {
+            "gameTime": "1 - 00:22",
+            "label": "DRIVE",
+            "position": "22200",
+            "half": "1",
+            "confidence": "0.44840341806411743"
+        },
+        {
+            "gameTime": "1 - 00:23",
+            "label": "PASS",
+            "position": "23960",
+            "half": "1",
+            "confidence": "0.752740204334259"
+        }
+    ]
+}

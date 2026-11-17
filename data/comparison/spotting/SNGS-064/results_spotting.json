@@ -1,0 +1,33 @@
+{
+    "UrlLocal": "SNGS-064",
+    "predictions": [
+        {
+            "gameTime": "1 - 00:14",
+            "label": "PASS",
+            "position": "14520",
+            "half": "1",
+            "confidence": "0.9408308863639832"
+        },
+        {
+            "gameTime": "1 - 00:16",
+            "label": "PASS",
+            "position": "16000",
+            "half": "1",
+            "confidence": "0.5223531723022461"
+        },
+        {
+            "gameTime": "1 - 00:16",
+            "label": "DRIVE",
+            "position": "16840",
+            "half": "1",
+            "confidence": "0.36309128999710083"
+        },
+        {
+            "gameTime": "1 - 00:20",
+            "label": "PASS",
+            "position": "20200",
+            "half": "1",
+            "confidence": "0.36018016934394836"
+        }
+    ]
+}

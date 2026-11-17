@@ -1,0 +1,23 @@
+package org.main.sn.dsl;
+
+public final class Ball extends Entity {
+    private static final Ball INSTANCE = new Ball();
+
+    private Ball() {
+        super("ball");
+    }
+
+    public static Ball get() {
+        return INSTANCE;
+    }
+
+    public BallEvent MOVETO(int s, int e) {
+        return BallEvent.moveTo(s, e);
+    }
+
+    @Override
+    public String toString() {
+        return "BALL";
+    }
+
+}

@@ -1,0 +1,4501 @@
+=== Split: train ===
+**************************
+INSTANCE : SNGS-060
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 16 | frames: present start = 21 length = 24 end = 45
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 16 to player ID 19 | frames: present start = 117 length = 19 end = 136
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 19 to player ID 22 | frames: present start = 142 length = 45 end = 187
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 15 | frames: present start = 403 length = 18 end = 421
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 23 to player ID 8 | frames: present start = 589 length = 31 end = 620
+
+
+solution #5
+------------------
+
+EVENT # 0 PASS
+ From player ID 19 to player ID 1 | frames: present start = 695 length = 51 end = 746
+
+
+train/SNGS-060 -> 402.0 ms
+**************************
+INSTANCE : SNGS-061
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 14 | frames: present start = 84 length = 33 end = 117
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 14 to player ID 13 | frames: present start = 139 length = 72 end = 211
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 15 to player ID 25 | frames: present start = 340 length = 80 end = 420
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 24 | frames: present start = 698 length = 44 end = 742
+
+
+train/SNGS-061 -> 95.0 ms
+**************************
+INSTANCE : SNGS-062
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 9 to player ID 11 | frames: present start = 65 length = 24 end = 89
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 9 | frames: present start = 100 length = 53 end = 153
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 9 to player ID 2 | frames: present start = 154 length = 34 end = 188
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 4 | frames: present start = 415 length = 23 end = 438
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 4 to player ID 8 | frames: present start = 469 length = 29 end = 498
+
+
+solution #5
+------------------
+
+EVENT # 0 PASS
+ From player ID 8 to player ID 11 | frames: present start = 588 length = 26 end = 614
+
+
+train/SNGS-062 -> 88.0 ms
+**************************
+INSTANCE : SNGS-063
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 16 to player ID 15 | frames: present start = 21 length = 18 end = 39
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 12 to player ID 11 | frames: present start = 79 length = 16 end = 95
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 5 to player ID 9 | frames: present start = 507 length = 23 end = 530
+
+
+train/SNGS-063 -> 70.0 ms
+No matches found for the given query.
+train/SNGS-064 -> 74.0 ms
+No matches found for the given query.
+train/SNGS-065 -> 75.0 ms
+**************************
+INSTANCE : SNGS-066
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 1 to player ID 21 | frames: present start = 461 length = 78 end = 539
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 21 to player ID 14 | frames: present start = 622 length = 35 end = 657
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 12 | frames: present start = 694 length = 9 end = 703
+
+
+train/SNGS-066 -> 80.0 ms
+**************************
+INSTANCE : SNGS-067
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 1 to player ID 19 | frames: present start = 287 length = 23 end = 310
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 19 to player ID 1 | frames: present start = 314 length = 25 end = 339
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 23 | frames: present start = 444 length = 16 end = 460
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 23 to player ID 26 | frames: present start = 459 length = 34 end = 493
+
+
+train/SNGS-067 -> 65.0 ms
+**************************
+INSTANCE : SNGS-068
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 17 | frames: present start = 119 length = 10 end = 129
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 10 to player ID 14 | frames: present start = 262 length = 65 end = 327
+
+
+train/SNGS-068 -> 87.0 ms
+**************************
+INSTANCE : SNGS-069
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 19 to player ID 10 | frames: present start = 278 length = 7 end = 285
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 10 to player ID 17 | frames: present start = 309 length = 7 end = 316
+
+
+train/SNGS-069 -> 60.0 ms
+**************************
+INSTANCE : SNGS-070
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 14 | frames: present start = 174 length = 30 end = 204
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 14 to player ID 10 | frames: present start = 215 length = 59 end = 274
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 10 to player ID 18 | frames: present start = 283 length = 28 end = 311
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 24 to player ID 22 | frames: present start = 462 length = 35 end = 497
+
+
+train/SNGS-070 -> 69.0 ms
+**************************
+INSTANCE : SNGS-071
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 1 to player ID 7 | frames: present start = 157 length = 98 end = 255
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 7 to player ID 4 | frames: present start = 254 length = 110 end = 364
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 10 to player ID 15 | frames: present start = 396 length = 58 end = 454
+
+
+train/SNGS-071 -> 70.0 ms
+**************************
+INSTANCE : SNGS-072
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 8 | frames: present start = 363 length = 15 end = 378
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 4 to player ID 23 | frames: present start = 530 length = 65 end = 595
+
+
+train/SNGS-072 -> 64.0 ms
+**************************
+INSTANCE : SNGS-073
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 12 | frames: present start = 27 length = 20 end = 47
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 16 | frames: present start = 49 length = 18 end = 67
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 16 to player ID 15 | frames: present start = 69 length = 7 end = 76
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 15 to player ID 14 | frames: present start = 77 length = 9 end = 86
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 14 to player ID 3 | frames: present start = 86 length = 22 end = 108
+
+
+solution #5
+------------------
+
+EVENT # 0 PASS
+ From player ID 3 to player ID 5 | frames: present start = 165 length = 48 end = 213
+
+
+solution #6
+------------------
+
+EVENT # 0 PASS
+ From player ID 5 to player ID 6 | frames: present start = 317 length = 28 end = 345
+
+
+solution #7
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 25 | frames: present start = 384 length = 11 end = 395
+
+
+solution #8
+------------------
+
+EVENT # 0 PASS
+ From player ID 25 to player ID 9 | frames: present start = 436 length = 27 end = 463
+
+
+solution #9
+------------------
+
+EVENT # 0 PASS
+ From player ID 9 to player ID 25 | frames: present start = 487 length = 44 end = 531
+
+
+train/SNGS-073 -> 73.0 ms
+**************************
+INSTANCE : SNGS-074
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 5 to player ID 17 | frames: present start = 353 length = 35 end = 388
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 12 to player ID 11 | frames: present start = 571 length = 30 end = 601
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 7 | frames: present start = 626 length = 35 end = 661
+
+
+train/SNGS-074 -> 72.0 ms
+**************************
+INSTANCE : SNGS-075
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 4 to player ID 9 | frames: present start = 498 length = 243 end = 741
+
+
+train/SNGS-075 -> 62.0 ms
+**************************
+INSTANCE : SNGS-076
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 18 to player ID 17 | frames: present start = 708 length = 20 end = 728
+
+
+train/SNGS-076 -> 101.0 ms
+**************************
+INSTANCE : SNGS-077
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 3 to player ID 1 | frames: present start = 169 length = 29 end = 198
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 10 | frames: present start = 506 length = 7 end = 513
+
+
+train/SNGS-077 -> 61.0 ms
+**************************
+INSTANCE : SNGS-097
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 3 to player ID 9 | frames: present start = 248 length = 41 end = 289
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 17 to player ID 6 | frames: present start = 635 length = 45 end = 680
+
+
+train/SNGS-097 -> 61.0 ms
+**************************
+INSTANCE : SNGS-098
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 8 to player ID 4 | frames: present start = 176 length = 22 end = 198
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 4 to player ID 2 | frames: present start = 357 length = 31 end = 388
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 11 | frames: present start = 387 length = 97 end = 484
+
+
+train/SNGS-098 -> 49.0 ms
+**************************
+INSTANCE : SNGS-099
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 6 to player ID 9 | frames: present start = 104 length = 36 end = 140
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 9 to player ID 10 | frames: present start = 161 length = 24 end = 185
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 10 to player ID 9 | frames: present start = 213 length = 5 end = 218
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 12 to player ID 8 | frames: present start = 264 length = 30 end = 294
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 8 to player ID 20 | frames: present start = 357 length = 53 end = 410
+
+
+solution #5
+------------------
+
+EVENT # 0 PASS
+ From player ID 24 to player ID 25 | frames: present start = 488 length = 80 end = 568
+
+
+train/SNGS-099 -> 59.0 ms
+**************************
+INSTANCE : SNGS-100
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 21 to player ID 20 | frames: present start = 232 length = 37 end = 269
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 20 to player ID 22 | frames: present start = 432 length = 20 end = 452
+
+
+train/SNGS-100 -> 65.0 ms
+**************************
+INSTANCE : SNGS-101
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 15 | frames: present start = 46 length = 42 end = 88
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 22 to player ID 6 | frames: present start = 329 length = 69 end = 398
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 6 to player ID 7 | frames: present start = 398 length = 26 end = 424
+
+
+train/SNGS-101 -> 46.0 ms
+**************************
+INSTANCE : SNGS-102
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 17 | frames: present start = 161 length = 15 end = 176
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 17 to player ID 18 | frames: present start = 179 length = 21 end = 200
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 18 to player ID 16 | frames: present start = 262 length = 20 end = 282
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 18 to player ID 24 | frames: present start = 333 length = 35 end = 368
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 24 to player ID 20 | frames: present start = 416 length = 41 end = 457
+
+
+train/SNGS-102 -> 69.0 ms
+**************************
+INSTANCE : SNGS-103
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 9 to player ID 4 | frames: present start = 161 length = 228 end = 389
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 12 to player ID 19 | frames: present start = 405 length = 62 end = 467
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 19 to player ID 15 | frames: present start = 483 length = 166 end = 649
+
+
+train/SNGS-103 -> 64.0 ms
+**************************
+INSTANCE : SNGS-104
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 15 to player ID 11 | frames: present start = 328 length = 35 end = 363
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 15 | frames: present start = 362 length = 58 end = 420
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 15 to player ID 17 | frames: present start = 478 length = 24 end = 502
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 17 to player ID 18 | frames: present start = 517 length = 43 end = 560
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 18 to player ID 20 | frames: present start = 559 length = 118 end = 677
+
+
+solution #5
+------------------
+
+EVENT # 0 PASS
+ From player ID 20 to player ID 18 | frames: present start = 676 length = 15 end = 691
+
+
+train/SNGS-104 -> 74.0 ms
+**************************
+INSTANCE : SNGS-105
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 17 to player ID 18 | frames: present start = 128 length = 15 end = 143
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 19 to player ID 20 | frames: present start = 152 length = 25 end = 177
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 20 to player ID 13 | frames: present start = 224 length = 29 end = 253
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 19 | frames: present start = 271 length = 76 end = 347
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 19 to player ID 8 | frames: present start = 353 length = 6 end = 359
+
+
+solution #5
+------------------
+
+EVENT # 0 PASS
+ From player ID 17 to player ID 24 | frames: present start = 404 length = 72 end = 476
+
+
+solution #6
+------------------
+
+EVENT # 0 PASS
+ From player ID 24 to player ID 17 | frames: present start = 522 length = 13 end = 535
+
+
+train/SNGS-105 -> 60.0 ms
+**************************
+INSTANCE : SNGS-106
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 6 to player ID 7 | frames: present start = 610 length = 83 end = 693
+
+
+train/SNGS-106 -> 56.0 ms
+**************************
+INSTANCE : SNGS-107
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 4 to player ID 3 | frames: present start = 174 length = 33 end = 207
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 3 to player ID 5 | frames: present start = 235 length = 5 end = 240
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 5 to player ID 6 | frames: present start = 242 length = 7 end = 249
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 23 to player ID 20 | frames: present start = 307 length = 27 end = 334
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 20 to player ID 24 | frames: present start = 344 length = 7 end = 351
+
+
+train/SNGS-107 -> 56.0 ms
+**************************
+INSTANCE : SNGS-108
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 21 | frames: present start = 168 length = 100 end = 268
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 23 to player ID 15 | frames: present start = 280 length = 44 end = 324
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 15 to player ID 4 | frames: present start = 323 length = 16 end = 339
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 4 to player ID 24 | frames: present start = 474 length = 11 end = 485
+
+
+train/SNGS-108 -> 60.0 ms
+**************************
+INSTANCE : SNGS-109
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 14 to player ID 22 | frames: present start = 187 length = 66 end = 253
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 22 to player ID 8 | frames: present start = 252 length = 181 end = 433
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 8 to player ID 12 | frames: present start = 440 length = 5 end = 445
+
+
+train/SNGS-109 -> 68.0 ms
+**************************
+INSTANCE : SNGS-110
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 17 to player ID 20 | frames: present start = 164 length = 204 end = 368
+
+
+train/SNGS-110 -> 58.0 ms
+**************************
+INSTANCE : SNGS-111
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 8 to player ID 6 | frames: present start = 222 length = 32 end = 254
+
+
+train/SNGS-111 -> 54.0 ms
+**************************
+INSTANCE : SNGS-112
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 5 | frames: present start = 22 length = 28 end = 50
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 5 to player ID 1 | frames: present start = 148 length = 50 end = 198
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 15 to player ID 23 | frames: present start = 407 length = 12 end = 419
+
+
+train/SNGS-112 -> 55.0 ms
+No matches found for the given query.
+train/SNGS-113 -> 73.0 ms
+**************************
+INSTANCE : SNGS-114
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 1 to player ID 2 | frames: present start = 122 length = 62 end = 184
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 18 to player ID 23 | frames: present start = 646 length = 87 end = 733
+
+
+train/SNGS-114 -> 59.0 ms
+**************************
+INSTANCE : SNGS-115
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 4 to player ID 1 | frames: present start = 49 length = 68 end = 117
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 1 to player ID 13 | frames: present start = 143 length = 17 end = 160
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 6 | frames: present start = 159 length = 3 end = 162
+
+
+train/SNGS-115 -> 53.0 ms
+**************************
+INSTANCE : SNGS-151
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 3 to player ID 5 | frames: present start = 125 length = 49 end = 174
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 5 to player ID 6 | frames: present start = 203 length = 31 end = 234
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 6 to player ID 7 | frames: present start = 235 length = 25 end = 260
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 7 to player ID 17 | frames: present start = 286 length = 46 end = 332
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 17 to player ID 19 | frames: present start = 368 length = 31 end = 399
+
+
+solution #5
+------------------
+
+EVENT # 0 PASS
+ From player ID 19 to player ID 18 | frames: present start = 445 length = 19 end = 464
+
+
+train/SNGS-151 -> 56.0 ms
+**************************
+INSTANCE : SNGS-152
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 4 to player ID 22 | frames: present start = 28 length = 143 end = 171
+
+
+train/SNGS-152 -> 61.0 ms
+**************************
+INSTANCE : SNGS-153
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 3 to player ID 9 | frames: present start = 169 length = 34 end = 203
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 9 to player ID 11 | frames: present start = 245 length = 37 end = 282
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 21 to player ID 27 | frames: present start = 441 length = 70 end = 511
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 22 to player ID 26 | frames: present start = 567 length = 7 end = 574
+
+
+train/SNGS-153 -> 49.0 ms
+**************************
+INSTANCE : SNGS-154
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 18 to player ID 22 | frames: present start = 158 length = 71 end = 229
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 22 to player ID 23 | frames: present start = 238 length = 19 end = 257
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 23 to player ID 24 | frames: present start = 293 length = 40 end = 333
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 3 to player ID 6 | frames: present start = 536 length = 96 end = 632
+
+
+train/SNGS-154 -> 56.0 ms
+**************************
+INSTANCE : SNGS-155
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 19 to player ID 21 | frames: present start = 97 length = 73 end = 170
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 21 to player ID 17 | frames: present start = 209 length = 32 end = 241
+
+
+train/SNGS-155 -> 48.0 ms
+No matches found for the given query.
+train/SNGS-156 -> 52.0 ms
+**************************
+INSTANCE : SNGS-157
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 11 | frames: present start = 174 length = 75 end = 249
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 23 to player ID 13 | frames: present start = 307 length = 11 end = 318
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 14 to player ID 20 | frames: present start = 346 length = 26 end = 372
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 20 to player ID 5 | frames: present start = 405 length = 45 end = 450
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 5 to player ID 20 | frames: present start = 607 length = 27 end = 634
+
+
+train/SNGS-157 -> 46.0 ms
+**************************
+INSTANCE : SNGS-158
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 9 to player ID 25 | frames: present start = 241 length = 58 end = 299
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 25 to player ID 26 | frames: present start = 331 length = 46 end = 377
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 26 to player ID 23 | frames: present start = 382 length = 35 end = 417
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 23 to player ID 21 | frames: present start = 478 length = 150 end = 628
+
+
+train/SNGS-158 -> 47.0 ms
+**************************
+INSTANCE : SNGS-159
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 14 to player ID 15 | frames: present start = 48 length = 3 end = 51
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 15 to player ID 16 | frames: present start = 51 length = 30 end = 81
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 16 to player ID 14 | frames: present start = 127 length = 7 end = 134
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 23 to player ID 15 | frames: present start = 378 length = 28 end = 406
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 21 to player ID 20 | frames: present start = 529 length = 49 end = 578
+
+
+train/SNGS-159 -> 51.0 ms
+**************************
+INSTANCE : SNGS-160
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 9 to player ID 14 | frames: present start = 51 length = 147 end = 198
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 14 to player ID 18 | frames: present start = 226 length = 55 end = 281
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 18 to player ID 17 | frames: present start = 316 length = 30 end = 346
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 17 to player ID 15 | frames: present start = 427 length = 35 end = 462
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 15 to player ID 18 | frames: present start = 497 length = 50 end = 547
+
+
+solution #5
+------------------
+
+EVENT # 0 PASS
+ From player ID 4 to player ID 6 | frames: present start = 638 length = 7 end = 645
+
+
+solution #6
+------------------
+
+EVENT # 0 PASS
+ From player ID 6 to player ID 21 | frames: present start = 645 length = 26 end = 671
+
+
+train/SNGS-160 -> 47.0 ms
+**************************
+INSTANCE : SNGS-161
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 12 | frames: present start = 326 length = 37 end = 363
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 12 to player ID 4 | frames: present start = 458 length = 22 end = 480
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 17 to player ID 15 | frames: present start = 695 length = 35 end = 730
+
+
+train/SNGS-161 -> 47.0 ms
+**************************
+INSTANCE : SNGS-162
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 22 to player ID 7 | frames: present start = 181 length = 146 end = 327
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 7 to player ID 12 | frames: present start = 326 length = 32 end = 358
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 9 to player ID 8 | frames: present start = 412 length = 11 end = 423
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 8 to player ID 23 | frames: present start = 422 length = 34 end = 456
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 23 to player ID 2 | frames: present start = 468 length = 51 end = 519
+
+
+solution #5
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 25 | frames: present start = 518 length = 41 end = 559
+
+
+solution #6
+------------------
+
+EVENT # 0 PASS
+ From player ID 25 to player ID 6 | frames: present start = 562 length = 103 end = 665
+
+
+train/SNGS-162 -> 56.0 ms
+**************************
+INSTANCE : SNGS-163
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 25 | frames: present start = 362 length = 138 end = 500
+
+
+train/SNGS-163 -> 45.0 ms
+**************************
+INSTANCE : SNGS-164
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 1 to player ID 2 | frames: present start = 36 length = 13 end = 49
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 6 to player ID 9 | frames: present start = 199 length = 16 end = 215
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 9 to player ID 14 | frames: present start = 288 length = 9 end = 297
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 1 to player ID 8 | frames: present start = 323 length = 4 end = 327
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 8 to player ID 19 | frames: present start = 429 length = 24 end = 453
+
+
+solution #5
+------------------
+
+EVENT # 0 PASS
+ From player ID 8 to player ID 10 | frames: present start = 478 length = 22 end = 500
+
+
+solution #6
+------------------
+
+EVENT # 0 PASS
+ From player ID 10 to player ID 1 | frames: present start = 550 length = 24 end = 574
+
+
+train/SNGS-164 -> 58.0 ms
+**************************
+INSTANCE : SNGS-165
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 14 to player ID 15 | frames: present start = 443 length = 61 end = 504
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 15 to player ID 24 | frames: present start = 507 length = 44 end = 551
+
+
+train/SNGS-165 -> 47.0 ms
+**************************
+INSTANCE : SNGS-166
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 17 to player ID 12 | frames: present start = 178 length = 184 end = 362
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 3 to player ID 4 | frames: present start = 580 length = 23 end = 603
+
+
+train/SNGS-166 -> 56.0 ms
+No matches found for the given query.
+train/SNGS-167 -> 54.0 ms
+**************************
+INSTANCE : SNGS-168
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 6 to player ID 10 | frames: present start = 25 length = 29 end = 54
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 4 to player ID 9 | frames: present start = 157 length = 26 end = 183
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 8 to player ID 6 | frames: present start = 586 length = 47 end = 633
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 6 to player ID 3 | frames: present start = 640 length = 44 end = 684
+
+
+train/SNGS-168 -> 57.0 ms
+**************************
+INSTANCE : SNGS-169
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 6 to player ID 3 | frames: present start = 183 length = 18 end = 201
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 17 to player ID 4 | frames: present start = 538 length = 80 end = 618
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 4 to player ID 1 | frames: present start = 654 length = 49 end = 703
+
+
+train/SNGS-169 -> 53.0 ms
+**************************
+INSTANCE : SNGS-170
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 4 | frames: present start = 4 length = 12 end = 16
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 4 to player ID 2 | frames: present start = 30 length = 4 end = 34
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 21 | frames: present start = 78 length = 221 end = 299
+
+
+train/SNGS-170 -> 55.0 ms
+=== Split: test ===
+**************************
+INSTANCE : SNGS-116
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 19 | frames: present start = 317 length = 118 end = 435
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 19 to player ID 9 | frames: present start = 526 length = 122 end = 648
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 9 to player ID 22 | frames: present start = 647 length = 44 end = 691
+
+
+test/SNGS-116 -> 50.0 ms
+**************************
+INSTANCE : SNGS-117
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 9 to player ID 18 | frames: present start = 178 length = 34 end = 212
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 18 to player ID 1 | frames: present start = 355 length = 166 end = 521
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 24 to player ID 11 | frames: present start = 548 length = 186 end = 734
+
+
+test/SNGS-117 -> 42.0 ms
+**************************
+INSTANCE : SNGS-118
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 20 to player ID 13 | frames: present start = 197 length = 64 end = 261
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 7 | frames: present start = 316 length = 25 end = 341
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 7 to player ID 13 | frames: present start = 341 length = 20 end = 361
+
+
+test/SNGS-118 -> 49.0 ms
+**************************
+INSTANCE : SNGS-119
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 5 to player ID 4 | frames: present start = 164 length = 29 end = 193
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 4 to player ID 5 | frames: present start = 227 length = 29 end = 256
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 5 to player ID 13 | frames: present start = 265 length = 133 end = 398
+
+
+test/SNGS-119 -> 44.0 ms
+**************************
+INSTANCE : SNGS-120
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 24 to player ID 26 | frames: present start = 260 length = 40 end = 300
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 6 to player ID 17 | frames: present start = 494 length = 17 end = 511
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 5 to player ID 12 | frames: present start = 519 length = 6 end = 525
+
+
+test/SNGS-120 -> 53.0 ms
+**************************
+INSTANCE : SNGS-121
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 2 | frames: present start = 237 length = 77 end = 314
+
+
+test/SNGS-121 -> 46.0 ms
+**************************
+INSTANCE : SNGS-122
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 24 to player ID 22 | frames: present start = 335 length = 25 end = 360
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 22 to player ID 15 | frames: present start = 360 length = 128 end = 488
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 15 to player ID 26 | frames: present start = 536 length = 42 end = 578
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 26 to player ID 15 | frames: present start = 598 length = 95 end = 693
+
+
+test/SNGS-122 -> 52.0 ms
+**************************
+INSTANCE : SNGS-123
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 13 | frames: present start = 4 length = 157 end = 161
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 20 to player ID 23 | frames: present start = 190 length = 76 end = 266
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 21 to player ID 14 | frames: present start = 390 length = 233 end = 623
+
+
+test/SNGS-123 -> 50.0 ms
+**************************
+INSTANCE : SNGS-124
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 10 to player ID 1 | frames: present start = 103 length = 67 end = 170
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 1 to player ID 18 | frames: present start = 171 length = 14 end = 185
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 21 to player ID 24 | frames: present start = 281 length = 25 end = 306
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 24 to player ID 14 | frames: present start = 310 length = 100 end = 410
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 14 to player ID 23 | frames: present start = 470 length = 9 end = 479
+
+
+solution #5
+------------------
+
+EVENT # 0 PASS
+ From player ID 12 to player ID 16 | frames: present start = 512 length = 11 end = 523
+
+
+solution #6
+------------------
+
+EVENT # 0 PASS
+ From player ID 20 to player ID 25 | frames: present start = 589 length = 59 end = 648
+
+
+test/SNGS-124 -> 52.0 ms
+**************************
+INSTANCE : SNGS-125
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 26 to player ID 22 | frames: present start = 435 length = 14 end = 449
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 22 to player ID 12 | frames: present start = 532 length = 37 end = 569
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 12 to player ID 24 | frames: present start = 649 length = 32 end = 681
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 24 to player ID 12 | frames: present start = 712 length = 14 end = 726
+
+
+test/SNGS-125 -> 37.0 ms
+**************************
+INSTANCE : SNGS-126
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 4 to player ID 1 | frames: present start = 244 length = 17 end = 261
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 1 to player ID 6 | frames: present start = 289 length = 29 end = 318
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 12 to player ID 17 | frames: present start = 325 length = 17 end = 342
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 21 to player ID 13 | frames: present start = 398 length = 14 end = 412
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 3 | frames: present start = 481 length = 91 end = 572
+
+
+test/SNGS-126 -> 51.0 ms
+No matches found for the given query.
+test/SNGS-127 -> 70.0 ms
+**************************
+INSTANCE : SNGS-128
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 12 to player ID 7 | frames: present start = 91 length = 233 end = 324
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 16 to player ID 1 | frames: present start = 333 length = 50 end = 383
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 7 to player ID 2 | frames: present start = 443 length = 133 end = 576
+
+
+test/SNGS-128 -> 57.0 ms
+**************************
+INSTANCE : SNGS-129
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 12 | frames: present start = 53 length = 78 end = 131
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 12 to player ID 16 | frames: present start = 133 length = 62 end = 195
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 8 to player ID 1 | frames: present start = 308 length = 154 end = 462
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 1 to player ID 10 | frames: present start = 467 length = 25 end = 492
+
+
+test/SNGS-129 -> 50.0 ms
+No matches found for the given query.
+test/SNGS-130 -> 47.0 ms
+No matches found for the given query.
+test/SNGS-131 -> 56.0 ms
+**************************
+INSTANCE : SNGS-132
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 12 to player ID 11 | frames: present start = 130 length = 59 end = 189
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 20 | frames: present start = 257 length = 36 end = 293
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 18 to player ID 12 | frames: present start = 425 length = 35 end = 460
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 25 to player ID 23 | frames: present start = 599 length = 45 end = 644
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 23 to player ID 24 | frames: present start = 654 length = 78 end = 732
+
+
+test/SNGS-132 -> 49.0 ms
+**************************
+INSTANCE : SNGS-133
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 15 to player ID 19 | frames: present start = 51 length = 28 end = 79
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 19 to player ID 5 | frames: present start = 80 length = 504 end = 584
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 5 to player ID 24 | frames: present start = 583 length = 21 end = 604
+
+
+test/SNGS-133 -> 52.0 ms
+**************************
+INSTANCE : SNGS-134
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 10 to player ID 11 | frames: present start = 357 length = 18 end = 375
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 7 to player ID 6 | frames: present start = 480 length = 13 end = 493
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 3 to player ID 1 | frames: present start = 510 length = 63 end = 573
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 1 to player ID 22 | frames: present start = 574 length = 49 end = 623
+
+
+test/SNGS-134 -> 49.0 ms
+**************************
+INSTANCE : SNGS-135
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 21 to player ID 12 | frames: present start = 462 length = 143 end = 605
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 7 to player ID 23 | frames: present start = 644 length = 69 end = 713
+
+
+test/SNGS-135 -> 52.0 ms
+**************************
+INSTANCE : SNGS-136
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 5 to player ID 21 | frames: present start = 21 length = 167 end = 188
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 21 to player ID 15 | frames: present start = 245 length = 5 end = 250
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 15 to player ID 5 | frames: present start = 251 length = 10 end = 261
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 5 to player ID 21 | frames: present start = 260 length = 11 end = 271
+
+
+test/SNGS-136 -> 41.0 ms
+**************************
+INSTANCE : SNGS-137
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 15 to player ID 20 | frames: present start = 474 length = 34 end = 508
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 17 to player ID 10 | frames: present start = 522 length = 62 end = 584
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 10 to player ID 17 | frames: present start = 586 length = 90 end = 676
+
+
+test/SNGS-137 -> 39.0 ms
+**************************
+INSTANCE : SNGS-138
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 15 to player ID 17 | frames: present start = 5 length = 59 end = 64
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 17 to player ID 15 | frames: present start = 73 length = 97 end = 170
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 17 to player ID 14 | frames: present start = 370 length = 193 end = 563
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 8 to player ID 5 | frames: present start = 579 length = 17 end = 596
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 5 to player ID 6 | frames: present start = 608 length = 17 end = 625
+
+
+solution #5
+------------------
+
+EVENT # 0 PASS
+ From player ID 6 to player ID 15 | frames: present start = 670 length = 7 end = 677
+
+
+test/SNGS-138 -> 53.0 ms
+**************************
+INSTANCE : SNGS-139
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 12 to player ID 20 | frames: present start = 47 length = 80 end = 127
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 20 to player ID 19 | frames: present start = 137 length = 3 end = 140
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 19 to player ID 21 | frames: present start = 146 length = 26 end = 172
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 5 to player ID 19 | frames: present start = 243 length = 21 end = 264
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 19 to player ID 5 | frames: present start = 265 length = 5 end = 270
+
+
+solution #5
+------------------
+
+EVENT # 0 PASS
+ From player ID 15 to player ID 6 | frames: present start = 369 length = 19 end = 388
+
+
+solution #6
+------------------
+
+EVENT # 0 PASS
+ From player ID 6 to player ID 11 | frames: present start = 389 length = 8 end = 397
+
+
+solution #7
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 14 | frames: present start = 399 length = 261 end = 660
+
+
+solution #8
+------------------
+
+EVENT # 0 PASS
+ From player ID 14 to player ID 11 | frames: present start = 696 length = 32 end = 728
+
+
+test/SNGS-139 -> 49.0 ms
+**************************
+INSTANCE : SNGS-140
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 3 to player ID 2 | frames: present start = 168 length = 34 end = 202
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 3 | frames: present start = 214 length = 39 end = 253
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 3 to player ID 5 | frames: present start = 262 length = 79 end = 341
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 5 to player ID 3 | frames: present start = 449 length = 202 end = 651
+
+
+test/SNGS-140 -> 55.0 ms
+**************************
+INSTANCE : SNGS-141
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 8 to player ID 10 | frames: present start = 20 length = 8 end = 28
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 23 to player ID 24 | frames: present start = 157 length = 22 end = 179
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 8 | frames: present start = 406 length = 163 end = 569
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 14 to player ID 18 | frames: present start = 637 length = 84 end = 721
+
+
+test/SNGS-141 -> 46.0 ms
+**************************
+INSTANCE : SNGS-142
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 1 to player ID 21 | frames: present start = 103 length = 118 end = 221
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 21 to player ID 23 | frames: present start = 295 length = 25 end = 320
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 16 to player ID 20 | frames: present start = 504 length = 155 end = 659
+
+
+test/SNGS-142 -> 48.0 ms
+**************************
+INSTANCE : SNGS-143
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 19 to player ID 10 | frames: present start = 437 length = 97 end = 534
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 10 to player ID 15 | frames: present start = 571 length = 53 end = 624
+
+
+test/SNGS-143 -> 35.0 ms
+**************************
+INSTANCE : SNGS-144
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 1 | frames: present start = 94 length = 84 end = 178
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 19 to player ID 18 | frames: present start = 549 length = 44 end = 593
+
+
+test/SNGS-144 -> 41.0 ms
+**************************
+INSTANCE : SNGS-145
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 22 to player ID 1 | frames: present start = 224 length = 160 end = 384
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 1 to player ID 25 | frames: present start = 384 length = 88 end = 472
+
+
+test/SNGS-145 -> 45.0 ms
+**************************
+INSTANCE : SNGS-146
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 12 | frames: present start = 44 length = 41 end = 85
+
+
+test/SNGS-146 -> 37.0 ms
+**************************
+INSTANCE : SNGS-147
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 1 to player ID 3 | frames: present start = 283 length = 98 end = 381
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 3 to player ID 20 | frames: present start = 404 length = 60 end = 464
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 20 to player ID 11 | frames: present start = 554 length = 86 end = 640
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 22 to player ID 25 | frames: present start = 709 length = 5 end = 714
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 25 to player ID 17 | frames: present start = 714 length = 14 end = 728
+
+
+test/SNGS-147 -> 33.0 ms
+No matches found for the given query.
+test/SNGS-148 -> 41.0 ms
+**************************
+INSTANCE : SNGS-149
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 15 to player ID 10 | frames: present start = 163 length = 34 end = 197
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 10 to player ID 12 | frames: present start = 207 length = 54 end = 261
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 12 to player ID 11 | frames: present start = 303 length = 46 end = 349
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 13 | frames: present start = 374 length = 77 end = 451
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 20 | frames: present start = 489 length = 143 end = 632
+
+
+solution #5
+------------------
+
+EVENT # 0 PASS
+ From player ID 23 to player ID 20 | frames: present start = 662 length = 7 end = 669
+
+
+test/SNGS-149 -> 47.0 ms
+**************************
+INSTANCE : SNGS-150
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 12 to player ID 13 | frames: present start = 97 length = 34 end = 131
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 17 to player ID 25 | frames: present start = 141 length = 49 end = 190
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 25 to player ID 24 | frames: present start = 215 length = 10 end = 225
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 6 to player ID 19 | frames: present start = 399 length = 82 end = 481
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 19 to player ID 28 | frames: present start = 610 length = 137 end = 747
+
+
+test/SNGS-150 -> 45.0 ms
+**************************
+INSTANCE : SNGS-187
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 4 to player ID 2 | frames: present start = 280 length = 14 end = 294
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 6 to player ID 23 | frames: present start = 298 length = 77 end = 375
+
+
+test/SNGS-187 -> 55.0 ms
+**************************
+INSTANCE : SNGS-188
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 5 to player ID 23 | frames: present start = 592 length = 102 end = 694
+
+
+test/SNGS-188 -> 69.0 ms
+**************************
+INSTANCE : SNGS-189
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 1 to player ID 2 | frames: present start = 88 length = 14 end = 102
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 21 | frames: present start = 129 length = 56 end = 185
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 22 to player ID 11 | frames: present start = 399 length = 50 end = 449
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 13 | frames: present start = 485 length = 7 end = 492
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 14 to player ID 15 | frames: present start = 642 length = 24 end = 666
+
+
+test/SNGS-189 -> 53.0 ms
+**************************
+INSTANCE : SNGS-190
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 8 to player ID 20 | frames: present start = 111 length = 15 end = 126
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 20 to player ID 11 | frames: present start = 385 length = 272 end = 657
+
+
+test/SNGS-190 -> 46.0 ms
+**************************
+INSTANCE : SNGS-191
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 2 | frames: present start = 302 length = 27 end = 329
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 14 to player ID 18 | frames: present start = 458 length = 12 end = 470
+
+
+test/SNGS-191 -> 48.0 ms
+**************************
+INSTANCE : SNGS-192
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 15 to player ID 10 | frames: present start = 211 length = 50 end = 261
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 18 to player ID 9 | frames: present start = 425 length = 61 end = 486
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 4 to player ID 2 | frames: present start = 510 length = 138 end = 648
+
+
+test/SNGS-192 -> 50.0 ms
+**************************
+INSTANCE : SNGS-193
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 1 to player ID 16 | frames: present start = 161 length = 18 end = 179
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 10 to player ID 19 | frames: present start = 179 length = 88 end = 267
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 19 to player ID 11 | frames: present start = 320 length = 24 end = 344
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 10 | frames: present start = 385 length = 18 end = 403
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 3 to player ID 14 | frames: present start = 470 length = 22 end = 492
+
+
+test/SNGS-193 -> 52.0 ms
+**************************
+INSTANCE : SNGS-194
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 14 to player ID 10 | frames: present start = 554 length = 10 end = 564
+
+
+test/SNGS-194 -> 64.0 ms
+**************************
+INSTANCE : SNGS-195
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 4 to player ID 15 | frames: present start = 63 length = 30 end = 93
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 12 to player ID 10 | frames: present start = 263 length = 8 end = 271
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 10 to player ID 4 | frames: present start = 276 length = 28 end = 304
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 8 to player ID 16 | frames: present start = 372 length = 13 end = 385
+
+
+test/SNGS-195 -> 54.0 ms
+**************************
+INSTANCE : SNGS-196
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 14 to player ID 1 | frames: present start = 477 length = 89 end = 566
+
+
+test/SNGS-196 -> 56.0 ms
+**************************
+INSTANCE : SNGS-197
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 15 | frames: present start = 263 length = 14 end = 277
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 15 to player ID 11 | frames: present start = 290 length = 34 end = 324
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 13 | frames: present start = 404 length = 13 end = 417
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 15 | frames: present start = 421 length = 16 end = 437
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 15 to player ID 13 | frames: present start = 480 length = 29 end = 509
+
+
+solution #5
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 24 | frames: present start = 523 length = 43 end = 566
+
+
+test/SNGS-197 -> 57.0 ms
+**************************
+INSTANCE : SNGS-198
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 10 to player ID 20 | frames: present start = 287 length = 6 end = 293
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 20 to player ID 4 | frames: present start = 326 length = 29 end = 355
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 4 to player ID 2 | frames: present start = 370 length = 23 end = 393
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 26 | frames: present start = 635 length = 92 end = 727
+
+
+test/SNGS-198 -> 62.0 ms
+**************************
+INSTANCE : SNGS-199
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 1 to player ID 20 | frames: present start = 168 length = 51 end = 219
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 20 to player ID 23 | frames: present start = 279 length = 35 end = 314
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 6 to player ID 5 | frames: present start = 356 length = 54 end = 410
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 5 to player ID 13 | frames: present start = 488 length = 29 end = 517
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 12 | frames: present start = 517 length = 16 end = 533
+
+
+solution #5
+------------------
+
+EVENT # 0 PASS
+ From player ID 20 to player ID 23 | frames: present start = 540 length = 4 end = 544
+
+
+solution #6
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 3 | frames: present start = 550 length = 10 end = 560
+
+
+test/SNGS-199 -> 58.0 ms
+**************************
+INSTANCE : SNGS-200
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 12 to player ID 7 | frames: present start = 84 length = 21 end = 105
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 7 to player ID 6 | frames: present start = 162 length = 7 end = 169
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 3 | frames: present start = 249 length = 4 end = 253
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 14 to player ID 20 | frames: present start = 254 length = 13 end = 267
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 17 to player ID 3 | frames: present start = 343 length = 32 end = 375
+
+
+solution #5
+------------------
+
+EVENT # 0 PASS
+ From player ID 20 to player ID 17 | frames: present start = 673 length = 29 end = 702
+
+
+test/SNGS-200 -> 52.0 ms
+=== Split: valid ===
+**************************
+INSTANCE : SNGS-021
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 5 to player ID 6 | frames: present start = 38 length = 3 end = 41
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 5 to player ID 20 | frames: present start = 160 length = 77 end = 237
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 12 | frames: present start = 313 length = 27 end = 340
+
+
+valid/SNGS-021 -> 53.0 ms
+**************************
+INSTANCE : SNGS-022
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 4 to player ID 3 | frames: present start = 457 length = 50 end = 507
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 3 to player ID 20 | frames: present start = 512 length = 106 end = 618
+
+
+valid/SNGS-022 -> 46.0 ms
+**************************
+INSTANCE : SNGS-023
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 3 | frames: present start = 2 length = 213 end = 215
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 3 to player ID 2 | frames: present start = 447 length = 49 end = 496
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 3 | frames: present start = 501 length = 7 end = 508
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 3 to player ID 2 | frames: present start = 507 length = 19 end = 526
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 5 | frames: present start = 525 length = 7 end = 532
+
+
+solution #5
+------------------
+
+EVENT # 0 PASS
+ From player ID 22 to player ID 23 | frames: present start = 539 length = 18 end = 557
+
+
+solution #6
+------------------
+
+EVENT # 0 PASS
+ From player ID 23 to player ID 22 | frames: present start = 577 length = 14 end = 591
+
+
+solution #7
+------------------
+
+EVENT # 0 PASS
+ From player ID 22 to player ID 19 | frames: present start = 592 length = 6 end = 598
+
+
+valid/SNGS-023 -> 61.0 ms
+**************************
+INSTANCE : SNGS-024
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 4 to player ID 13 | frames: present start = 163 length = 132 end = 295
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 3 to player ID 24 | frames: present start = 398 length = 322 end = 720
+
+
+valid/SNGS-024 -> 41.0 ms
+**************************
+INSTANCE : SNGS-025
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 24 to player ID 25 | frames: present start = 478 length = 163 end = 641
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 25 to player ID 20 | frames: present start = 697 length = 23 end = 720
+
+
+valid/SNGS-025 -> 54.0 ms
+**************************
+INSTANCE : SNGS-026
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 1 to player ID 3 | frames: present start = 155 length = 31 end = 186
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 9 to player ID 25 | frames: present start = 188 length = 281 end = 469
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 25 to player ID 21 | frames: present start = 658 length = 48 end = 706
+
+
+valid/SNGS-026 -> 42.0 ms
+**************************
+INSTANCE : SNGS-027
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 12 | frames: present start = 274 length = 3 end = 277
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 9 to player ID 3 | frames: present start = 408 length = 71 end = 479
+
+
+valid/SNGS-027 -> 53.0 ms
+**************************
+INSTANCE : SNGS-028
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 7 to player ID 17 | frames: present start = 125 length = 8 end = 133
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 17 to player ID 3 | frames: present start = 227 length = 106 end = 333
+
+
+valid/SNGS-028 -> 38.0 ms
+**************************
+INSTANCE : SNGS-029
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 7 to player ID 3 | frames: present start = 87 length = 7 end = 94
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 3 to player ID 5 | frames: present start = 344 length = 13 end = 357
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 10 to player ID 11 | frames: present start = 368 length = 12 end = 380
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 13 | frames: present start = 433 length = 39 end = 472
+
+
+valid/SNGS-029 -> 43.0 ms
+No matches found for the given query.
+valid/SNGS-030 -> 50.0 ms
+**************************
+INSTANCE : SNGS-031
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 7 to player ID 6 | frames: present start = 1 length = 39 end = 40
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 16 to player ID 18 | frames: present start = 61 length = 27 end = 88
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 18 to player ID 20 | frames: present start = 124 length = 33 end = 157
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 4 to player ID 11 | frames: present start = 649 length = 35 end = 684
+
+
+valid/SNGS-031 -> 50.0 ms
+**************************
+INSTANCE : SNGS-032
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 19 to player ID 12 | frames: present start = 577 length = 16 end = 593
+
+
+valid/SNGS-032 -> 45.0 ms
+No matches found for the given query.
+valid/SNGS-033 -> 42.0 ms
+**************************
+INSTANCE : SNGS-034
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 14 | frames: present start = 30 length = 117 end = 147
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 14 to player ID 19 | frames: present start = 202 length = 3 end = 205
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 19 to player ID 14 | frames: present start = 364 length = 194 end = 558
+
+
+valid/SNGS-034 -> 55.0 ms
+**************************
+INSTANCE : SNGS-035
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 9 to player ID 12 | frames: present start = 125 length = 58 end = 183
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 12 to player ID 19 | frames: present start = 219 length = 17 end = 236
+
+
+valid/SNGS-035 -> 46.0 ms
+No matches found for the given query.
+valid/SNGS-036 -> 62.0 ms
+**************************
+INSTANCE : SNGS-037
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 7 to player ID 8 | frames: present start = 119 length = 13 end = 132
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 9 to player ID 10 | frames: present start = 197 length = 9 end = 206
+
+
+valid/SNGS-037 -> 44.0 ms
+**************************
+INSTANCE : SNGS-038
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 15 to player ID 14 | frames: present start = 300 length = 76 end = 376
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 15 to player ID 16 | frames: present start = 495 length = 44 end = 539
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 16 to player ID 15 | frames: present start = 568 length = 61 end = 629
+
+
+valid/SNGS-038 -> 48.0 ms
+**************************
+INSTANCE : SNGS-039
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 1 to player ID 9 | frames: present start = 48 length = 30 end = 78
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 9 to player ID 24 | frames: present start = 86 length = 72 end = 158
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 24 to player ID 23 | frames: present start = 203 length = 52 end = 255
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 23 to player ID 3 | frames: present start = 354 length = 15 end = 369
+
+
+valid/SNGS-039 -> 62.0 ms
+**************************
+INSTANCE : SNGS-040
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 18 | frames: present start = 164 length = 53 end = 217
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 20 to player ID 23 | frames: present start = 324 length = 22 end = 346
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 23 to player ID 24 | frames: present start = 398 length = 4 end = 402
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 8 to player ID 6 | frames: present start = 637 length = 24 end = 661
+
+
+valid/SNGS-040 -> 60.0 ms
+**************************
+INSTANCE : SNGS-041
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 11 | frames: present start = 164 length = 37 end = 201
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 5 to player ID 11 | frames: present start = 346 length = 11 end = 357
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 5 to player ID 11 | frames: present start = 489 length = 21 end = 510
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 16 to player ID 2 | frames: present start = 624 length = 38 end = 662
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 4 | frames: present start = 700 length = 22 end = 722
+
+
+valid/SNGS-041 -> 51.0 ms
+**************************
+INSTANCE : SNGS-042
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 22 to player ID 3 | frames: present start = 256 length = 26 end = 282
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 3 to player ID 15 | frames: present start = 587 length = 42 end = 629
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 15 to player ID 18 | frames: present start = 674 length = 36 end = 710
+
+
+valid/SNGS-042 -> 62.0 ms
+**************************
+INSTANCE : SNGS-043
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 1 to player ID 16 | frames: present start = 129 length = 125 end = 254
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 22 to player ID 6 | frames: present start = 379 length = 41 end = 420
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 15 to player ID 18 | frames: present start = 570 length = 25 end = 595
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 23 to player ID 25 | frames: present start = 602 length = 12 end = 614
+
+
+valid/SNGS-043 -> 58.0 ms
+**************************
+INSTANCE : SNGS-044
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 8 to player ID 22 | frames: present start = 289 length = 58 end = 347
+
+
+valid/SNGS-044 -> 61.0 ms
+**************************
+INSTANCE : SNGS-045
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 18 to player ID 8 | frames: present start = 131 length = 10 end = 141
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 7 to player ID 5 | frames: present start = 143 length = 15 end = 158
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 12 | frames: present start = 225 length = 60 end = 285
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 12 to player ID 13 | frames: present start = 285 length = 45 end = 330
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 8 | frames: present start = 383 length = 102 end = 485
+
+
+valid/SNGS-045 -> 52.0 ms
+**************************
+INSTANCE : SNGS-046
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 24 to player ID 8 | frames: present start = 539 length = 41 end = 580
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 22 | frames: present start = 611 length = 39 end = 650
+
+
+valid/SNGS-046 -> 56.0 ms
+**************************
+INSTANCE : SNGS-047
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 17 to player ID 22 | frames: present start = 547 length = 18 end = 565
+
+
+valid/SNGS-047 -> 63.0 ms
+**************************
+INSTANCE : SNGS-048
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 16 to player ID 18 | frames: present start = 229 length = 36 end = 265
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 2 | frames: present start = 541 length = 15 end = 556
+
+
+valid/SNGS-048 -> 66.0 ms
+**************************
+INSTANCE : SNGS-049
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 9 to player ID 6 | frames: present start = 249 length = 15 end = 264
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 6 to player ID 4 | frames: present start = 298 length = 25 end = 323
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 6 to player ID 4 | frames: present start = 434 length = 32 end = 466
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 4 to player ID 1 | frames: present start = 470 length = 109 end = 579
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 1 to player ID 2 | frames: present start = 613 length = 27 end = 640
+
+
+solution #5
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 8 | frames: present start = 639 length = 14 end = 653
+
+
+solution #6
+------------------
+
+EVENT # 0 PASS
+ From player ID 9 to player ID 10 | frames: present start = 674 length = 19 end = 693
+
+
+valid/SNGS-049 -> 62.0 ms
+**************************
+INSTANCE : SNGS-050
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 20 to player ID 19 | frames: present start = 245 length = 44 end = 289
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 19 to player ID 21 | frames: present start = 562 length = 10 end = 572
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 21 to player ID 19 | frames: present start = 624 length = 17 end = 641
+
+
+valid/SNGS-050 -> 64.0 ms
+**************************
+INSTANCE : SNGS-051
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 17 to player ID 13 | frames: present start = 545 length = 89 end = 634
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 17 to player ID 13 | frames: present start = 721 length = 11 end = 732
+
+
+valid/SNGS-051 -> 50.0 ms
+**************************
+INSTANCE : SNGS-052
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 16 to player ID 4 | frames: present start = 89 length = 18 end = 107
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 4 to player ID 2 | frames: present start = 116 length = 14 end = 130
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 16 | frames: present start = 162 length = 21 end = 183
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 16 to player ID 21 | frames: present start = 218 length = 36 end = 254
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 17 | frames: present start = 395 length = 4 end = 399
+
+
+solution #5
+------------------
+
+EVENT # 0 PASS
+ From player ID 17 to player ID 24 | frames: present start = 398 length = 24 end = 422
+
+
+valid/SNGS-052 -> 56.0 ms
+**************************
+INSTANCE : SNGS-053
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 5 to player ID 9 | frames: present start = 1 length = 22 end = 23
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 9 to player ID 10 | frames: present start = 26 length = 103 end = 129
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 10 to player ID 4 | frames: present start = 278 length = 77 end = 355
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 4 to player ID 6 | frames: present start = 442 length = 18 end = 460
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 6 to player ID 4 | frames: present start = 477 length = 18 end = 495
+
+
+solution #5
+------------------
+
+EVENT # 0 PASS
+ From player ID 4 to player ID 10 | frames: present start = 500 length = 17 end = 517
+
+
+solution #6
+------------------
+
+EVENT # 0 PASS
+ From player ID 10 to player ID 6 | frames: present start = 556 length = 8 end = 564
+
+
+valid/SNGS-053 -> 64.0 ms
+**************************
+INSTANCE : SNGS-054
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 6 to player ID 20 | frames: present start = 62 length = 43 end = 105
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 16 | frames: present start = 167 length = 13 end = 180
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 16 to player ID 17 | frames: present start = 181 length = 7 end = 188
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 17 to player ID 21 | frames: present start = 238 length = 108 end = 346
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 21 to player ID 17 | frames: present start = 345 length = 17 end = 362
+
+
+solution #5
+------------------
+
+EVENT # 0 PASS
+ From player ID 26 to player ID 5 | frames: present start = 592 length = 68 end = 660
+
+
+valid/SNGS-054 -> 51.0 ms
+**************************
+INSTANCE : SNGS-055
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 16 | frames: present start = 121 length = 34 end = 155
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 3 | frames: present start = 389 length = 25 end = 414
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 15 to player ID 16 | frames: present start = 634 length = 23 end = 657
+
+
+valid/SNGS-055 -> 71.0 ms
+**************************
+INSTANCE : SNGS-056
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 8 to player ID 4 | frames: present start = 206 length = 79 end = 285
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 4 to player ID 5 | frames: present start = 568 length = 30 end = 598
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 5 to player ID 4 | frames: present start = 603 length = 59 end = 662
+
+
+valid/SNGS-056 -> 53.0 ms
+**************************
+INSTANCE : SNGS-057
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 19 to player ID 24 | frames: present start = 260 length = 54 end = 314
+
+
+valid/SNGS-057 -> 61.0 ms
+**************************
+INSTANCE : SNGS-058
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 20 to player ID 5 | frames: present start = 212 length = 81 end = 293
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 3 | frames: present start = 316 length = 18 end = 334
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 3 to player ID 9 | frames: present start = 341 length = 45 end = 386
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 9 to player ID 25 | frames: present start = 424 length = 21 end = 445
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 25 to player ID 4 | frames: present start = 466 length = 85 end = 551
+
+
+valid/SNGS-058 -> 58.0 ms
+**************************
+INSTANCE : SNGS-059
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 1 | frames: present start = 75 length = 23 end = 98
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 1 to player ID 6 | frames: present start = 463 length = 27 end = 490
+
+
+valid/SNGS-059 -> 57.0 ms
+**************************
+INSTANCE : SNGS-078
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 6 to player ID 11 | frames: present start = 155 length = 45 end = 200
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 14 | frames: present start = 289 length = 15 end = 304
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 14 to player ID 23 | frames: present start = 326 length = 140 end = 466
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 24 to player ID 1 | frames: present start = 560 length = 37 end = 597
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 1 to player ID 18 | frames: present start = 638 length = 23 end = 661
+
+
+solution #5
+------------------
+
+EVENT # 0 PASS
+ From player ID 9 to player ID 10 | frames: present start = 708 length = 11 end = 719
+
+
+valid/SNGS-078 -> 65.0 ms
+**************************
+INSTANCE : SNGS-079
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 17 | frames: present start = 169 length = 33 end = 202
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 23 to player ID 25 | frames: present start = 390 length = 56 end = 446
+
+
+valid/SNGS-079 -> 57.0 ms
+**************************
+INSTANCE : SNGS-080
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 14 to player ID 13 | frames: present start = 108 length = 11 end = 119
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 3 to player ID 2 | frames: present start = 181 length = 77 end = 258
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 21 | frames: present start = 309 length = 151 end = 460
+
+
+valid/SNGS-080 -> 45.0 ms
+**************************
+INSTANCE : SNGS-081
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 8 | frames: present start = 1 length = 65 end = 66
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 10 to player ID 12 | frames: present start = 68 length = 7 end = 75
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 12 to player ID 16 | frames: present start = 76 length = 71 end = 147
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 16 to player ID 12 | frames: present start = 152 length = 87 end = 239
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 23 to player ID 15 | frames: present start = 394 length = 250 end = 644
+
+
+valid/SNGS-081 -> 60.0 ms
+**************************
+INSTANCE : SNGS-082
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 3 to player ID 5 | frames: present start = 122 length = 21 end = 143
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 15 to player ID 16 | frames: present start = 313 length = 9 end = 322
+
+
+valid/SNGS-082 -> 63.0 ms
+**************************
+INSTANCE : SNGS-083
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 18 to player ID 17 | frames: present start = 173 length = 31 end = 204
+
+
+valid/SNGS-083 -> 53.0 ms
+**************************
+INSTANCE : SNGS-084
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 13 | frames: present start = 61 length = 26 end = 87
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 2 | frames: present start = 87 length = 23 end = 110
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 6 to player ID 19 | frames: present start = 180 length = 25 end = 205
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 15 to player ID 16 | frames: present start = 215 length = 20 end = 235
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 23 to player ID 25 | frames: present start = 304 length = 28 end = 332
+
+
+valid/SNGS-084 -> 56.0 ms
+**************************
+INSTANCE : SNGS-085
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 6 to player ID 7 | frames: present start = 76 length = 109 end = 185
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 7 to player ID 6 | frames: present start = 189 length = 3 end = 192
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 8 to player ID 13 | frames: present start = 225 length = 15 end = 240
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 22 to player ID 12 | frames: present start = 302 length = 11 end = 313
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 7 to player ID 2 | frames: present start = 347 length = 32 end = 379
+
+
+valid/SNGS-085 -> 59.0 ms
+**************************
+INSTANCE : SNGS-086
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 17 to player ID 12 | frames: present start = 172 length = 82 end = 254
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 12 to player ID 22 | frames: present start = 253 length = 72 end = 325
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 22 to player ID 23 | frames: present start = 342 length = 136 end = 478
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 23 to player ID 17 | frames: present start = 496 length = 28 end = 524
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 17 to player ID 16 | frames: present start = 543 length = 47 end = 590
+
+
+solution #5
+------------------
+
+EVENT # 0 PASS
+ From player ID 1 to player ID 9 | frames: present start = 733 length = 4 end = 737
+
+
+valid/SNGS-086 -> 64.0 ms
+**************************
+INSTANCE : SNGS-087
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 10 to player ID 11 | frames: present start = 17 length = 162 end = 179
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 12 | frames: present start = 286 length = 85 end = 371
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 12 to player ID 4 | frames: present start = 408 length = 132 end = 540
+
+
+valid/SNGS-087 -> 50.0 ms
+**************************
+INSTANCE : SNGS-088
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 24 to player ID 15 | frames: present start = 245 length = 24 end = 269
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 11 to player ID 13 | frames: present start = 592 length = 21 end = 613
+
+
+valid/SNGS-088 -> 61.0 ms
+**************************
+INSTANCE : SNGS-089
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 25 to player ID 5 | frames: present start = 297 length = 24 end = 321
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 14 to player ID 19 | frames: present start = 411 length = 8 end = 419
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 19 to player ID 20 | frames: present start = 423 length = 6 end = 429
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 13 to player ID 5 | frames: present start = 564 length = 138 end = 702
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 5 to player ID 9 | frames: present start = 709 length = 35 end = 744
+
+
+valid/SNGS-089 -> 60.0 ms
+**************************
+INSTANCE : SNGS-090
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 9 to player ID 18 | frames: present start = 203 length = 160 end = 363
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 18 to player ID 20 | frames: present start = 367 length = 10 end = 377
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 20 to player ID 9 | frames: present start = 395 length = 243 end = 638
+
+
+valid/SNGS-090 -> 51.0 ms
+**************************
+INSTANCE : SNGS-091
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 21 to player ID 24 | frames: present start = 269 length = 36 end = 305
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 24 to player ID 21 | frames: present start = 304 length = 25 end = 329
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 4 to player ID 17 | frames: present start = 425 length = 76 end = 501
+
+
+solution #3
+------------------
+
+EVENT # 0 PASS
+ From player ID 17 to player ID 9 | frames: present start = 576 length = 13 end = 589
+
+
+solution #4
+------------------
+
+EVENT # 0 PASS
+ From player ID 2 to player ID 4 | frames: present start = 662 length = 10 end = 672
+
+
+solution #5
+------------------
+
+EVENT # 0 PASS
+ From player ID 5 to player ID 1 | frames: present start = 678 length = 73 end = 751
+
+
+valid/SNGS-091 -> 64.0 ms
+**************************
+INSTANCE : SNGS-092
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 3 to player ID 22 | frames: present start = 5 length = 107 end = 112
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 22 to player ID 24 | frames: present start = 120 length = 54 end = 174
+
+
+solution #2
+------------------
+
+EVENT # 0 PASS
+ From player ID 12 to player ID 5 | frames: present start = 656 length = 51 end = 707
+
+
+valid/SNGS-092 -> 62.0 ms
+**************************
+INSTANCE : SNGS-093
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 16 to player ID 12 | frames: present start = 175 length = 51 end = 226
+
+
+valid/SNGS-093 -> 59.0 ms
+**************************
+INSTANCE : SNGS-094
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 3 to player ID 1 | frames: present start = 210 length = 3 end = 213
+
+
+valid/SNGS-094 -> 69.0 ms
+**************************
+INSTANCE : SNGS-095
+**************************
+
+solution #0
+------------------
+
+EVENT # 0 PASS
+ From player ID 16 to player ID 19 | frames: present start = 158 length = 15 end = 173
+
+
+solution #1
+------------------
+
+EVENT # 0 PASS
+ From player ID 23 to player ID 24 | frames: present start = 535 length = 39 end = 574
+
+
+valid/SNGS-095 -> 48.0 ms
+No matches found for the given query.
+valid/SNGS-096 -> 67.0 ms

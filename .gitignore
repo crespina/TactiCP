@@ -1,0 +1,55 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+.kotlin
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+
+### Eclipse ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+### Mac OS ###
+.DS_Store
+
+### Environment / secrets ###
+.env
+
+### Data ###
+data/SoccerNet/*
+### Python ###
+__pycache__/
+*.pyc
+
+### Build and run outputs ###
+dependency-reduced-pom.xml
+claude_shim_log.jsonl
+out/
+
+### Local scripts, kept out of the repository ###
+src/main/python/possession.py
+src/main/python/trackingVisualizer.py
+src/main/python/gsrVisualizer.py

@@ -1,0 +1,82 @@
+{
+    "UrlLocal": "SNGS-112",
+    "predictions": [
+        {
+            "gameTime": "1 - 00:02",
+            "label": "DRIVE",
+            "position": "2200",
+            "half": "1",
+            "confidence": "0.855711817741394"
+        },
+        {
+            "gameTime": "1 - 00:04",
+            "label": "DRIVE",
+            "position": "4960",
+            "half": "1",
+            "confidence": "0.27192604541778564"
+        },
+        {
+            "gameTime": "1 - 00:05",
+            "label": "PASS",
+            "position": "5920",
+            "half": "1",
+            "confidence": "0.9702627658843994"
+        },
+        {
+            "gameTime": "1 - 00:08",
+            "label": "DRIVE",
+            "position": "8360",
+            "half": "1",
+            "confidence": "0.9285067915916443"
+        },
+        {
+            "gameTime": "1 - 00:10",
+            "label": "DRIVE",
+            "position": "10360",
+            "half": "1",
+            "confidence": "0.23048023879528046"
+        },
+        {
+            "gameTime": "1 - 00:12",
+            "label": "PASS",
+            "position": "12520",
+            "half": "1",
+            "confidence": "0.9472808837890625"
+        },
+        {
+            "gameTime": "1 - 00:13",
+            "label": "PASS",
+            "position": "13720",
+            "half": "1",
+            "confidence": "0.80963534116745"
+        },
+        {
+            "gameTime": "1 - 00:14",
+            "label": "DRIVE",
+            "position": "14920",
+            "half": "1",
+            "confidence": "0.6933191418647766"
+        },
+        {
+            "gameTime": "1 - 00:16",
+            "label": "PASS",
+            "position": "16080",
+            "half": "1",
+            "confidence": "0.3966676890850067"
+        },
+        {
+            "gameTime": "1 - 00:17",
+            "label": "DRIVE",
+            "position": "17040",
+            "half": "1",
+            "confidence": "0.3096286356449127"
+        },
+        {
+            "gameTime": "1 - 00:22",
+            "label": "DRIVE",
+            "position": "22280",
+            "half": "1",
+            "confidence": "0.23368188738822937"
+        }
+    ]
+}

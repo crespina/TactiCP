@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TactiCP - Football Pattern Retrieval</title>
+  <style>
+    /* ─── Theme variables ──────────────────────────────────── */
+    :root {
+      /* Dark theme (default) */
+      --bg-body: #0f1117;
+      --text-main: #e2e8f0;
+      --accent: #7dd3fc;
+      --card-bg: #1e2130;
+      --card-border: #2d3148;
+      --heading-muted: #94a3b8;
+      --input-bg: #0f1117;
+      --input-border: #3d4468;
+      --btn-bg: #2563eb;
+      --btn-hover: #1d4ed8;
+      --btn-disabled-bg: #374151;
+      --btn-disabled-color: inherit;
+      --status-muted: #64748b;
+      --result-card-bg: #262b40;
+      --result-card-border: #3d4468;
+      --badge-bg: #1e3a5f;
+      --badge-color: #7dd3fc;
+      --result-text-color: #a5f3fc;
+      --example-bg: #0f1117;
+      --example-hover-bg: #1a1f2e;
+      --example-code-color: #94a3b8;
+      --spinner-border: #3d4468;
+      --spinner-active: #7dd3fc;
+      --nav-btn-bg: #374151;
+      --nav-btn-hover: #4b5563;
+      --nav-btn-disabled-bg: #1f2937;
+      --nav-btn-disabled-color: #4b5563;
+      --clip-bg: #000;
+      --clip-label-color: #64748b;
+      --toggle-bg: #374151;
+      --toggle-knob: #e2e8f0;
+    }
+
+    [data-theme="light"] {
+      --bg-body: #f0f2f5;
+      --text-main: #1e293b;
+      --accent: #0369a1;
+      --card-bg: #ffffff;
+      --card-border: #d1d5db;
+      --heading-muted: #475569;
+      --input-bg: #f8fafc;
+      --input-border: #cbd5e1;
+      --btn-bg: #2563eb;
+      --btn-hover: #1d4ed8;
+      --btn-disabled-bg: #d1d5db;
+      --btn-disabled-color: #6b7280;
+      --status-muted: #64748b;
+      --result-card-bg: #f1f5f9;
+      --result-card-border: #cbd5e1;
+      --badge-bg: #dbeafe;
+      --badge-color: #1e40af;
+      --result-text-color: #0c4a6e;
+      --example-bg: #f8fafc;
+      --example-hover-bg: #e0e7ef;
+      --example-code-color: #475569;
+      --spinner-border: #cbd5e1;
+      --spinner-active: #0369a1;
+      --nav-btn-bg: #d1d5db;
+      --nav-btn-hover: #9ca3af;
+      --nav-btn-disabled-bg: #e5e7eb;
+      --nav-btn-disabled-color: #9ca3af;
+      --clip-bg: #111;
+      --clip-label-color: #64748b;
+      --toggle-bg: #cbd5e1;
+      --toggle-knob: #ffffff;
+    }
+
+    /* ─── Reset & base ─────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg-body);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: clamp(1rem, 2vw, 2rem);
+      gap: 1.5rem;
+      transition: background .3s, color .3s;
+    }
+
+    h1 {
+      font-size: clamp(1.1rem, 2.5vw, 1.8rem);
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: .04em;
+    }
+
+    /* ─── Two-column layout ───────────────────────────────── */
+    .main-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      width: 100%;
+      max-width: 1600px;
+    }
+    .left-column, .right-column {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      min-width: 0;
+    }
+
+    /* Large screens: give more room to results */
+    @media (min-width: 1200px) {
+      .main-layout {
+        grid-template-columns: 2fr 3fr;
+      }
+    }
+    /* Medium screens: equal halves */
+    @media (max-width: 1199px) and (min-width: 901px) {
+      .main-layout {
+        grid-template-columns: 1fr 1fr;
+      }
+      .examples-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    /* Small screens: single column */
+    @media (max-width: 900px) {
+      .main-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ─── Theme toggle ─────────────────────────────────────── */
+    .header-row {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      max-width: 1600px;
+      justify-content: center;
+      position: relative;
+    }
+    .header-row h1 {
+      text-align: center;
+    }
+    .header-row .theme-toggle {
+      position: absolute;
+      right: 0;
+    }
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      cursor: pointer;
+      user-select: none;
+      font-size: .85rem;
+      color: var(--heading-muted);
+    }
+    .theme-toggle .toggle-track {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      background: var(--toggle-bg);
+      border-radius: 12px;
+      transition: background .3s;
+    }
+    .theme-toggle .toggle-knob {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 18px;
+      height: 18px;
+      background: var(--toggle-knob);
+      border-radius: 50%;
+      transition: transform .3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    [data-theme="light"] .toggle-knob {
+      transform: translateX(20px);
+    }
+
+    /* ─── Section cards ─────────────────────────────────────── */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: clamp(1rem, 1.5vw, 1.5rem);
+      width: 100%;
+      transition: background .3s, border-color .3s;
+    }
+    .card h2 {
+      font-size: clamp(.8rem, 1.1vw, 1rem);
+      font-weight: 600;
+      color: var(--heading-muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 1rem;
+    }
+
+    /* ─── Video section ─────────────────────────────────────── */
+    .video-row {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    select {
+      background: var(--input-bg);
+      color: var(--text-main);
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      padding: .5rem .75rem;
+      font-size: clamp(.8rem, 1.2vw, .95rem);
+      cursor: pointer;
+      flex: 1;
+      min-width: 0;
+      width: 100%;
+    }
+    video {
+      width: 100%;
+      border-radius: 8px;
+      margin-top: 1rem;
+      background: #000;
+      max-height: clamp(200px, 30vw, 420px);
+      display: none;
+    }
+    video.visible { display: block; }
+
+    /* ─── NL → DSL translate helper ─────────────────────────── */
+    .translate-helper {
+      margin-bottom: 1rem;
+      padding: clamp(.6rem, 1vw, .9rem);
+      border: 1px dashed var(--input-border);
+      border-radius: 10px;
+      background: var(--example-bg);
+    }
+    .translate-label {
+      display: block;
+      font-size: clamp(.78rem, 1vw, .9rem);
+      color: var(--heading-muted);
+      margin-bottom: .55rem;
+    }
+    .translate-label strong { color: var(--accent); }
+    .translate-row {
+      display: flex;
+      gap: .6rem;
+      flex-wrap: wrap;
+      align-items: stretch;
+    }
+    .nl-textarea {
+      flex: 1 1 240px;
+      min-width: 0;
+      min-height: 46px;
+      background: var(--input-bg);
+      color: var(--text-main);
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      padding: .55rem .65rem;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: clamp(.78rem, 1vw, .9rem);
+      resize: vertical;
+    }
+    .nl-textarea:focus { outline: none; border-color: var(--accent); }
+    .translate-controls {
+      display: flex;
+      gap: .5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    #nl-dataset {
+      flex: 0 0 auto;
+      width: auto;
+      min-width: 130px;
+      background: var(--input-bg);
+      color: var(--text-main);
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      padding: .45rem .55rem;
+      font-size: clamp(.75rem, 1vw, .85rem);
+    }
+    #translate-btn {
+      align-self: center;
+      background: #7c3aed;
+    }
+    #translate-btn:hover { background: #6d28d9; }
+    .translate-status {
+      font-size: .82rem;
+      color: var(--status-muted);
+      margin-top: .5rem;
+      min-height: 1.1em;
+    }
+    .translate-status.error { color: #f87171; }
+    .translate-status.ok    { color: #4ade80; }
+
+    /* ─── Query section ─────────────────────────────────────── */
+    .query-row { display: flex; gap: .75rem; flex-wrap: wrap; }
+    textarea {
+      flex: 1;
+      min-width: 0;
+      min-height: clamp(60px, 8vw, 80px);
+      background: var(--input-bg);
+      color: var(--text-main);
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      padding: clamp(.5rem, 1vw, .75rem);
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: clamp(.75rem, 1vw, .9rem);
+      resize: vertical;
+    }
+    textarea:focus { outline: none; border-color: var(--accent); }
+    button {
+      background: var(--btn-bg);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: clamp(.5rem, 1vw, .75rem) clamp(.75rem, 1.5vw, 1.5rem);
+      font-size: clamp(.8rem, 1.1vw, .95rem);
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s;
+      align-self: flex-end;
+      white-space: nowrap;
+    }
+    button:hover { background: var(--btn-hover); }
+    button:disabled { background: var(--btn-disabled-bg); color: var(--btn-disabled-color); cursor: not-allowed; }
+
+    /* ─── Status bar ────────────────────────────────────────── */
+    #status {
+      font-size: .88rem;
+      color: var(--status-muted);
+      min-height: 1.4em;
+    }
+    #status.error { color: #f87171; }
+    #status.ok    { color: #4ade80; }
+
+    /* ─── Results section ───────────────────────────────────── */
+    #results-section { display: none; }
+    #count-section   { display: none; }
+
+    /* count result box */
+    .count-result-box {
+      display: flex;
+      align-items: baseline;
+      gap: .75rem;
+      padding: 1.5rem;
+      border-radius: .5rem;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+    }
+    .count-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #4ade80;
+    }
+    .count-label {
+      font-size: 1.1rem;
+      color: var(--heading-muted);
+    }
+
+    /* counter badge */
+    .result-counter {
+      font-size: .88rem;
+      color: var(--heading-muted);
+      margin-bottom: .75rem;
+    }
+
+    /* ─── Carousel ──────────────────────────────────────────── */
+    .carousel {
+      position: relative;
+    }
+    .carousel-track {
+      overflow: hidden;
+    }
+    .carousel-slide {
+      display: none;
+    }
+    .carousel-slide.active {
+      display: block;
+    }
+
+    /* result card inside carousel */
+    .result-card {
+      background: var(--result-card-bg);
+      border: 1px solid var(--result-card-border);
+      border-radius: 10px;
+      padding: clamp(.75rem, 1.3vw, 1.25rem);
+      transition: background .3s, border-color .3s;
+    }
+    .result-card .instance-badge {
+      display: inline-block;
+      background: var(--badge-bg);
+      color: var(--badge-color);
+      border-radius: 6px;
+      padding: .2rem .7rem;
+      font-size: clamp(.68rem, .9vw, .78rem);
+      font-weight: 600;
+      margin-bottom: .75rem;
+    }
+    .result-text {
+      background: var(--input-bg);
+      border-radius: 8px;
+      padding: clamp(.5rem, 1vw, .85rem) clamp(.6rem, 1.1vw, 1rem);
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: clamp(.72rem, .95vw, .82rem);
+      color: var(--result-text-color);
+      white-space: pre-wrap;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+
+    /* sub-video clip */
+    .clip-wrapper {
+      background: var(--clip-bg);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .clip-wrapper video {
+      width: 100%;
+      max-height: clamp(200px, 28vw, 380px);
+      display: block;
+      margin: 0;
+      border-radius: 0;
+    }
+    .clip-label {
+      font-size: .8rem;
+      color: var(--clip-label-color);
+      text-align: center;
+      padding: .3rem 0 .5rem;
+    }
+
+    /* carousel navigation */
+    .carousel-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+    .carousel-nav button {
+      background: var(--nav-btn-bg);
+      padding: .5rem 1.25rem;
+      font-size: .9rem;
+    }
+    .carousel-nav button:hover { background: var(--nav-btn-hover); }
+    .carousel-nav button:disabled { background: var(--nav-btn-disabled-bg); color: var(--nav-btn-disabled-color); }
+    .carousel-page {
+      font-size: .9rem;
+      color: var(--heading-muted);
+      min-width: 80px;
+      text-align: center;
+    }
+
+    /* ─── Example queries ────────────────────────────────────── */
+    .examples-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+      gap: .75rem;
+    }
+    .example-card {
+      background: var(--example-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      padding: clamp(.5rem, 1vw, .75rem);
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+    }
+    .example-card:hover {
+      border-color: var(--accent);
+      background: var(--example-hover-bg);
+    }
+    .example-label {
+      font-size: clamp(.75rem, 1vw, .85rem);
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: .4rem;
+    }
+    .example-card code {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: clamp(.62rem, .8vw, .72rem);
+      color: var(--example-code-color);
+      word-break: break-all;
+      line-height: 1.4;
+    }
+
+    /* ─── Syntax guide ─────────────────────────────────────── */
+    .syntax-guide {
+      font-size: clamp(.78rem, 1vw, .88rem);
+      line-height: 1.6;
+      color: var(--text-main);
+    }
+    .syntax-guide p {
+      margin-bottom: .75rem;
+    }
+    .syntax-guide h3 {
+      font-size: clamp(.75rem, 1vw, .88rem);
+      font-weight: 700;
+      color: var(--accent);
+      margin: 1rem 0 .5rem;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .syntax-guide dl {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: .3rem .75rem;
+      margin-bottom: .5rem;
+    }
+    .syntax-guide dt {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: clamp(.7rem, .9vw, .82rem);
+      color: var(--result-text-color);
+      white-space: nowrap;
+    }
+    .syntax-guide dd {
+      color: var(--heading-muted);
+      font-size: clamp(.72rem, .95vw, .84rem);
+    }
+    .syntax-guide code {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: .85em;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 4px;
+      padding: .1rem .35rem;
+      color: var(--result-text-color);
+    }
+    .syntax-tip {
+      margin-top: 1rem;
+      padding: .6rem .75rem;
+      background: var(--badge-bg);
+      border-radius: 8px;
+      color: var(--badge-color);
+      font-size: clamp(.72rem, .95vw, .84rem);
+    }
+
+    /* ─── DSL Syntax highlighting ─────────────────────────────── */
+    .dsl-kw-structure   { color: #2563eb; font-weight: 700; }   /* SELECT FROM WHERE SEARCH COUNT */
+    .dsl-kw-logic       { color: #dc2626; font-weight: 700; }   /* AND OR NOT */
+    .dsl-kw-entity      { color: #9333ea; }                     /* PLAYER BALL TEAM */
+    .dsl-kw-event       { color: #16a34a; }                     /* POSSESSION POSITION PASSTO MOVETO */
+    .dsl-kw-constraint  { color: #ea580c; }                     /* MAXDURATION MINDURATION STARTMIN ... */
+    .dsl-kw-dataset     { color: #2563eb; }                     /* TRAIN TEST VALID ALL FIRST */
+    .dsl-string         { color: #ea580c; }                     /* string literals */
+    .dsl-number         { color: #0891b2; }                     /* numeric literals */
+    .dsl-paren          { color: var(--heading-muted); }        /* parentheses, dots, commas */
+
+    [data-theme="light"] .dsl-kw-structure  { color: #1d4ed8; }
+    [data-theme="light"] .dsl-kw-logic      { color: #b91c1c; }
+    [data-theme="light"] .dsl-kw-entity     { color: #7e22ce; }
+    [data-theme="light"] .dsl-kw-event      { color: #15803d; }
+    [data-theme="light"] .dsl-kw-constraint { color: #c2410c; }
+    [data-theme="light"] .dsl-kw-dataset    { color: #1d4ed8; }
+    [data-theme="light"] .dsl-string        { color: #c2410c; }
+    [data-theme="light"] .dsl-number        { color: #0e7490; }
+
+    /* ── Highlighted editor (textarea + overlay) ──────────── */
+    .code-editor {
+      position: relative;
+      width: 100%;
+      flex: 1;
+      min-width: 0;
+    }
+    .code-editor textarea,
+    .code-editor .code-highlight {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: clamp(.75rem, 1vw, .9rem);
+      line-height: 1.55;
+      padding: clamp(.5rem, 1vw, .75rem);
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      overflow: auto;
+      width: 100%;
+      min-height: clamp(60px, 8vw, 80px);
+      box-sizing: border-box;
+      margin: 0;
+    }
+    .code-editor textarea {
+      position: relative;
+      z-index: 2;
+      background: transparent;
+      color: transparent;
+      caret-color: var(--text-main);
+      resize: vertical;
+    }
+    .code-editor textarea:focus { outline: none; border-color: var(--accent); }
+    .code-editor textarea:focus + .code-highlight { border-color: var(--accent); }
+    .code-editor .code-highlight {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 1;
+      background: var(--input-bg);
+      color: var(--text-main);
+      pointer-events: none;
+      border: 1px solid var(--input-border);
+    }
+
+    /* ─── Spinner ───────────────────────────────────────────── */
+    .spinner {
+      display: none;
+      width: 20px; height: 20px;
+      border: 3px solid var(--spinner-border);
+      border-top-color: var(--spinner-active);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      flex-shrink: 0;
+    }
+    .spinner.active { display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Additional styles for result text box */
+    .result-textbox {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: .5rem;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .result-textbox label {
+      color: var(--heading-muted);
+      font-size: .85rem;
+    }
+    #solution-select {
+      background: var(--input-bg);
+      color: var(--text-main);
+      border: 1px solid var(--input-border);
+      border-radius: 6px;
+      padding: .35rem .5rem;
+      font-size: .85rem;
+      justify-self: end;
+      min-width: 120px;
+    }
+    #result-text {
+      grid-column: 1 / -1;
+      background: var(--input-bg);
+      color: var(--result-text-color);
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      padding: .75rem;
+      min-height: 140px;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: .82rem;
+      white-space: pre-wrap;
+      resize: vertical;
+    }
+
+    .inline-results {
+      margin-top: .75rem;
+      display: grid;
+      gap: .4rem;
+    }
+    .inline-results label {
+      color: var(--heading-muted);
+      font-size: .85rem;
+    }
+    #inline-result-text {
+      background: var(--input-bg);
+      color: var(--result-text-color);
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      padding: .75rem;
+      min-height: 120px;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: .82rem;
+      white-space: pre-wrap;
+      resize: vertical;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header-row">
+    <h1>⚽ TactiCP - Football Pattern Retrieval</h1>
+    <div class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle dark / light mode">
+      <span class="toggle-label" id="theme-label">🌙</span>
+      <div class="toggle-track">
+        <div class="toggle-knob"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Two-column layout ────────────────────────────────── -->
+  <div class="main-layout">
+    <!-- ── Left column ──────────────────────────────────────── -->
+    <div class="left-column">
+      <!-- ── 1. Video selector ──────────────────────────────── -->
+      <div class="card" id="video-card">
+        <h2>Select Instance</h2>
+        <div class="video-row">
+          <select id="instance-select">
+            <option value="">Loading instances…</option>
+          </select>
+        </div>
+        <video id="main-video" controls></video>
+      </div>
+
+      <!-- ── 2. Example queries ─────────────────────────────── -->
+      <div class="card">
+        <h2>Example Queries</h2>
+        <div class="examples-grid">
+          <div class="example-card" onclick="loadExample(this)">
+            <div class="example-label">🎯 Pass between two players</div>
+            <code>SELECT(PLAYER("pwc1").PASSTO(PLAYER("pwc2")).MINRANGE()).WHERE(RECTANGLE(-60, 20, 65, 40)).FROM("SNGS-060, SNGS-061")</code>
+          </div>
+          <div class="example-card" onclick="loadExample(this)">
+            <div class="example-label">⚽ Ball movement</div>
+            <code>SELECT(BALL().MOVETO(4, 6).WHERE(RADIUS(-20, 10, 35)), BALL().MOVETO(14, 9).MINRANGE()).FROM("SNGS-061")</code>
+          </div>
+          <div class="example-card" onclick="loadExample(this)">
+            <div class="example-label">🏃 Player movement</div>
+            <code>SELECT(PLAYER("pwc3").MOVETO(1, 6).MINRANGE().WHERE(RADIUS(-20, 20, 20)), PLAYER("pwc3").MOVETO(6, 7)).FROM("SNGS-061")</code>
+          </div>
+          <div class="example-card" onclick="loadExample(this)">
+            <div class="example-label">👥 Team movement</div>
+            <code>SELECT(TEAM("t1", PLAYER("pwc3"), PLAYER("pleft", "left"), PLAYER("p1", 1)).MOVETO(11, 10, 3)).WHERE(RECTANGLE(-20,-20,40,20)).FROM("SNGS-060")</code>
+          </div>
+          <div class="example-card" onclick="loadExample(this)">
+            <div class="example-label">📍 Ball position</div>
+            <code>SELECT(POSITION(BALL(), 1, 4)).WHERE(RADIUS(-20, 0, 20)).FROM("SNGS-060")</code>
+          </div>
+          <div class="example-card" onclick="loadExample(this)">
+            <div class="example-label">🔒 Player possession</div>
+            <code>SELECT(POSSESSION(PLAYER("pwc4"))).WHERE(RECTANGLE(-5, 5, 10, 10), STARTMAX(50), ENDMAX(200), MAXDURATION(50), MINDURATION(15)).FROM("SNGS-060")</code>
+          </div>
+        </div>
+      </div>
+      <!-- ── 3. Syntax guide ──────────────────────────────── -->
+      <div class="card">
+        <h2>Syntax Guide</h2>
+        <div class="syntax-guide">
+          <p>Queries follow the pattern: <code>SELECT(…).WHERE(…).FROM(…)</code></p>
+
+          <h3>SELECT — What to search for</h3>
+          <dl>
+            <dt><code>PLAYER("identifier")</code></dt>
+            <dd>Declare a player variable. Optionally specify a team affiliation or ID: <code>PLAYER("identifier", "left")</code>, <code>PLAYER("identifier", 1)</code>.</dd>
+
+            <dt><code>BALL()</code></dt>
+            <dd>Reference the ball.</dd>
+
+            <dt><code>TEAM("identifier", PLAYER(…), …)</code></dt>
+            <dd>Group several players into a team.</dd>
+
+            <dt><code>.MOVETO(x, y)</code></dt>
+            <dd>Constrain an entity to move from zone x to zone y.</dd>
+
+            <dt><code>.PASSTO(PLAYER(...))</code></dt>
+            <dd>Constrain a player to pass the ball to another player.</dd>
+
+            <dt><code>.MINRANGE()</code></dt>
+            <dd>Minimise the time range of the movement or action.</dd>
+
+            <dt><code>POSITION(entity, zones...)</code></dt>
+            <dd>Constrain an entity to be in the zones</dd>
+
+            <dt><code>POSSESSION(entity)</code></dt>
+            <dd>Constrain an entity to have ball possession.</dd>
+          </dl>
+
+          <h3>FROM — Which instances to search</h3>
+          <p>Specify one or more instance IDs: <code>.FROM("SNGS-060")</code> or <code>.FROM("SNGS-060, SNGS-061", ...)</code>.</p>
+
+          <h3>WHERE — Spatial &amp; temporal constraints</h3>
+          <dl>
+            <dt><code>RECTANGLE(x, y, w, h)</code></dt>
+            <dd>Restrict the search to a rectangular area.</dd>
+
+            <dt><code>RADIUS(x, y, r)</code></dt>
+            <dd>Restrict the search to a circular area centered at <code>(x, y)</code> with radius <code>r</code>.</dd>
+
+            <dt><code>STARTMIN(frame)</code></dt>
+            <dd>Restrict the minimal starting time</dd>
+            <dt><code>STARTMAX(frame)</code></dt>
+            <dd>Restrict the maximal starting time</dd>
+            <dt><code>ENDMIN(frame)</code></dt>
+            <dd>Restrict the minimal ending time</dd>
+            <dt><code>ENDMAX(frame)</code></dt>
+            <dd>Restrict the maximal ending time</dd>
+
+            <dt><code>MINDURATION(nFrames)</code></dt>
+            <dd>Limit the minimal length of the pattern.</dd>
+            <dt><code>MAXDURATION(nFrames)</code></dt>
+            <dd>Limit the maximal length of the pattern.</dd>
+
+            <dt><code>DURING(from, to)</code></dt>
+            <dd>Only frames <code>from</code> to <code>to</code>. A position or a possession is cut to them; a move or a pass must lie inside them.</dd>
+
+
+          </dl>
+
+          <p class="syntax-tip">💡 <strong>Tip:</strong> Append <code>.SEARCH(1)</code> to your query to get the first solution.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Right column ─────────────────────────────────────── -->
+    <div class="right-column">
+      <!-- ── 4. Query input ─────────────────────────────────── -->
+      <div class="card">
+        <h2>Query</h2>
+
+        <!-- ── NL → DSL translate helper ─────────────────────── -->
+        <div class="translate-helper">
+          <label class="translate-label" for="nl-input">
+            💬 <strong>Need help with your query?</strong> Describe it in plain English and let us translate it.
+          </label>
+          <div class="translate-row">
+            <textarea id="nl-input" class="nl-textarea" spellcheck="true"
+              placeholder="e.g.  find all passes from player 11 to any player"></textarea>
+            <div class="translate-controls">
+              <select id="nl-dataset" title="Which dataset should the query search?">
+                <option value="all">all datasets</option>
+                <option value="train">train split</option>
+                <option value="test">test split</option>
+                <option value="valid">valid split</option>
+              </select>
+              <button id="translate-btn" onclick="translateQuery()">✨ Translate</button>
+              <div class="spinner" id="translate-spinner"></div>
+            </div>
+          </div>
+          <div id="translate-status" class="translate-status"></div>
+        </div>
+
+        <div class="query-row">
+          <div class="code-editor">
+            <textarea id="query-input" spellcheck="false"
+              placeholder='e.g.  SELECT(PLAYER("p1").PASSTO(PLAYER("p2")).MINRANGE()).FROM("SNGS-060").SEARCH(0)'
+              oninput="syncHighlight()" onscroll="syncScroll()"></textarea>
+            <div class="code-highlight" id="query-highlight"></div>
+          </div>
+          <button id="run-btn" onclick="runQuery()">▶ Run</button>
+          <div class="spinner" id="spinner"></div>
+        </div>
+        <div id="status"></div>
+        <div id="inline-results" class="inline-results" style="display:none;">
+          <label for="inline-result-text">Result output</label>
+          <textarea id="inline-result-text" readonly></textarea>
+        </div>
+      </div>
+
+      <!-- ── 4. Results ─────────────────────────────────────── -->
+      <div class="card" id="results-section">
+        <h2>Results</h2>
+        <div class="result-counter" id="result-counter"></div>
+
+        <div class="result-textbox">
+          <label for="result-text">Solution text</label>
+          <select id="solution-select"></select>
+          <textarea id="result-text" readonly></textarea>
+        </div>
+
+        <div class="carousel" id="carousel">
+          <div class="carousel-track" id="carousel-track"></div>
+          <div class="carousel-nav">
+            <button id="prev-btn" onclick="navigate(-1)">← Prev</button>
+            <span class="carousel-page" id="carousel-page"></span>
+            <button id="next-btn" onclick="navigate(1)">Next →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── 4b. Count Result ───────────────────────────────── -->
+      <div class="card" id="count-section" style="display:none;">
+        <h2>Count Result</h2>
+        <div class="count-result-box">
+          <span class="count-value" id="count-value">0</span>
+          <span class="count-label">solution(s) matched</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // ─────────────────────────────────────────────────────────────
+  // DSL Syntax Highlighting
+  // ─────────────────────────────────────────────────────────────
+  function highlightDSL(text) {
+    // Escape HTML first
+    let s = String(text ?? '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    // Tokenise via regex — order matters (strings before keywords)
+    const tokens = [
+      // String literals "..."
+      { re: /(&quot;[^&]*?&quot;)/g, cls: 'dsl-string' },
+      // Structure keywords
+      { re: /\b(SELECT|FROM|WHERE|SEARCH|COUNT)\b/g, cls: 'dsl-kw-structure' },
+      // Logical operators
+      { re: /\b(AND|OR|NOT)\b/g, cls: 'dsl-kw-logic' },
+      // Entities
+      { re: /\b(PLAYER|BALL|TEAM)\b/g, cls: 'dsl-kw-entity' },
+      // Events
+      { re: /\b(POSSESSION|POSITION|PASSTO|MOVETO)\b/g, cls: 'dsl-kw-event' },
+      // Constraints
+      { re: /\b(MAXDURATION|MINDURATION|MAX_DURATION|MIN_DURATION|STARTMIN|STARTMAX|ENDMIN|ENDMAX|DURING|START|END|WITHIN|RADIUS|RECTANGLE|ATMOST|ATLEAST|MINRANGE|MIN_RANGE)\b/g, cls: 'dsl-kw-constraint' },
+      // Dataset keywords
+      { re: /\b(TRAIN|TEST|VALID|ALL|FIRST)\b/g, cls: 'dsl-kw-dataset' },
+      // Numbers (standalone — not inside placeholders)
+      { re: /(?<!\x00)(-?\b\d+(?:\.\d+)?\b)(?!\x00)/g, cls: 'dsl-number' },
+    ];
+
+    // Apply token replacements; use a placeholder approach to avoid double-matching
+    let uid = 0;
+    const placeholders = [];
+
+    for (const { re, cls } of tokens) {
+      s = s.replace(re, (match) => {
+        const idx = uid++;
+        placeholders.push(`<span class="${cls}">${match}</span>`);
+        return `\x00\x00${idx}\x00\x00`;
+      });
+    }
+
+    // Restore placeholders (reverse order so inner indices aren't corrupted)
+    for (let i = placeholders.length - 1; i >= 0; i--) {
+      s = s.replace(`\x00\x00${i}\x00\x00`, placeholders[i]);
+    }
+
+    // Ensure trailing newline so the highlight div matches textarea height
+    if (s.endsWith('\n')) s += ' ';
+
+    return s;
+  }
+
+  function syncHighlight() {
+    const ta = document.getElementById('query-input');
+    const hl = document.getElementById('query-highlight');
+    hl.innerHTML = highlightDSL(ta.value);
+  }
+
+  function syncScroll() {
+    const ta = document.getElementById('query-input');
+    const hl = document.getElementById('query-highlight');
+    hl.scrollTop  = ta.scrollTop;
+    hl.scrollLeft = ta.scrollLeft;
+  }
+
+  // Highlight example-card <code> elements on page load
+  function highlightExamples() {
+    document.querySelectorAll('.example-card code').forEach(el => {
+      el.innerHTML = highlightDSL(el.textContent);
+    });
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // State
+  // ─────────────────────────────────────────────────────────────
+  let allSlides   = [];
+  let currentIdx  = 0;
+  let instanceMap = {};  // id -> {split, label, hasVideo}
+  let currentResults = [];
+
+  // ─────────────────────────────────────────────────────────────
+  // Boot: load instances
+  // ─────────────────────────────────────────────────────────────
+  async function loadInstances() {
+    try {
+      const res  = await fetch('/api/instances');
+      const data = await res.json();
+      const sel  = document.getElementById('instance-select');
+      const dsSel = document.getElementById('nl-dataset');
+      sel.innerHTML = '<option value="">— choose an instance —</option>';
+      data.forEach(inst => {
+        instanceMap[inst.id] = inst;
+        const opt = document.createElement('option');
+        opt.value = inst.id;
+        opt.textContent = inst.label + (inst.hasVideo === 'true' ? '' : ' (no video)');
+        sel.appendChild(opt);
+
+        // Also offer each instance as a translate-dataset target
+        if (dsSel) {
+          const dsOpt = document.createElement('option');
+          dsOpt.value = inst.id;
+          dsOpt.textContent = inst.id;
+          dsSel.appendChild(dsOpt);
+        }
+      });
+    } catch (e) {
+      setStatus('Failed to load instances: ' + e.message, 'error');
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Instance selection → load main video
+  // ─────────────────────────────────────────────────────────────
+  document.getElementById('instance-select').addEventListener('change', async function () {
+    const id   = this.value;
+    const vid  = document.getElementById('main-video');
+    if (!id || !instanceMap[id] || instanceMap[id].hasVideo !== 'true') {
+      vid.onerror = null;
+      vid.classList.remove('visible');
+      vid.src = '';
+      setStatus('');
+      return;
+    }
+    const { split } = instanceMap[id];
+    vid.onerror = () => {
+      setStatus('Could not load the video of ' + id + '.', 'error');
+      vid.classList.remove('visible');
+    };
+    vid.src = `/api/video/${split}/${id}`;
+    vid.classList.add('visible');
+    vid.load();
+    setStatus('');
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // Translate a natural-language description into a DSL query
+  // ─────────────────────────────────────────────────────────────
+  async function translateQuery() {
+    const desc    = document.getElementById('nl-input').value.trim();
+    const dataset = document.getElementById('nl-dataset').value;
+    const btn     = document.getElementById('translate-btn');
+    const spinner = document.getElementById('translate-spinner');
+
+    if (!desc) {
+      setTranslateStatus('Please describe your query in English first.', 'error');
+      return;
+    }
+
+    btn.disabled = true;
+    spinner.classList.add('active');
+    setTranslateStatus('Translating your description…');
+
+    try {
+      const res  = await fetch('/api/translate', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ description: desc, dataset })
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        setTranslateStatus('Translation failed: ' + (data.error || 'unknown error'), 'error');
+        return;
+      }
+
+      // Drop the generated DSL into the query box and refresh highlighting
+      const qbox = document.getElementById('query-input');
+      qbox.value = data.query;
+      syncHighlight();
+      setTranslateStatus('Translated — review the query below, then hit ▶ Run.', 'ok');
+      qbox.scrollIntoView({ behavior: 'smooth' });
+      qbox.focus();
+    } catch (e) {
+      setTranslateStatus('Request failed: ' + e.message, 'error');
+    } finally {
+      btn.disabled = false;
+      spinner.classList.remove('active');
+    }
+  }
+
+  function setTranslateStatus(msg, cls) {
+    const el = document.getElementById('translate-status');
+    el.textContent = msg;
+    el.className   = 'translate-status' + (cls ? ' ' + cls : '');
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Run query
+  // ─────────────────────────────────────────────────────────────
+  async function runQuery() {
+    const query   = document.getElementById('query-input').value.trim();
+    const btn     = document.getElementById('run-btn');
+    const spinner = document.getElementById('spinner');
+    if (!query) { setStatus('Please enter a query.', 'error'); return; }
+
+    btn.disabled     = true;
+    spinner.classList.add('active');
+    setStatus('Running query…');
+    clearResults();
+
+    try {
+      const res  = await fetch('/api/query', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ query })
+      });
+      const data = await res.json();
+      console.log('query response', data);
+      window.lastFullText = data.fullText || (data.results || []).map(r => r.text).join('\n');
+
+      if (!data.success) {
+        setStatus('Error: ' + data.error, 'error');
+        return;
+      }
+
+      // COUNT() query – display the count in a dedicated panel
+      if (data.count !== null && data.count !== undefined) {
+        setStatus('COUNT query completed.', 'ok');
+        document.getElementById('count-value').textContent = data.count;
+        const countSection = document.getElementById('count-section');
+        countSection.style.display = 'block';
+        countSection.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+
+      if (data.results.length === 0) {
+        setStatus('No solutions found.', 'error');
+        return;
+      }
+
+      setStatus(`Found ${data.results.length} solution(s).`, 'ok');
+      renderResults(data.results);
+    } catch (e) {
+      setStatus('Request failed: ' + e.message, 'error');
+    } finally {
+      btn.disabled = false;
+      spinner.classList.remove('active');
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Render results into carousel slides
+  // ─────────────────────────────────────────────────────────────
+  function renderResults(results) {
+    const track = document.getElementById('carousel-track');
+    const select = document.getElementById('solution-select');
+    track.innerHTML = '';
+    allSlides = [];
+    currentResults = results;
+
+    select.innerHTML = '';
+    const allOpt = document.createElement('option');
+    allOpt.value = '-1';
+    allOpt.textContent = 'all solutions';
+    select.appendChild(allOpt);
+
+    results.forEach((sol, idx) => {
+      const opt = document.createElement('option');
+      opt.value = String(idx);
+      opt.textContent = `solution #${sol.solutionIndex}`;
+      select.appendChild(opt);
+
+      const slide = document.createElement('div');
+      slide.className = 'carousel-slide' + (idx === 0 ? ' active' : '');
+
+      // instance badge + text
+      const instInfo   = instanceMap[sol.instance?.split('/').pop()] || {};
+      const split      = instInfo.split || guessplit(sol.instance);
+      const instanceId = sol.instance?.split('/').pop() || sol.instance;
+
+      // Build clip video if we have timing
+      const hasVideo   = instInfo.hasVideo === 'true';
+      const clipHtml   = (hasVideo && sol.intervalStart >= 0 && sol.intervalEnd > sol.intervalStart)
+        ? buildClipHtml(split, instanceId, sol.intervalStart, sol.intervalEnd)
+        : '';
+
+      slide.innerHTML = `
+        <div class="result-card">
+          <div class="instance-badge">${sol.instance || ''} &nbsp;·&nbsp; solution #${sol.solutionIndex}</div>
+          <div class="result-text">${highlightDSL(sol.text)}</div>
+          ${clipHtml}
+        </div>`;
+
+      track.appendChild(slide);
+      allSlides.push(slide);
+    });
+
+    select.onchange = () => {
+      const idx = parseInt(select.value, 10);
+      if (idx === -1) {
+        updateTextBox(true);
+      } else {
+        jumpTo(idx);
+      }
+    };
+
+    // Wire up video seek after DOM is ready
+    results.forEach((sol, idx) => {
+      const vid = document.getElementById('clip-video-' + idx);
+      if (vid) {
+        const startT = parseFloat(vid.dataset.start);
+        const endT   = parseFloat(vid.dataset.end);
+        vid.addEventListener('loadedmetadata', () => { vid.currentTime = startT; });
+        vid.addEventListener('timeupdate', () => {
+          if (vid.currentTime >= endT) { vid.pause(); }
+        });
+      }
+    });
+
+    document.getElementById('results-section').style.display = 'block';
+    document.getElementById('result-counter').textContent =
+      `${results.length} solution${results.length !== 1 ? 's' : ''} found`;
+    currentIdx = 0;
+    updateTextBox(true);
+    updateNav();
+    document.getElementById('results-section').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function buildClipHtml(split, instanceId, startFrame, endFrame) {
+    const fps    = 25;
+    const startT = (startFrame / fps).toFixed(2);
+    const endT   = (endFrame   / fps).toFixed(2);
+    const slideIdx = allSlides.length;
+    return `
+      <div class="clip-wrapper">
+        <video id="clip-video-${slideIdx}" controls preload="metadata"
+               data-start="${startT}" data-end="${endT}"
+               src="/api/video/${split}/${instanceId}">
+        </video>
+        <div class="clip-label">frames ${startFrame} – ${endFrame} &nbsp;(${startT}s – ${endT}s)</div>
+      </div>`;
+  }
+
+  function guessplit(instancePath) {
+    if (!instancePath) return 'train';
+    if (instancePath.includes('train')) return 'train';
+    if (instancePath.includes('test'))  return 'test';
+    if (instancePath.includes('valid')) return 'valid';
+    return 'train';
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Carousel navigation
+  // ─────────────────────────────────────────────────────────────
+  function navigate(dir) {
+    allSlides[currentIdx].classList.remove('active');
+    currentIdx = Math.max(0, Math.min(allSlides.length - 1, currentIdx + dir));
+    allSlides[currentIdx].classList.add('active');
+    updateTextBox();
+    updateNav();
+  }
+
+  function updateNav() {
+    document.getElementById('prev-btn').disabled = (currentIdx === 0);
+    document.getElementById('next-btn').disabled = (currentIdx === allSlides.length - 1);
+    document.getElementById('carousel-page').textContent =
+      allSlides.length > 0 ? `${currentIdx + 1} / ${allSlides.length}` : '';
+  }
+
+  function updateTextBox(useAll) {
+    const box = document.getElementById('result-text');
+    const sel = document.getElementById('solution-select');
+    const inlineBox = document.getElementById('inline-result-text');
+    const inlineWrap = document.getElementById('inline-results');
+    if (!currentResults.length) {
+      box.value = '';
+      sel.innerHTML = '';
+      inlineBox.value = '';
+      inlineWrap.style.display = 'none';
+      return;
+    }
+    if (useAll) {
+      const allText = window.lastFullText || currentResults.map(r => r.text).join('\n');
+      box.value = allText;
+      sel.value = '-1';
+      inlineBox.value = allText;
+      inlineWrap.style.display = 'grid';
+      return;
+    }
+    const singleText = currentResults[currentIdx].text || '';
+    box.value = singleText;
+    sel.value = String(currentIdx);
+    inlineBox.value = singleText;
+    inlineWrap.style.display = 'grid';
+  }
+
+  function jumpTo(idx) {
+    if (idx < 0 || idx >= allSlides.length) return;
+    allSlides[currentIdx].classList.remove('active');
+    currentIdx = idx;
+    allSlides[currentIdx].classList.add('active');
+    updateTextBox(false);
+    updateNav();
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Utilities
+  // ─────────────────────────────────────────────────────────────
+  function clearResults() {
+    document.getElementById('results-section').style.display = 'none';
+    document.getElementById('count-section').style.display = 'none';
+    document.getElementById('count-value').textContent = '0';
+    document.getElementById('carousel-track').innerHTML = '';
+    document.getElementById('result-text').value = '';
+    document.getElementById('solution-select').innerHTML = '';
+    document.getElementById('inline-result-text').value = '';
+    document.getElementById('inline-results').style.display = 'none';
+    allSlides  = [];
+    currentIdx = 0;
+    currentResults = [];
+    window.lastFullText = '';
+  }
+
+  function setStatus(msg, cls) {
+    const el = document.getElementById('status');
+    el.textContent  = msg;
+    el.className    = cls || '';
+  }
+
+  function escHtml(s) {
+    return String(s ?? '')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // Allow Ctrl+Enter to submit
+  document.getElementById('query-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) runQuery();
+  });
+
+  // Ctrl+Enter in the English box triggers translation
+  document.getElementById('nl-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); translateQuery(); }
+  });
+
+  // Load an example query into the input
+  function loadExample(card) {
+    const code = card.querySelector('code').textContent.trim();
+    document.getElementById('query-input').value = code;
+    syncHighlight();
+    document.getElementById('query-input').scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('query-input').focus();
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Theme toggle (dark / light)
+  // ─────────────────────────────────────────────────────────────
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.getElementById('theme-label').textContent = theme === 'light' ? '☀️' : '🌙';
+    localStorage.setItem('theme', theme);
+  }
+
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+  }
+
+  // Restore saved preference (or respect OS preference)
+  (function initTheme() {
+    const saved = localStorage.getItem('theme');
+    if (saved) {
+      applyTheme(saved);
+    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+      applyTheme('light');
+    } else {
+      applyTheme('dark');
+    }
+  })();
+
+  // ─────────────────────────────────────────────────────────────
+  // Init
+  // ─────────────────────────────────────────────────────────────
+  loadInstances();
+  highlightExamples();
+  syncHighlight();
+  </script>
+</body>
+</html>
+
