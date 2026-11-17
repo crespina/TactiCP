@@ -249,7 +249,6 @@ public class Query {
                     cp.post(le(endOf(lastVar), total_end_max + 1));
                 }
             } catch (InconsistencyException e) {
-                //System.out.println("No solution found for instance " + instance.name);
                 modelNanos += System.nanoTime() - modelStart;
                 continue;
             }
@@ -776,13 +775,11 @@ public class Query {
 
         // SELECT refuses a negated pass
         if (minrange) {
-            //cp.post(new SubstringRegular(possession, eventInterval, Automaton.A_0STAR_B(teams.length, passersIds, receiversIds)));
             cp.post(new SubstringRegular(possession, eventInterval, Automaton.A_0PLUS_B(teams.length, passersIds, receiversIds)));
         } else {
             // n + 2: a pass may run from the first frame to the last one, plus its two delimiters
             CPIntervalVar paddedInterval = paddedFor(cp, eventInterval, n + 2);
             int[] paddedArray = Automaton.pad(possession);
-            //cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_PADSTAR_BPLUS_PAD(teams.length, passersIds, receiversIds)));
             cp.post(new SubstringRegular(paddedArray, paddedInterval, Automaton.PAD_APLUS_0PLUS_BPLUS_PAD(teams.length, passersIds, receiversIds)));
             linkPadded(cp, eventInterval, paddedInterval);
         }

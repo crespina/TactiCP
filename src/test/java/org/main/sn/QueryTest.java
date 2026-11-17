@@ -419,9 +419,6 @@ public class QueryTest {
 
     @Test
     public void TestAND() throws IOException {
-        //SELECT(POSSESSION(PLAYER("p", 13))).FROM("SNGS-061").searchAndPrint();
-        //SELECT(BALL().MOVETO(6,7)).FROM("SNGS-061").searchAndPrint();
-
         SelectExpr andQuery = SELECT(
                 AND(POSSESSION(PLAYER("p", 13)),
                         BALL().MOVETO(6, 7))
@@ -436,9 +433,6 @@ public class QueryTest {
                 OR(PLAYER("p11",11).PASSTO(PLAYER("p14", 14)).MINRANGE(),
                         BALL().MOVETO(4, 6).WHERE(RADIUS(-20, 10, 35)))
         ).FROM("SNGS-061");
-
-//        SELECT(PLAYER("p11",11).PASSTO(PLAYER("p14", 14)).MINRANGE()).FROM("SNGS-061").searchAndPrint();
-//        SELECT( BALL().MOVETO(4, 6).WHERE(RADIUS(-20, 10, 35))).FROM("SNGS-061").searchAndPrint();
 
         List<Result> results = orQuery.search();
         assertEquals(2, results.size());
