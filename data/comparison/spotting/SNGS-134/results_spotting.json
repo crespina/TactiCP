@@ -1,0 +1,75 @@
+{
+    "UrlLocal": "SNGS-134",
+    "predictions": [
+        {
+            "gameTime": "1 - 00:14",
+            "label": "PASS",
+            "position": "14240",
+            "half": "1",
+            "confidence": "0.938366174697876"
+        },
+        {
+            "gameTime": "1 - 00:15",
+            "label": "DRIVE",
+            "position": "15520",
+            "half": "1",
+            "confidence": "0.9048276543617249"
+        },
+        {
+            "gameTime": "1 - 00:18",
+            "label": "PASS",
+            "position": "18000",
+            "half": "1",
+            "confidence": "0.8848301768302917"
+        },
+        {
+            "gameTime": "1 - 00:18",
+            "label": "PASS",
+            "position": "18880",
+            "half": "1",
+            "confidence": "0.7990939617156982"
+        },
+        {
+            "gameTime": "1 - 00:20",
+            "label": "DRIVE",
+            "position": "20160",
+            "half": "1",
+            "confidence": "0.9067723751068115"
+        },
+        {
+            "gameTime": "1 - 00:21",
+            "label": "PASS",
+            "position": "21480",
+            "half": "1",
+            "confidence": "0.9503596425056458"
+        },
+        {
+            "gameTime": "1 - 00:22",
+            "label": "DRIVE",
+            "position": "22920",
+            "half": "1",
+            "confidence": "0.3550262451171875"
+        },
+        {
+            "gameTime": "1 - 00:23",
+            "label": "PASS",
+            "position": "23320",
+            "half": "1",
+            "confidence": "0.8537527322769165"
+        },
+        {
+            "gameTime": "1 - 00:24",
+            "label": "DRIVE",
+            "position": "24760",
+            "half": "1",
+            "confidence": "0.6535899639129639"
+        },
+        {
+            "gameTime": "1 - 00:25",
+            "label": "PASS",
+            "position": "25040",
+            "half": "1",
+            "confidence": "0.27368342876434326"
+        }
+    ]
+}

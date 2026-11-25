@@ -1,0 +1,12 @@
+{
+    "UrlLocal": "SNGS-036",
+    "predictions": [
+        {
+            "gameTime": "1 - 00:27",
+            "label": "DRIVE",
+            "position": "27560",
+            "half": "1",
+            "confidence": "0.5592228174209595"
+        }
+    ]
+}
